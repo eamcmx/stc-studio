@@ -1389,6 +1389,8 @@ details summary { cursor: pointer; color: var(--muted); font-size: 12px; margin-
  * Decodes REAL 8051 machine code (so disassembly bytes match Keil: 74 25, 78 10, 89, 80 FE ...).
  * Used by the CSSA Topic-4 ISA lecture and the 25-practicals module. Works in Node and the browser.
  * Verified against the teacher's Expected Register Snapshots — see test.js.
+ * v3 (2026-11-08): SETB C is one byte, MOV Rn,direct takes 2 cycles, ANL/ORL C,/bit, Keil's generic
+ *   JMP label / CALL label (assembled as LJMP / LCALL). Cycle table checked opcode by opcode (Intel MCS-51).
  * v2 (2026-11-05): external pins for the board view (buttons pull a pin LOW), latch-vs-pin port reads,
  * INT0/INT1 sampled from P3.2/P3.3, IP priorities. Board checks: test_board.js.
  *
@@ -1542,7 +1544,7 @@ details summary { cursor: pointer; color: var(--muted); font-size: 12px; margin-
       case 'INC': case 'DEC':
         if (a[0]==='A') return 1; if (/^@R[01]$/.test(a[0])) return 1; if (/^R[0-7]$/.test(a[0])) return 1;
         if (a[0]==='DPTR') return 1; return 2; // INC direct
-      case 'SETB': return 2;
+      case 'SETB': return a[0]==='C' ? 1 : 2;   // SETB C is one byte (D3)
       case 'PUSH': case 'POP': return 2;
       case 'MOV':
         return movSize(a);
@@ -1554,7 +1556,8 @@ details summary { cursor: pointer; color: var(--muted); font-size: 12px; margin-
       case 'SJMP': return 2;
       case 'AJMP': case 'ACALL': return 2;
       case 'LJMP': case 'LCALL': return 3;
-      case 'JMP': return 1; // JMP @A+DPTR
+      case 'JMP': return /^@A\s*\+\s*DPTR$/i.test(a[0]||'') ? 1 : 3; // JMP @A+DPTR, or Keil's generic JMP label (made LJMP)
+      case 'CALL': return 3;                    // Keil's generic CALL label (made LCALL)
       case 'JZ': case 'JNZ': case 'JC': case 'JNC': return 2;
       case 'JB': case 'JNB': case 'JBC': return 3;
       case 'CJNE': return 3;
@@ -1671,6 +1674,7 @@ details summary { cursor: pointer; color: var(--muted); font-size: 12px; margin-
           return [b0|0x05, direct(s2)];
         }
         if (d==='C') { // ANL C,bit / ORL C,bit  (XRL has no bit form)
+          if (s2[0]==='/') { if (m==='ANL') return [0xB0, bit(s2.slice(1))]; if (m==='ORL') return [0xA0, bit(s2.slice(1))]; } // C,/bit
           if (m==='ANL') return [0x82, bit(s2)];
           if (m==='ORL') return [0x72, bit(s2)];
           throw new Error('XRL C,bit not valid');
@@ -1697,7 +1701,8 @@ details summary { cursor: pointer; color: var(--muted); font-size: 12px; margin-
       case 'LCALL': return [0x12].concat(addr16(a[0]));
       case 'AJMP': { var t=addr11(a[0]); return [0x01 | ((t&0x700)>>3), t&0xFF]; }
       case 'ACALL': { var t2=addr11(a[0]); return [0x11 | ((t2&0x700)>>3), t2&0xFF]; }
-      case 'JMP': return [0x73]; // @A+DPTR
+      case 'JMP': if (/^@A\s*\+\s*DPTR$/i.test(a[0]||'')) return [0x73]; return [0x02].concat(addr16(a[0])); // @A+DPTR, or generic JMP = LJMP
+      case 'CALL': return [0x12].concat(addr16(a[0]));  // generic CALL = LCALL (Keil may pick the 2-byte ACALL)
       case 'JZ': return [0x60, rel(a[0])];
       case 'JNZ': return [0x70, rel(a[0])];
       case 'JC': return [0x40, rel(a[0])];
@@ -1880,7 +1885,7 @@ details summary { cursor: pointer; color: var(--muted); font-size: 12px; margin-
     else if (op===0xF5) { this.writeDirect(dir(), this.acc); } // MOV direct,A
     else if (op===0xF6 || op===0xF7) { this.writeIndirect(this.getR(op&1), this.acc); } // MOV @Ri,A
     else if (op>=0xF8 && op<=0xFF) { this.setR(n, this.acc); } // MOV Rn,A
-    else if (op===0xA8+0 || (op>=0xA8 && op<=0xAF)) { this.setR(n, this.readDirect(dir())); cyc=2; } // MOV Rn,direct (2 cycles, as in the Intel table)
+    else if (op===0xA8+0 || (op>=0xA8 && op<=0xAF)) { this.setR(n, this.readDirect(dir())); cyc=2; } // MOV Rn,direct
     else if (op===0xA6 || op===0xA7) { this.writeIndirect(this.getR(op&1), this.readDirect(dir())); cyc=2; } // MOV @Ri,direct
     else if (op===0x88 || (op>=0x88 && op<=0x8F)) { var dd=dir(); this.writeDirect(dd, this.getR(n)); cyc=2; } // MOV direct,Rn
     else if (op===0x86 || op===0x87) { var dd2=dir(); this.writeDirect(dd2, this.readIndirect(this.getR(op&1))); cyc=2; } // MOV direct,@Ri
@@ -1941,8 +1946,8 @@ details summary { cursor: pointer; color: var(--muted); font-size: 12px; margin-
     else if (op===0x63) { var d63=dir(); var i63=imm8(); this.writeDirect(d63, this.readLatch(d63)^i63); cyc=2; }
     else if (op===0x72) { var b72=dir(); setCY(this, getCY(this) | this.readBit(b72)); cyc=2; } // ORL C,bit
     else if (op===0x82) { var b82=dir(); setCY(this, getCY(this) & this.readBit(b82)); cyc=2; } // ANL C,bit
-    else if (op===0xA0) { var bA0=dir(); setCY(this, getCY(this) | (this.readBit(bA0)?0:1)); cyc=2; } // ORL C,/bit
-    else if (op===0xB0) { var bB0=dir(); setCY(this, getCY(this) & (this.readBit(bB0)?0:1)); cyc=2; } // ANL C,/bit
+    else if (op===0xA0) { var bA0=dir(); setCY(this, getCY(this) | (this.readBit(bA0)^1)); cyc=2; } // ORL C,/bit
+    else if (op===0xB0) { var bB0=dir(); setCY(this, getCY(this) & (this.readBit(bB0)^1)); cyc=2; } // ANL C,/bit
     else if (op===0xE4) { this.setACC(0); } // CLR A
     else if (op===0xF4) { this.setACC(~this.acc & 0xFF); } // CPL A
     else if (op===0xC3) { setCY(this,0); } // CLR C
