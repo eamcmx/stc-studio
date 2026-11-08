@@ -1,0 +1,35 @@
+00125$:
+       MOV  a,_main_j_10000_12     1
+       ADD  a,_main_j_10000_12     1
+       ADD  a, #_acc               1
+       MOV  r1,a                   1
+       MOV  ar2,@r1                2
+       INC  r1                     1
+       MOV  ar3,@r1                2
+       DEC  r1                     1
+       MOV  a,_main_j_10000_12     1
+       ADD  a, r5                  1
+       MOV  dpl,a                  1
+       CLR  a                      1
+       ADDC a, r6                  1
+       MOV  dph,a                  1
+       CLR  a                      1
+       MOVC a,@a+dptr              2
+       MOV  r4,a                   1
+       RLC  a                      1
+       SUBB a,acc                  1
+       MOV  r7,a                   1
+       MOV  a,r4                   1
+       ADD  a, r2                  1
+       MOV  r2,a                   1
+       MOV  a,r7                   1
+       ADDC a, r3                  1
+       MOV  r3,a                   1
+       MOV  @r1,ar2                2
+       INC  r1                     1
+       MOV  @r1,ar3                2
+       DEC  r1                     1
+       INC  _main_j_10000_12       1
+       MOV  a,#0x100 - 0x18        1
+       ADD  a,_main_j_10000_12     1
+       JNC  00125$                 2

@@ -23,6 +23,8 @@ const BUILDS = [
   ['C, 32-bit multiply', 'ref/nn/c/digit_nn_c_long.hex'],
   ['C, optimized for size', 'ref/nn/c/digit_nn_c_size.hex'],
   ['C tuned for the 8051', 'ref/nn/c/digit_nn_c_tuned.hex'],
+  ['SDCC as written', 'ref/nn/c/sdcc/digit_nn.hex'],
+  ['SDCC tuned for the 8051', 'ref/nn/c/sdcc_tuned/digit_nn.hex'],
 ];
 const LIT = [0, 5, 10, 15, 20, 25, 30, 35];
 const series = [];

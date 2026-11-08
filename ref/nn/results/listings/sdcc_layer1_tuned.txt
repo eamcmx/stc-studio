@@ -1,0 +1,40 @@
+00128$:
+       MOV  _main___700000000_70000_20,r4 2
+       INC  r4                     1
+       INC  r4                     1
+       MOV  r0,_main___700000000_70000_20 2
+       MOV  ar2,@r0                2
+       INC  r0                     1
+       MOV  ar5,@r0                2
+       MOV  a,_main_j_10000_12     1
+       ADD  a, r6                  1
+       MOV  dpl,a                  1
+       CLR  a                      1
+       ADDC a, r7                  1
+       MOV  dph,a                  1
+       CLR  a                      1
+       MOVC a,@a+dptr              2
+       MOV  r3,a                   1
+       PUSH ar6                    2
+       PUSH ar7                    2
+       MOV  a,r3                   1
+       RLC  a                      1
+       SUBB a,acc                  1
+       MOV  r7,a                   1
+       MOV  a,r3                   1
+       ADD  a, r2                  1
+       MOV  r2,a                   1
+       MOV  a,r7                   1
+       ADDC a, r5                  1
+       MOV  r5,a                   1
+       MOV  r0,_main___700000000_70000_20 2
+       MOV  @r0,ar2                2
+       INC  r0                     1
+       MOV  @r0,ar5                2
+       INC  _main_j_10000_12       1
+       CLR  c                      1
+       MOV  a,_main_j_10000_12     1
+       SUBB a,#0x18                1
+       POP  ar7                    2
+       POP  ar6                    2
+       JC   00128$                 2
