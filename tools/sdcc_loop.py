@@ -40,12 +40,14 @@ def loop(rst, src_line):
 
 def text(body):
     out = []
+    rows = [('       ' + ins.partition(' ')[0].upper().ljust(5) + ins.partition(' ')[2]) for lab, ins, cyc in body if not lab]
+    width = max([34] + [len(r) + 2 for r in rows])     # SDCC's long symbol names must not run into the cycle column
     for lab, ins, cyc in body:
         if lab:
             out.append(lab + ':')
         else:
             op, _, args = ins.partition(' ')
-            out.append(('       ' + op.upper().ljust(5) + args).ljust(34) + str(cyc).rjust(2))
+            out.append(('       ' + op.upper().ljust(5) + args).ljust(width) + str(cyc).rjust(2))
     return '\n'.join(out) + '\n'
 
 
