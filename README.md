@@ -49,7 +49,7 @@ course that is running and are not in this repository; the tests that use them s
 
 ## Licences
 
-MIT for this repository (`LICENSE`). `src/stcisp.js` and two tools carry code from stcgal (MIT, its notice is kept in
+MIT for this repository (`LICENSE`); third-party notices in `NOTICE`. `src/stcisp.js` and two tools carry code from stcgal (MIT, its notice is kept in
 the files). The UCI digits in `nn/data/optdigits/` are CC BY 4.0 (Alpaydin and Kaynak, 1998,
 https://doi.org/10.24432/C50P49). MNIST is not included.
 

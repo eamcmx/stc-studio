@@ -1,0 +1,10 @@
+Third-party code and data in this repository
+
+src/stcisp.js, tools/flash_stcgal.py and tools/probe_stc.py contain code ported or
+copied from stcgal 1.10 (https://github.com/grigorig/stcgal), also under the MIT
+licence: Copyright (c) 2013-2015 Grigori Goronzy and others. Its notice is kept in
+those files.
+
+nn/data/optdigits/ holds the UCI Optical Recognition of Handwritten Digits dataset
+(Alpaydin, E. and Kaynak, C., 1998, https://doi.org/10.24432/C50P49), licensed
+under Creative Commons Attribution 4.0 International (CC BY 4.0).
