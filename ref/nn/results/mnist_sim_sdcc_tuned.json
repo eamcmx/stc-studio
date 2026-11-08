@@ -1,0 +1,19 @@
+{
+ "made": "2026-11-08T07:32:36.543Z",
+ "by": "test/nn_mnist.js",
+ "bytes": 7782,
+ "flash_end": 7791,
+ "ram_scores_end": null,
+ "program": "ref/nn/c/mnist/sdcc_tuned/digit_mnist.hex",
+ "digits": 10000,
+ "answers_unlike_python": 0,
+ "display_faults": 0,
+ "read_correctly": 9591,
+ "accuracy_pct": 95.91,
+ "avg_cycles": 80778,
+ "avg_ms": 87.65,
+ "min_ms": 40.22,
+ "max_ms": 163.15,
+ "avg_lit": 30.46,
+ "cycles_per_ms": 921.6
+}

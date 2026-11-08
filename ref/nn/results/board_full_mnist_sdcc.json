@@ -1,0 +1,44 @@
+{
+ "made": "2026-11-08T07:28:12.160Z",
+ "by": "test/board_run.js",
+ "port": "COM13",
+ "baud": 19200,
+ "builds": [
+  {
+   "name": "MNIST SDCC as written",
+   "file": "ref/nn/c/mnist/sdcc/digit_mnist.hex",
+   "inputs": 10000,
+   "equal": 10000,
+   "differ": 0,
+   "no_answer": 0,
+   "read_correctly": 9591,
+   "median_round_trip_ms": 278.3,
+   "flash_s": 11.3,
+   "first_differences": []
+  },
+  {
+   "name": "MNIST SDCC tuned",
+   "file": "ref/nn/c/mnist/sdcc_tuned/digit_mnist.hex",
+   "inputs": 10000,
+   "equal": 10000,
+   "differ": 0,
+   "no_answer": 0,
+   "read_correctly": 9591,
+   "median_round_trip_ms": 250.6,
+   "flash_s": 11,
+   "first_differences": []
+  },
+  {
+   "name": "asm 5x7 (put back)",
+   "file": "ref/nn/digit_nn.a51",
+   "inputs": 4,
+   "equal": 4,
+   "differ": 0,
+   "no_answer": 0,
+   "read_correctly": null,
+   "median_round_trip_ms": 94.4,
+   "flash_s": 4.3,
+   "first_differences": []
+  }
+ ]
+}

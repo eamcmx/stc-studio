@@ -1,0 +1,10 @@
+﻿weights.h:6: warning 356: object in read-only code space should be const
+weights.h:7: warning 356: object in read-only code space should be const
+weights.h:205: warning 356: object in read-only code space should be const
+weights.h:206: warning 356: object in read-only code space should be const
+digit_mnist.c:21: warning 356: object in read-only code space should be const
+digit_mnist.c:22: warning 356: object in read-only code space should be const
+digit_mnist.c:23: warning 356: object in read-only code space should be const
+digit_mnist.c:37: warning 357: pointer to object in read-only code space should be pointer to const
+digit_mnist.c:46: warning 357: pointer to object in read-only code space should be pointer to const
+-:0: warning 357: pointer to object in read-only code space should be pointer to const

@@ -29,6 +29,8 @@ const BUILDS = [
   ['SDCC, 32-bit multiply', 'ref/nn/c/sdcc_long/digit_nn.hex', V57],
   ['SDCC tuned', 'ref/nn/c/sdcc_tuned/digit_nn.hex', V57],
   ['MNIST 14x14', 'ref/nn/mnist/digit_mnist.a51', VMNIST],
+  ['MNIST SDCC as written', 'ref/nn/c/mnist/sdcc/digit_mnist.hex', VMNIST],
+  ['MNIST SDCC tuned', 'ref/nn/c/mnist/sdcc_tuned/digit_mnist.hex', VMNIST],
   ['asm 5x7 (put back)', 'ref/nn/digit_nn.a51', V57.slice(0, 4)],
 ].filter(b => !onlyArg || onlyArg.split('|').includes(b[0]));
 const s24 = h => { const v = parseInt(h, 16); return v & 0x800000 ? v - 0x1000000 : v; };

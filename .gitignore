@@ -22,3 +22,12 @@ ref/nn/c/sdcc*/*.lk
 ref/nn/c/sdcc*/*.mem
 ref/nn/c/sdcc*/*.ihx
 ref/nn/c/sdcc*/*.asm
+ref/nn/avr/build/
+ref/nn/c/mnist/sdcc*/*.c
+ref/nn/c/mnist/sdcc*/*.h
+ref/nn/c/mnist/sdcc*/*.rel
+ref/nn/c/mnist/sdcc*/*.sym
+ref/nn/c/mnist/sdcc*/*.lk
+ref/nn/c/mnist/sdcc*/*.mem
+ref/nn/c/mnist/sdcc*/*.ihx
+ref/nn/c/mnist/sdcc*/*.asm

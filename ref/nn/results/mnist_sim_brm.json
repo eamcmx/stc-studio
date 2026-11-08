@@ -1,0 +1,19 @@
+{
+ "made": "2026-11-08T07:31:20.789Z",
+ "by": "test/nn_mnist.js",
+ "bytes": 7224,
+ "flash_end": 7266,
+ "ram_scores_end": "0xc7",
+ "program": "ref/nn/mnist/brm/digit_mnist_brm.a51",
+ "digits": 10000,
+ "answers_unlike_python": 0,
+ "display_faults": 0,
+ "read_correctly": 9591,
+ "accuracy_pct": 95.91,
+ "avg_cycles": 37553,
+ "avg_ms": 40.75,
+ "min_ms": 21.76,
+ "max_ms": 70.88,
+ "avg_lit": 30.46,
+ "cycles_per_ms": 921.6
+}

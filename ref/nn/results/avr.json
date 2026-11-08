@@ -1,0 +1,56 @@
+{
+ "by": "tools/avr_run.py",
+ "mcu": "ATmega328P",
+ "clock_hz": 16000000,
+ "tools": "avr-gcc (GCC) 7.3.0; Version: 1.6+dfsg-3build2",
+ "runs": [
+  {
+   "network": "5x7",
+   "opt": "-O2",
+   "inputs": 346,
+   "equal_to_reference": 346,
+   "read_correctly": null,
+   "flash_bytes": 1690,
+   "avg_cycles": 14302,
+   "avg_ms": 0.894,
+   "min_ms": 0.63,
+   "max_ms": 1.318
+  },
+  {
+   "network": "5x7",
+   "opt": "-Os",
+   "inputs": 346,
+   "equal_to_reference": 346,
+   "read_correctly": null,
+   "flash_bytes": 1704,
+   "avg_cycles": 16104,
+   "avg_ms": 1.007,
+   "min_ms": 0.738,
+   "max_ms": 1.438
+  },
+  {
+   "network": "MNIST",
+   "opt": "-O2",
+   "inputs": 10000,
+   "equal_to_reference": 10000,
+   "read_correctly": 9591,
+   "flash_bytes": 7254,
+   "avg_cycles": 40788,
+   "avg_ms": 2.549,
+   "min_ms": 1.375,
+   "max_ms": 4.418
+  },
+  {
+   "network": "MNIST",
+   "opt": "-Os",
+   "inputs": 10000,
+   "equal_to_reference": 10000,
+   "read_correctly": 9591,
+   "flash_bytes": 7268,
+   "avg_cycles": 45041,
+   "avg_ms": 2.815,
+   "min_ms": 1.545,
+   "max_ms": 4.835
+  }
+ ]
+}
