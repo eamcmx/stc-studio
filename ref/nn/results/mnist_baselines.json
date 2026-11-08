@@ -1,0 +1,34 @@
+{
+ "by": "nn/mnist_baselines.py",
+ "seed": 1,
+ "runs": [
+  {
+   "model": "784-128-10, 28 x 28 grey",
+   "epochs": 20,
+   "test_pct": 97.62,
+   "source": "run of 8 Nov 2026 (log)"
+  },
+  {
+   "model": "784-128-10, 28 x 28 grey",
+   "epochs": 60,
+   "test_pct": 97.71,
+   "source": "run of 8 Nov 2026 (log)"
+  },
+  {
+   "model": "784-256-10, 28 x 28 grey",
+   "epochs": 20,
+   "test_pct": 97.68,
+   "source": "run of 8 Nov 2026 (log)"
+  },
+  {
+   "model": "196-32-10, 14 x 14 binary",
+   "epochs": 20,
+   "test_pct": 95.96
+  },
+  {
+   "model": "196-32-10, 14 x 14 binary",
+   "epochs": 60,
+   "test_pct": 96.11
+  }
+ ]
+}
