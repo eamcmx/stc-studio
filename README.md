@@ -44,7 +44,9 @@ The C builds are in `ref/nn/c/`: `tools/keil_c.sh` compiles with Keil C51 (the e
 ## The assembler and the simulator
 
 `node test/probes.js`, `node test/fuzz.js` and `node test/board_test.js` check the assembler and the board model; the
-reference outputs of Keil are in `ref/`. The 41 course programs that the assembler was also checked on belong to a
+reference outputs of Keil are in `ref/`. `node test/cycles.js` checks the cycles the simulator charges for every opcode
+against the 8051 table (until 8 Nov 2026 `MOV Rn,direct` cost 1 cycle instead of 2; the paper's times are from the
+corrected simulator), and `node test/nn_keil.js` builds every assembly program of the paper with Keil (needs Keil C51). The 41 course programs that the assembler was also checked on belong to a
 course that is running and are not in this repository; the tests that use them say so and skip.
 
 ## Licences

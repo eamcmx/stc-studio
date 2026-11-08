@@ -1,0 +1,278 @@
+{
+ "made": "2026-11-08T12:42:50.971Z",
+ "by": "test/nn_keil.js",
+ "programs": 45,
+ "same": 45,
+ "rows": [
+  {
+   "file": "ref/nn/ablation/all_shortcuts.a51",
+   "bytes": 1654,
+   "compared": "linked image",
+   "same_as_keil": true
+  },
+  {
+   "file": "ref/nn/ablation/factorial/b.a51",
+   "bytes": 1714,
+   "compared": "linked image",
+   "same_as_keil": true
+  },
+  {
+   "file": "ref/nn/ablation/factorial/bm.a51",
+   "bytes": 1688,
+   "compared": "linked image",
+   "same_as_keil": true
+  },
+  {
+   "file": "ref/nn/ablation/factorial/bms.a51",
+   "bytes": 1672,
+   "compared": "linked image",
+   "same_as_keil": true
+  },
+  {
+   "file": "ref/nn/ablation/factorial/br.a51",
+   "bytes": 1696,
+   "compared": "linked image",
+   "same_as_keil": true
+  },
+  {
+   "file": "ref/nn/ablation/factorial/brm.a51",
+   "bytes": 1670,
+   "compared": "linked image",
+   "same_as_keil": true
+  },
+  {
+   "file": "ref/nn/ablation/factorial/brms.a51",
+   "bytes": 1654,
+   "compared": "linked image",
+   "same_as_keil": true
+  },
+  {
+   "file": "ref/nn/ablation/factorial/brs.a51",
+   "bytes": 1685,
+   "compared": "linked image",
+   "same_as_keil": true
+  },
+  {
+   "file": "ref/nn/ablation/factorial/bs.a51",
+   "bytes": 1703,
+   "compared": "linked image",
+   "same_as_keil": true
+  },
+  {
+   "file": "ref/nn/ablation/factorial/m.a51",
+   "bytes": 1699,
+   "compared": "linked image",
+   "same_as_keil": true
+  },
+  {
+   "file": "ref/nn/ablation/factorial/ms.a51",
+   "bytes": 1683,
+   "compared": "linked image",
+   "same_as_keil": true
+  },
+  {
+   "file": "ref/nn/ablation/factorial/none.a51",
+   "bytes": 1725,
+   "compared": "linked image",
+   "same_as_keil": true
+  },
+  {
+   "file": "ref/nn/ablation/factorial/r.a51",
+   "bytes": 1707,
+   "compared": "linked image",
+   "same_as_keil": true
+  },
+  {
+   "file": "ref/nn/ablation/factorial/rm.a51",
+   "bytes": 1681,
+   "compared": "linked image",
+   "same_as_keil": true
+  },
+  {
+   "file": "ref/nn/ablation/factorial/rms.a51",
+   "bytes": 1665,
+   "compared": "linked image",
+   "same_as_keil": true
+  },
+  {
+   "file": "ref/nn/ablation/factorial/rs.a51",
+   "bytes": 1696,
+   "compared": "linked image",
+   "same_as_keil": true
+  },
+  {
+   "file": "ref/nn/ablation/factorial/s.a51",
+   "bytes": 1714,
+   "compared": "linked image",
+   "same_as_keil": true
+  },
+  {
+   "file": "ref/nn/ablation/no_binary.a51",
+   "bytes": 1665,
+   "compared": "linked image",
+   "same_as_keil": true
+  },
+  {
+   "file": "ref/nn/ablation/no_mulab.a51",
+   "bytes": 1685,
+   "compared": "linked image",
+   "same_as_keil": true
+  },
+  {
+   "file": "ref/nn/ablation/no_rowptr.a51",
+   "bytes": 1672,
+   "compared": "linked image",
+   "same_as_keil": true
+  },
+  {
+   "file": "ref/nn/ablation/no_shortcuts.a51",
+   "bytes": 1725,
+   "compared": "linked image",
+   "same_as_keil": true
+  },
+  {
+   "file": "ref/nn/ablation/sum32.a51",
+   "bytes": 1670,
+   "compared": "linked image",
+   "same_as_keil": true
+  },
+  {
+   "file": "ref/nn/digit_nn.a51",
+   "bytes": 1654,
+   "compared": "linked image",
+   "same_as_keil": true
+  },
+  {
+   "file": "ref/nn/energy/digit_nn_marker.a51",
+   "bytes": 1660,
+   "compared": "linked image",
+   "same_as_keil": true
+  },
+  {
+   "file": "ref/nn/energy/digit_nn_marker_dark.a51",
+   "bytes": 1660,
+   "compared": "linked image",
+   "same_as_keil": true
+  },
+  {
+   "file": "ref/nn/gen/uci_bin.a51",
+   "bytes": 2350,
+   "compared": "A51 listing, line by line (over the 2 KB of the evaluation linker)",
+   "same_as_keil": true
+  },
+  {
+   "file": "ref/nn/gen/uci_gray.a51",
+   "bytes": 2363,
+   "compared": "A51 listing, line by line (over the 2 KB of the evaluation linker)",
+   "same_as_keil": true
+  },
+  {
+   "file": "ref/nn/mnist/brm/digit_mnist_brm.a51",
+   "bytes": 7224,
+   "compared": "A51 listing, line by line (over the 2 KB of the evaluation linker)",
+   "same_as_keil": true
+  },
+  {
+   "file": "ref/nn/mnist/digit_mnist.a51",
+   "bytes": 7208,
+   "compared": "A51 listing, line by line (over the 2 KB of the evaluation linker)",
+   "same_as_keil": true
+  },
+  {
+   "file": "ref/nn/sweep/uci_bin_h12.a51",
+   "bytes": 1438,
+   "compared": "linked image",
+   "same_as_keil": true
+  },
+  {
+   "file": "ref/nn/sweep/uci_bin_h16.a51",
+   "bytes": 1742,
+   "compared": "linked image",
+   "same_as_keil": true
+  },
+  {
+   "file": "ref/nn/sweep/uci_bin_h20.a51",
+   "bytes": 2046,
+   "compared": "linked image",
+   "same_as_keil": true
+  },
+  {
+   "file": "ref/nn/sweep/uci_bin_h24.a51",
+   "bytes": 2350,
+   "compared": "A51 listing, line by line (over the 2 KB of the evaluation linker)",
+   "same_as_keil": true
+  },
+  {
+   "file": "ref/nn/sweep/uci_bin_h28.a51",
+   "bytes": 2654,
+   "compared": "A51 listing, line by line (over the 2 KB of the evaluation linker)",
+   "same_as_keil": true
+  },
+  {
+   "file": "ref/nn/sweep/uci_bin_h32.a51",
+   "bytes": 2958,
+   "compared": "A51 listing, line by line (over the 2 KB of the evaluation linker)",
+   "same_as_keil": true
+  },
+  {
+   "file": "ref/nn/sweep/uci_bin_h8.a51",
+   "bytes": 1134,
+   "compared": "linked image",
+   "same_as_keil": true
+  },
+  {
+   "file": "ref/nn/sweep/uci_gray_h12.a51",
+   "bytes": 1451,
+   "compared": "linked image",
+   "same_as_keil": true
+  },
+  {
+   "file": "ref/nn/sweep/uci_gray_h16.a51",
+   "bytes": 1755,
+   "compared": "linked image",
+   "same_as_keil": true
+  },
+  {
+   "file": "ref/nn/sweep/uci_gray_h20.a51",
+   "bytes": 2059,
+   "compared": "A51 listing, line by line (over the 2 KB of the evaluation linker)",
+   "same_as_keil": true
+  },
+  {
+   "file": "ref/nn/sweep/uci_gray_h24.a51",
+   "bytes": 2363,
+   "compared": "A51 listing, line by line (over the 2 KB of the evaluation linker)",
+   "same_as_keil": true
+  },
+  {
+   "file": "ref/nn/sweep/uci_gray_h28.a51",
+   "bytes": 2667,
+   "compared": "A51 listing, line by line (over the 2 KB of the evaluation linker)",
+   "same_as_keil": true
+  },
+  {
+   "file": "ref/nn/sweep/uci_gray_h32.a51",
+   "bytes": 2971,
+   "compared": "A51 listing, line by line (over the 2 KB of the evaluation linker)",
+   "same_as_keil": true
+  },
+  {
+   "file": "ref/nn/sweep/uci_gray_h8.a51",
+   "bytes": 1147,
+   "compared": "linked image",
+   "same_as_keil": true
+  },
+  {
+   "file": "ref/nn/uci/digit_uci_bin.a51",
+   "bytes": 2350,
+   "compared": "A51 listing, line by line (over the 2 KB of the evaluation linker)",
+   "same_as_keil": true
+  },
+  {
+   "file": "ref/nn/uci/digit_uci_gray.a51",
+   "bytes": 2363,
+   "compared": "A51 listing, line by line (over the 2 KB of the evaluation linker)",
+   "same_as_keil": true
+  }
+ ]
+}

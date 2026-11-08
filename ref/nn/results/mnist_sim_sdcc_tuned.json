@@ -1,5 +1,5 @@
 {
- "made": "2026-11-08T07:32:36.543Z",
+ "made": "2026-11-08T12:50:11.201Z",
  "by": "test/nn_mnist.js",
  "bytes": 7782,
  "flash_end": 7791,
@@ -10,10 +10,10 @@
  "display_faults": 0,
  "read_correctly": 9591,
  "accuracy_pct": 95.91,
- "avg_cycles": 80778,
- "avg_ms": 87.65,
- "min_ms": 40.22,
- "max_ms": 163.15,
+ "avg_cycles": 83874,
+ "avg_ms": 91.01,
+ "min_ms": 41.21,
+ "max_ms": 170.25,
  "avg_lit": 30.46,
  "cycles_per_ms": 921.6
 }

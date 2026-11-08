@@ -6,7 +6,7 @@ H hidden neurons and 10 outputs, from the hand-written digit reader (ref/nn/digi
 
 Only the parts that depend on the network are rewritten; the rest is the hand-written code, unchanged:
   memory map   the inputs from 30H, then 2H bytes of layer-1 sums, H hidden values and 30 bytes of scores; the stack
-               starts at the next multiple of 8 and needs 12 bytes (checked)
+               starts at the next multiple of 8 and needs 13 bytes (checked)
   input        'bytes'  one character per input, 1 or 0, kept as a byte (the 5 x 7 reader, the UCI binary program)
                'hex'    one hex digit per input, the grey level 0-15, kept as a byte (the UCI 16-level program)
                'packed' one character per input, 1 or 0, kept as a bit, 8 inputs to a byte, first input in bit 7
@@ -106,14 +106,18 @@ def layer1_packed():
     return L
 
 
+STACK = 13
+
+
 def memory(nin, H, coding):
-    """Addresses of the memory map, and a check that the stack (12 bytes) still fits under 100H."""
+    """Addresses of the memory map, and a check that the stack still fits under 100H: 13 bytes at the deepest, the
+    display interrupt (6) while PUTHEX, NIBBLE and PUTC are called (7), measured in the simulator."""
     pix = math.ceil(nin / 8) if coding == 'packed' else nin
     acc1 = 0x30 + pix
     score_end = acc1 + 3 * H + 30                 # first byte above the scores
     stack = (score_end + 7) & ~7
-    if stack + 12 > 0x100:
-        raise ValueError('no room: %d inputs (%s) and %d hidden neurons need RAM up to %02XH' % (nin, coding, H, stack + 12))
+    if stack + STACK > 0x100:
+        raise ValueError('no room: %d inputs (%s) and %d hidden neurons need RAM up to %02XH' % (nin, coding, H, stack + STACK))
     return dict(pix_bytes=pix, acc1=acc1, hid=acc1 + 2 * H, score=acc1 + 3 * H, score_end=score_end, sp=stack - 1)
 
 

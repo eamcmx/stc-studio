@@ -1,5 +1,5 @@
 #!/bin/bash
-# Assembles one file with Keil C51 9.61 (A51 -> BL51 -> OH51), the steps uVision runs on F7.
+# Assembles one file with Keil C51 9.61 (compiler C51 V9.60.7.0, assembler A51 V8.2.7.0) (A51 -> BL51 -> OH51), the steps uVision runs on F7.
 #   tools/keil.sh <file.a51|file.asm> <outdir>
 # Writes <outdir>/<name>.hex, .lst, .m51 and errors.txt (the *** ERROR / *** WARNING lines of the listing and
 # the linker). Exit 0 = a hex file was made, 1 = A51 or BL51 reported an error.

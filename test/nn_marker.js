@@ -40,5 +40,5 @@ console.log(file + ': ' + n + ' readings: ' + (bad ? bad + ' answers differ' : '
   ' us before the first character of the answer; program ' + r.size + ' bytes');
 const save = (name, data) => { const d = path.join(ROOT, 'ref/nn/results'); fs.mkdirSync(d, { recursive: true });
   fs.writeFileSync(path.join(d, name + '.json'), JSON.stringify(Object.assign({ made: new Date().toISOString(), by: 'test/' + path.basename(__filename) }, data), null, 1)); };
-save('marker_' + path.basename(file, '.a51'), { file, readings: n, answers_unlike_python: bad, avg_pulse_ms: +(sum / n).toFixed(3), max_gap_us: Math.round(worstGap * 1000), bytes: r.size });
+save('marker_' + path.basename(file, '.a51'), { file, readings: n, answers_unlike_python: bad, avg_pulse_ms: +(sum / n).toFixed(4), max_gap_us: Math.round(worstGap * 1000), bytes: r.size });
 process.exit(bad ? 1 : 0);

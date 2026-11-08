@@ -1,0 +1,39 @@
+{
+ "by": "nn/mnist_validation.py",
+ "train": 50000,
+ "validation": 10000,
+ "epochs": 20,
+ "seed": 1,
+ "rows": [
+  {
+   "threshold": 64,
+   "H": 24,
+   "validation_pct": 95.41
+  },
+  {
+   "threshold": 64,
+   "H": 32,
+   "validation_pct": 95.6
+  },
+  {
+   "threshold": 96,
+   "H": 24,
+   "validation_pct": 95.31
+  },
+  {
+   "threshold": 96,
+   "H": 32,
+   "validation_pct": 96.04
+  },
+  {
+   "threshold": 128,
+   "H": 24,
+   "validation_pct": 94.9
+  },
+  {
+   "threshold": 128,
+   "H": 32,
+   "validation_pct": 95.18
+  }
+ ]
+}

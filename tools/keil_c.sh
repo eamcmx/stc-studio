@@ -1,5 +1,5 @@
 #!/bin/bash
-# Compiles one C file with Keil C51 9.61 (C51 -> BL51 -> OH51), the steps uVision runs on F7.
+# Compiles one C file with Keil C51 9.61 (compiler C51 V9.60.7.0, assembler A51 V8.2.7.0) (C51 -> BL51 -> OH51), the steps uVision runs on F7.
 #   tools/keil_c.sh <file.c> <outdir> [extra C51 options, e.g. "DEFINE(LONGMUL)" "OPTIMIZE(9,SIZE)"]
 # Headers next to the .c file are copied along. Writes <outdir>/<name>.hex, .lst, .m51 and errors.txt.
 # Exit 0 = a hex file was made.

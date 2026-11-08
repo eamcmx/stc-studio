@@ -27,14 +27,15 @@ and 24-bit bounds for any input.
 
 | Build | Bytes | Without the tables | Average reading | Full grid |
 |---|---|---|---|---|
-| SDCC, as written | 2207 | 997 | 46.2 ms | 76.0 ms |
-| SDCC, 32-bit multiply | 2299 | 1089 | 76.2 ms | 106.0 ms |
-| SDCC, tuned for the 8051 | 2206 | 996 | 37.8 ms | 74.7 ms |
+| SDCC, as written | 2207 | 997 | 47.0 ms | 77.0 ms |
+| SDCC, 32-bit multiply | 2299 | 1089 | 78.1 ms | 108.1 ms |
+| SDCC, tuned for the 8051 | 2206 | 996 | 39.0 ms | 77.6 ms |
 
 `--opt-code-speed` and `--opt-code-size` give the same code as the default. Every build answers the 346 drawings
 like Python, in the simulator and on the chip. With the arithmetic matched (`ref/nn/ablation/factorial`), SDCC as
-written is 1.34 times slower than the assembly with binary inputs only (34.4 ms), and SDCC tuned 2.12 times slower
-than the assembly with the row pointer and MUL AB (17.8 ms); for Keil C51 the factors are 1.23 and 1.79.
+written is 1.37 times slower than the assembly with binary inputs only (34.4 ms), and SDCC tuned 2.19 times slower
+than the assembly with the row pointer and MUL AB (17.8 ms); for Keil C51 the factors are 1.24 and 1.84 (C times from the corrected
+simulator, see docs/m6).
 
 ## MNIST
 

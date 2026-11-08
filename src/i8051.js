@@ -493,7 +493,7 @@
     else if (op===0xF5) { this.writeDirect(dir(), this.acc); } // MOV direct,A
     else if (op===0xF6 || op===0xF7) { this.writeIndirect(this.getR(op&1), this.acc); } // MOV @Ri,A
     else if (op>=0xF8 && op<=0xFF) { this.setR(n, this.acc); } // MOV Rn,A
-    else if (op===0xA8+0 || (op>=0xA8 && op<=0xAF)) { this.setR(n, this.readDirect(dir())); } // MOV Rn,direct
+    else if (op===0xA8+0 || (op>=0xA8 && op<=0xAF)) { this.setR(n, this.readDirect(dir())); cyc=2; } // MOV Rn,direct (2 cycles, as in the Intel table)
     else if (op===0xA6 || op===0xA7) { this.writeIndirect(this.getR(op&1), this.readDirect(dir())); cyc=2; } // MOV @Ri,direct
     else if (op===0x88 || (op>=0x88 && op<=0x8F)) { var dd=dir(); this.writeDirect(dd, this.getR(n)); cyc=2; } // MOV direct,Rn
     else if (op===0x86 || op===0x87) { var dd2=dir(); this.writeDirect(dd2, this.readIndirect(this.getR(op&1))); cyc=2; } // MOV direct,@Ri
@@ -554,6 +554,8 @@
     else if (op===0x63) { var d63=dir(); var i63=imm8(); this.writeDirect(d63, this.readLatch(d63)^i63); cyc=2; }
     else if (op===0x72) { var b72=dir(); setCY(this, getCY(this) | this.readBit(b72)); cyc=2; } // ORL C,bit
     else if (op===0x82) { var b82=dir(); setCY(this, getCY(this) & this.readBit(b82)); cyc=2; } // ANL C,bit
+    else if (op===0xA0) { var bA0=dir(); setCY(this, getCY(this) | (this.readBit(bA0)?0:1)); cyc=2; } // ORL C,/bit
+    else if (op===0xB0) { var bB0=dir(); setCY(this, getCY(this) & (this.readBit(bB0)?0:1)); cyc=2; } // ANL C,/bit
     else if (op===0xE4) { this.setACC(0); } // CLR A
     else if (op===0xF4) { this.setACC(~this.acc & 0xFF); } // CPL A
     else if (op===0xC3) { setCY(this,0); } // CLR C

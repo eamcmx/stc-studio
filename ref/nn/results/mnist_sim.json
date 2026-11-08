@@ -1,9 +1,10 @@
 {
- "made": "2026-11-08T05:30:40.943Z",
+ "made": "2026-11-08T12:41:14.018Z",
  "by": "test/nn_mnist.js",
  "bytes": 7208,
  "flash_end": 7250,
  "ram_scores_end": "0xc7",
+ "program": "ref/nn/mnist/digit_mnist.a51",
  "digits": 10000,
  "answers_unlike_python": 0,
  "display_faults": 0,

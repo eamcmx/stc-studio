@@ -1,0 +1,57 @@
+{
+ "made": "2026-11-08T12:50:11.293Z",
+ "by": "test/nn_nodisplay.js",
+ "cycles_per_ms": 921.6,
+ "rows": [
+  {
+   "name": "5x7, assembly",
+   "file": "ref/nn/digit_nn.a51",
+   "inputs": 346,
+   "bytes": 1654,
+   "isr_cycles": 40,
+   "avg_cycles": 15512,
+   "avg_cycles_without_display": 13088,
+   "ms_without_display": 14.2
+  },
+  {
+   "name": "5x7, C as written, Keil C51",
+   "file": "ref/nn/c/digit_nn_c.hex",
+   "inputs": 346,
+   "bytes": 1974,
+   "isr_cycles": 40,
+   "avg_cycles": 39242,
+   "avg_cycles_without_display": 33110,
+   "ms_without_display": 35.93
+  },
+  {
+   "name": "5x7, C as written, SDCC",
+   "file": "ref/nn/c/sdcc/digit_nn.hex",
+   "inputs": 346,
+   "bytes": 2207,
+   "isr_cycles": 42,
+   "avg_cycles": 43338,
+   "avg_cycles_without_display": 36228,
+   "ms_without_display": 39.31
+  },
+  {
+   "name": "MNIST, assembly",
+   "file": "ref/nn/mnist/digit_mnist.a51",
+   "inputs": 10000,
+   "bytes": 7208,
+   "isr_cycles": 40,
+   "avg_cycles": 36380,
+   "avg_cycles_without_display": 30696,
+   "ms_without_display": 33.31
+  },
+  {
+   "name": "MNIST, C as written, SDCC",
+   "file": "ref/nn/c/mnist/sdcc/digit_mnist.hex",
+   "inputs": 10000,
+   "bytes": 7812,
+   "isr_cycles": 42,
+   "avg_cycles": 102403,
+   "avg_cycles_without_display": 85603,
+   "ms_without_display": 92.88
+  }
+ ]
+}

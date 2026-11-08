@@ -1,0 +1,86 @@
+{
+ "made": "2026-11-08T12:56:30.802Z",
+ "by": "test/nn_roundtrip.js",
+ "baud": 19200,
+ "cycles_per_ms": 921.6,
+ "builds": [
+  {
+   "name": "asm 5x7",
+   "file": "ref/nn/digit_nn.a51",
+   "inputs": 346,
+   "median_round_trip_ms": 77
+  },
+  {
+   "name": "C as written",
+   "file": "ref/nn/c/digit_nn_c.hex",
+   "inputs": 346,
+   "median_round_trip_ms": 106.6
+  },
+  {
+   "name": "C, 32-bit multiply",
+   "file": "ref/nn/c/digit_nn_c_long.hex",
+   "inputs": 346,
+   "median_round_trip_ms": 131.4
+  },
+  {
+   "name": "C, optimized for size",
+   "file": "ref/nn/c/digit_nn_c_size.hex",
+   "inputs": 346,
+   "median_round_trip_ms": 113.2
+  },
+  {
+   "name": "C tuned",
+   "file": "ref/nn/c/digit_nn_c_tuned.hex",
+   "inputs": 346,
+   "median_round_trip_ms": 96.7
+  },
+  {
+   "name": "UCI binary",
+   "file": "ref/nn/uci/digit_uci_bin.a51",
+   "inputs": 1797,
+   "median_round_trip_ms": 99.5
+  },
+  {
+   "name": "UCI 16 grey levels",
+   "file": "ref/nn/uci/digit_uci_gray.a51",
+   "inputs": 1797,
+   "median_round_trip_ms": 135
+  },
+  {
+   "name": "SDCC as written",
+   "file": "ref/nn/c/sdcc/digit_nn.hex",
+   "inputs": 346,
+   "median_round_trip_ms": 108.3
+  },
+  {
+   "name": "SDCC, 32-bit multiply",
+   "file": "ref/nn/c/sdcc_long/digit_nn.hex",
+   "inputs": 346,
+   "median_round_trip_ms": 139.3
+  },
+  {
+   "name": "SDCC tuned",
+   "file": "ref/nn/c/sdcc_tuned/digit_nn.hex",
+   "inputs": 346,
+   "median_round_trip_ms": 100
+  },
+  {
+   "name": "MNIST 14x14",
+   "file": "ref/nn/mnist/digit_mnist.a51",
+   "inputs": 10000,
+   "median_round_trip_ms": 191.6
+  },
+  {
+   "name": "MNIST SDCC as written",
+   "file": "ref/nn/c/mnist/sdcc/digit_mnist.hex",
+   "inputs": 10000,
+   "median_round_trip_ms": 264.1
+  },
+  {
+   "name": "MNIST SDCC tuned",
+   "file": "ref/nn/c/mnist/sdcc_tuned/digit_mnist.hex",
+   "inputs": 10000,
+   "median_round_trip_ms": 243.8
+  }
+ ]
+}
