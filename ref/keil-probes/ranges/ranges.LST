@@ -1,0 +1,65 @@
+A51 MACRO ASSEMBLER  T                                                                    11/07/2026 13:36:48 PAGE     1
+
+
+MACRO ASSEMBLER A51 V8.2.7.0
+OBJECT MODULE PLACED IN t.OBJ
+ASSEMBLER INVOKED BY: C:\Keil_v5\C51\BIN\A51.EXE t.a51
+
+LOC  OBJ            LINE     SOURCE
+
+0000                   1      ORG 0
+0000 74FF              2      MOV A,#255
+0002 7400              3      MOV A,#256
+*** _________________________________^
+*** WARNING #A52 IN 3 (t.a51, LINE 3): VALUE HAS BEEN TRUNCATED TO 8 BITS
+0004 74FF              4      MOV A,#-1
+0006 7480              5      MOV A,#-128
+0008 747F              6      MOV A,#-129
+000A 7400              7      MOV A,#-256
+000C 74FF              8      MOV A,#-257
+*** _________________________________^
+*** WARNING #A52 IN 8 (t.a51, LINE 8): VALUE HAS BEEN TRUNCATED TO 8 BITS
+000E 7400              9      MOV A,#0FF00H
+0010 7480             10      MOV A,#0FF80H
+0012 74FF             11      MOV A,#0FFFFH
+0014 74FF             12      MOV A,#1FFH
+*** _________________________________^
+*** WARNING #A52 IN 12 (t.a51, LINE 12): VALUE HAS BEEN TRUNCATED TO 8 BITS
+0016 E5FF             13      MOV A,0FFH
+0018 E500             14      MOV A,100H
+*** ________________________________^
+*** WARNING #A52 IN 14 (t.a51, LINE 14): VALUE HAS BEEN TRUNCATED TO 8 BITS
+001A E56F             15      MOV A,-1
+001C 900000           16      MOV DPTR,#10000H
+001F 90FFFF           17      MOV DPTR,#-1
+0022 782C             18      MOV R0,#300
+*** __________________________________^
+*** WARNING #A52 IN 18 (t.a51, LINE 18): VALUE HAS BEEN TRUNCATED TO 8 BITS
+0024 75302C           19      MOV 30H,#300
+*** ___________________________________^
+*** WARNING #A52 IN 19 (t.a51, LINE 19): VALUE HAS BEEN TRUNCATED TO 8 BITS
+0027 2400             20      ADD A,#256
+*** _________________________________^
+*** WARNING #A52 IN 20 (t.a51, LINE 20): VALUE HAS BEEN TRUNCATED TO 8 BITS
+0029 7401             21      MOV A,#-0FFH
+002B E5/0             22      MOV A,0FF80H
+002D E56F             23      MOV A,0FFFFH
+002F B400FD           24      CJNE A,#256,$
+*** __________________________________^
+*** WARNING #A52 IN 24 (t.a51, LINE 24): VALUE HAS BEEN TRUNCATED TO 8 BITS
+0032 742C             25      MOV A,#LOW(300)
+                      26      END
+A51 MACRO ASSEMBLER  T                                                                    11/07/2026 13:36:48 PAGE     2
+
+SYMBOL TABLE LISTING
+------ ----- -------
+
+
+N A M E             T Y P E  V A L U E   ATTRIBUTES
+
+
+
+REGISTER BANK(S) USED: 0 
+
+
+ASSEMBLY COMPLETE.  8 WARNING(S), 0 ERROR(S)

@@ -1,0 +1,8 @@
+ ORG 7F8H
+ JMP T
+ JMP T
+ JMP T
+ JMP T
+ NOP
+T: NOP
+ END

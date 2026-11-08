@@ -1,0 +1,10 @@
+# Round trips on the real board, 7 Nov 2026, from Emmanuel's Chrome (STC Studio, Web Serial, 19200 baud):
+# send D + 35 squares, time until the end of the board's answer line. 15 tries each (9 for the last row).
+# version            drawing                                  median   min     max      answer line
+assembly             11111000110001100110001000110001000      80.1     79.7    81.1     =7 FFE52D FFA268 001CB1 002A16 FFAA87 FFFDAB FFB7AC 00480D FFF0AB 0005B0
+assembly             all 35 lit                               91.7     91.3    92.1     =8 001EF8 FF4B86 001325 001F19 FFC606 00017F 0005BE FF8AD0 002AC4 0003EA
+C as written         11111000110001100110001000110001000      111.5    111.4   111.8    =7 FFE52D FFA268 001CB1 002A16 FFAA87 FFFDAB FFB7AC 00480D FFF0AB 0005B0
+C as written         all 35 lit                               135.7    135.6   136.1    =8 001EF8 FF4B86 001325 001F19 FFC606 00017F 0005BE FF8AD0 002AC4 0003EA
+C tuned              11111000110001100110001000110001000      101.0    100.7   101.3    =7 FFE52D FFA268 001CB1 002A16 FFAA87 FFFDAB FFB7AC 00480D FFF0AB 0005B0
+C tuned              all 35 lit                               120.1    119.9   120.4    =8 001EF8 FF4B86 001325 001F19 FFC606 00017F 0005BE FF8AD0 002AC4 0003EA
+assembly (put back)  11111000110001100110001000110001000      80.2     79.6    80.5     =7 FFE52D FFA268 001CB1 002A16 FFAA87 FFFDAB FFB7AC 00480D FFF0AB 0005B0

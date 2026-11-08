@@ -1,0 +1,27 @@
+A51 MACRO ASSEMBLER  T                                                                    11/07/2026 13:36:46 PAGE     1
+
+
+MACRO ASSEMBLER A51 V8.2.7.0
+OBJECT MODULE PLACED IN t.OBJ
+ASSEMBLER INVOKED BY: C:\Keil_v5\C51\BIN\A51.EXE t.a51
+
+LOC  OBJ            LINE     SOURCE
+
+0000                   1      ORG 0
+0000 7401              2      MOV A,#1
+0002 80FE              3      SJMP $
+*** WARNING #A41 IN 3 (t.a51, LINE 3): MISSING 'END' STATEMENT
+A51 MACRO ASSEMBLER  T                                                                    11/07/2026 13:36:46 PAGE     2
+
+SYMBOL TABLE LISTING
+------ ----- -------
+
+
+N A M E             T Y P E  V A L U E   ATTRIBUTES
+
+
+
+REGISTER BANK(S) USED: 0 
+
+
+ASSEMBLY COMPLETE.  1 WARNING(S), 0 ERROR(S)

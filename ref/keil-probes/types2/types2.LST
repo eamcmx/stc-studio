@@ -1,0 +1,118 @@
+A51 MACRO ASSEMBLER  T                                                                    11/07/2026 13:40:40 PAGE     1
+
+
+MACRO ASSEMBLER A51 V8.2.7.0
+NO OBJECT MODULE REQUESTED
+ASSEMBLER INVOKED BY: C:\Keil_v5\C51\BIN\A51.EXE t.a51
+
+LOC  OBJ            LINE     SOURCE
+
+0000                   1      ORG 0
+0000 00                2     L1: NOP
+  0030                 3     D1 DATA 30H
+  0001                 4     B1 BIT 20H.1
+0001 E531              5      MOV A,1+D1
+0003 E560              6      MOV A,D1+D1
+0005 E530              7      MOV A,LOW D1
+0007 E530              8      MOV A,D1 AND 0FFH
+0009 E530              9      MOV A,D1 SHL 0
+000B E500             10      MOV A,HIGH D1
+000D 020000           11      LJMP L1 OR 0
+0010 020001           12      LJMP 1+L1
+0013 E540             13      MOV A,L1-D1
+0015 E530             14      MOV A,D1*1
+0017 E540             15      MOV A,-D1
+0019 02FFFF           16      LJMP L1-1
+001C E530             17      MOV A,(D1)
+001E D202             18      SETB B1+1
+0020 D202             19      SETB 1+B1
+  0030                20     D2 EQU D1
+0022 E530             21      MOV A,D2
+                      22     D3 DATA L1
+*** _________________________________^
+*** ERROR #A48 IN 22 (t.a51, LINE 22): DATA-ADDRESS EXPECTED
+0024                  23      MOV A,D3
+*** ________________________________^
+*** ERROR #A45 IN 23 (t.a51, LINE 23): UNDEFINED SYMBOL (PASS-2)
+                      24     B2 BIT D1.1
+*** ________________________________^
+*** ERROR #A17 IN 24 (t.a51, LINE 24): INVALID BYTE BASE IN BIT ADDRESS EXPRESSION
+  0001                25     B3 BIT B1
+0026 D201             26      SETB B3
+  0030                27     B4 BIT 30H
+                      28     B5 DATA B1
+*** _________________________________^
+*** ERROR #A48 IN 28 (t.a51, LINE 28): DATA-ADDRESS EXPECTED
+  0000                29     N2 EQU L1
+0028 E500             30      MOV A,N2
+*** ________________________________^
+*** ERROR #A48 IN 30 (t.a51, LINE 30): DATA-ADDRESS EXPECTED
+002A 020000           31      LJMP N2
+  0030                32     N3 SET D1
+002D E530             33      MOV A,N3
+002F 020030           34      LJMP D1+L1
+0032 E52F             35      MOV A,D1-1
+0034 E530             36      MOV A,D1/1
+0036 020000           37      LJMP L1+L1
+0039 020000           38      LJMP L1*1
+003C 020000           39      LJMP HIGH L1
+003F E530             40      MOV A,30H+D1-D1
+0041 D200             41      SETB B1-B1
+0043 D200             42      SETB B1-1
+0045 80BA             43      SJMP L1+1
+0047 80B8             44      SJMP 1+L1
+0049 E501             45      MOV A,D1 EQ D1
+004B 020001           46      LJMP L1 EQ L1
+004E E53F             47      MOV A,NOT D1
+0050 30               48      DB D1+L1
+A51 MACRO ASSEMBLER  T                                                                    11/07/2026 13:40:40 PAGE     2
+
+0051 7830             49      MOV R0,#D1+L1
+0053 E500             50      MOV A,L1 SHR 1
+0055 2031FD           51      JB B1+D1,$
+0058                  52      JB D1.0+1,$
+*** _____________________________^
+*** ERROR #A17 IN 52 (t.a51, LINE 52): INVALID BYTE BASE IN BIT ADDRESS EXPRESSION
+  007F                53     B6 BIT 7FH
+  0080                54     B7 BIT 80H
+  00FF                55     B8 BIT 0FFH
+  0100                56     B9 BIT 100H
+  0100                57     D4 DATA 100H
+  00FF                58     D5 DATA 0FFH
+  0000                59     X2 XDATA 10000H
+  FFFF                60     C2 CODE 0FFFFH
+0058 E5G0             61      MOV A,D4
+                      62      END
+A51 MACRO ASSEMBLER  T                                                                    11/07/2026 13:40:40 PAGE     3
+
+SYMBOL TABLE LISTING
+------ ----- -------
+
+
+N A M E             T Y P E  V A L U E   ATTRIBUTES
+
+B1 . . . . . . . .  B ADDR   0020H.1 A   
+B2 . . . . . . . .    ----   -----       
+B3 . . . . . . . .  B ADDR   0020H.1 A   
+B4 . . . . . . . .  B ADDR   0026H.0 A   
+B5 . . . . . . . .    ----   -----       
+B6 . . . . . . . .  B ADDR   002FH.7 A   
+B7 . . . . . . . .  B ADDR   0080H.0 A   
+B8 . . . . . . . .  B ADDR   00F8H.7 A   
+B9 . . . . . . . .  B ADDR   0000H.0 A   
+C2 . . . . . . . .  C ADDR   FFFFH   A   
+D1 . . . . . . . .  D ADDR   0030H   A   
+D2 . . . . . . . .  D ADDR   0030H   A   
+D3 . . . . . . . .    ----   -----       
+D4 . . . . . . . .  D ADDR   0100H   A   
+D5 . . . . . . . .  D ADDR   00FFH   A   
+L1 . . . . . . . .  C ADDR   0000H   A   
+N2 . . . . . . . .  C ADDR   0000H   A   
+N3 . . . . . . . .  D ADDR   0030H   A   
+X2 . . . . . . . .  X ADDR   0000H   A   
+
+
+REGISTER BANK(S) USED: 0 
+
+
+ASSEMBLY COMPLETE.  0 WARNING(S), 6 ERROR(S)

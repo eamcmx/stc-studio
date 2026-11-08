@@ -1,0 +1,35 @@
+A51 MACRO ASSEMBLER  T                                                                    11/07/2026 13:43:52 PAGE     1
+
+
+MACRO ASSEMBLER A51 V8.2.7.0
+NO OBJECT MODULE REQUESTED
+ASSEMBLER INVOKED BY: C:\Keil_v5\C51\BIN\A51.EXE t.a51
+
+LOC  OBJ            LINE     SOURCE
+
+0000                   1      ORG 0
+0000 00                2     T0: NOP
+*** _________________________^
+*** ERROR #A8 IN 2 (t.a51, LINE 2): ATTEMPT TO DEFINE AN ALREADY DEFINED LABEL
+0001                   3      DS 600H
+0601 0100              4      JMP T0
+*** ______________________________^
+*** ERROR #A46 IN 4 (t.a51, LINE 4): CODE-ADDRESS EXPECTED
+0603 00                5     L1: NOP
+                       6      END
+A51 MACRO ASSEMBLER  T                                                                    11/07/2026 13:43:52 PAGE     2
+
+SYMBOL TABLE LISTING
+------ ----- -------
+
+
+N A M E             T Y P E  V A L U E   ATTRIBUTES
+
+L1 . . . . . . . .  C ADDR   0603H   A   
+T0 . . . . . . . .  B ADDR   00B0H.4 A   
+
+
+REGISTER BANK(S) USED: 0 
+
+
+ASSEMBLY COMPLETE.  0 WARNING(S), 2 ERROR(S)

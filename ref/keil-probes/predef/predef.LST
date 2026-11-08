@@ -1,0 +1,229 @@
+A51 MACRO ASSEMBLER  T                                                                    11/07/2026 13:39:22 PAGE     1
+
+
+MACRO ASSEMBLER A51 V8.2.7.0
+NO OBJECT MODULE REQUESTED
+ASSEMBLER INVOKED BY: C:\Keil_v5\C51\BIN\A51.EXE t.a51
+
+LOC  OBJ            LINE     SOURCE
+
+0000                   1      ORG 0
+0000 0080              2      DW P0
+0002 0090              3      DW P1
+0004 00A0              4      DW P2
+0006 00B0              5      DW P3
+0008 00D0              6      DW PSW
+000A 00E0              7      DW ACC
+000C 00F0              8      DW B
+000E 0081              9      DW SP
+0010 0082             10      DW DPL
+0012 0083             11      DW DPH
+0014 0087             12      DW PCON
+0016 0088             13      DW TCON
+0018 0089             14      DW TMOD
+001A 008A             15      DW TL0
+001C 008B             16      DW TL1
+001E 008C             17      DW TH0
+0020 008D             18      DW TH1
+0022 00A8             19      DW IE
+0024 00B8             20      DW IP
+0026 0098             21      DW SCON
+0028 0099             22      DW SBUF
+002A 0000             23      DW T2CON
+*** _____________________________^
+*** ERROR #A45 IN 23 (t.a51, LINE 23): UNDEFINED SYMBOL (PASS-2)
+002C 0000             24      DW RCAP2L
+*** _____________________________^
+*** ERROR #A45 IN 24 (t.a51, LINE 24): UNDEFINED SYMBOL (PASS-2)
+002E 0000             25      DW RCAP2H
+*** _____________________________^
+*** ERROR #A45 IN 25 (t.a51, LINE 25): UNDEFINED SYMBOL (PASS-2)
+0030 0000             26      DW TL2
+*** _____________________________^
+*** ERROR #A45 IN 26 (t.a51, LINE 26): UNDEFINED SYMBOL (PASS-2)
+0032 0000             27      DW TH2
+*** _____________________________^
+*** ERROR #A45 IN 27 (t.a51, LINE 27): UNDEFINED SYMBOL (PASS-2)
+0034 00D7             28      DW CY
+0036 00D6             29      DW AC
+0038 00D5             30      DW F0
+003A 00D4             31      DW RS1
+003C 00D3             32      DW RS0
+003E 00D2             33      DW OV
+0040 00D0             34      DW P
+0042 008F             35      DW TF1
+0044 008E             36      DW TR1
+0046 008D             37      DW TF0
+0048 008C             38      DW TR0
+004A 008B             39      DW IE1
+004C 008A             40      DW IT1
+004E 0089             41      DW IE0
+0050 0088             42      DW IT0
+0052 00AF             43      DW EA
+0054 00AC             44      DW ES
+0056 00AB             45      DW ET1
+0058 00AA             46      DW EX1
+005A 00A9             47      DW ET0
+005C 00A8             48      DW EX0
+A51 MACRO ASSEMBLER  T                                                                    11/07/2026 13:39:22 PAGE     2
+
+005E 00BC             49      DW PS
+0060 00BB             50      DW PT1
+0062 00BA             51      DW PX1
+0064 00B9             52      DW PT0
+0066 00B8             53      DW PX0
+0068 00B7             54      DW RD
+006A 00B6             55      DW WR
+006C 00B5             56      DW T1
+006E 00B4             57      DW T0
+0070 00B3             58      DW INT1
+0072 00B2             59      DW INT0
+0074 00B1             60      DW TXD
+0076 00B0             61      DW RXD
+0078 009F             62      DW SM0
+007A 009E             63      DW SM1
+007C 009D             64      DW SM2
+007E 009C             65      DW REN
+0080 009B             66      DW TB8
+0082 009A             67      DW RB8
+0084 0099             68      DW TI
+0086 0098             69      DW RI
+0088 0000             70      DW ET2
+*** _____________________________^
+*** ERROR #A45 IN 70 (t.a51, LINE 70): UNDEFINED SYMBOL (PASS-2)
+008A 0000             71      DW PT2
+*** _____________________________^
+*** ERROR #A45 IN 71 (t.a51, LINE 71): UNDEFINED SYMBOL (PASS-2)
+008C 0000             72      DW T2EX
+*** _____________________________^
+*** ERROR #A45 IN 72 (t.a51, LINE 72): UNDEFINED SYMBOL (PASS-2)
+008E 0000             73      DW T2
+*** _____________________________^
+*** ERROR #A45 IN 73 (t.a51, LINE 73): UNDEFINED SYMBOL (PASS-2)
+0090 0000             74      DW TF2
+*** _____________________________^
+*** ERROR #A45 IN 74 (t.a51, LINE 74): UNDEFINED SYMBOL (PASS-2)
+0092 0000             75      DW EXF2
+*** _____________________________^
+*** ERROR #A45 IN 75 (t.a51, LINE 75): UNDEFINED SYMBOL (PASS-2)
+0094 0000             76      DW RCLK
+*** _____________________________^
+*** ERROR #A45 IN 76 (t.a51, LINE 76): UNDEFINED SYMBOL (PASS-2)
+0096 0000             77      DW TCLK
+*** _____________________________^
+*** ERROR #A45 IN 77 (t.a51, LINE 77): UNDEFINED SYMBOL (PASS-2)
+0098 0000             78      DW EXEN2
+*** _____________________________^
+*** ERROR #A45 IN 78 (t.a51, LINE 78): UNDEFINED SYMBOL (PASS-2)
+009A 0000             79      DW TR2
+*** _____________________________^
+*** ERROR #A45 IN 79 (t.a51, LINE 79): UNDEFINED SYMBOL (PASS-2)
+009C 0000             80      DW C_T2
+*** _____________________________^
+*** ERROR #A45 IN 80 (t.a51, LINE 80): UNDEFINED SYMBOL (PASS-2)
+009E 0000             81      DW CP_RL2
+*** _____________________________^
+*** ERROR #A45 IN 81 (t.a51, LINE 81): UNDEFINED SYMBOL (PASS-2)
+00A0 0000             82      DW AR0
+*** _____________________________^
+*** ERROR #A53 IN 82 (t.a51, LINE 82): MISSING 'USING' INFORMATION
+00A2 0000             83      DW PC
+00A4 0000             84      DW DPTR
+                      85      END
+A51 MACRO ASSEMBLER  T                                                                    11/07/2026 13:39:22 PAGE     3
+
+SYMBOL TABLE LISTING
+------ ----- -------
+
+
+N A M E             T Y P E  V A L U E   ATTRIBUTES
+
+AC . . . . . . . .  B ADDR   00D0H.6 A   
+ACC. . . . . . . .  D ADDR   00E0H   A   
+AR0. . . . . . . .  D ADDR   0000H   A   
+B. . . . . . . . .  D ADDR   00F0H   A   
+CP_RL2 . . . . . .    ----   -----       
+CY . . . . . . . .  B ADDR   00D0H.7 A   
+C_T2 . . . . . . .    ----   -----       
+DPH. . . . . . . .  D ADDR   0083H   A   
+DPL. . . . . . . .  D ADDR   0082H   A   
+EA . . . . . . . .  B ADDR   00A8H.7 A   
+ES . . . . . . . .  B ADDR   00A8H.4 A   
+ET0. . . . . . . .  B ADDR   00A8H.1 A   
+ET1. . . . . . . .  B ADDR   00A8H.3 A   
+ET2. . . . . . . .    ----   -----       
+EX0. . . . . . . .  B ADDR   00A8H.0 A   
+EX1. . . . . . . .  B ADDR   00A8H.2 A   
+EXEN2. . . . . . .    ----   -----       
+EXF2 . . . . . . .    ----   -----       
+F0 . . . . . . . .  B ADDR   00D0H.5 A   
+IE . . . . . . . .  D ADDR   00A8H   A   
+IE0. . . . . . . .  B ADDR   0088H.1 A   
+IE1. . . . . . . .  B ADDR   0088H.3 A   
+INT0 . . . . . . .  B ADDR   00B0H.2 A   
+INT1 . . . . . . .  B ADDR   00B0H.3 A   
+IP . . . . . . . .  D ADDR   00B8H   A   
+IT0. . . . . . . .  B ADDR   0088H.0 A   
+IT1. . . . . . . .  B ADDR   0088H.2 A   
+OV . . . . . . . .  B ADDR   00D0H.2 A   
+P. . . . . . . . .  B ADDR   00D0H.0 A   
+P0 . . . . . . . .  D ADDR   0080H   A   
+P1 . . . . . . . .  D ADDR   0090H   A   
+P2 . . . . . . . .  D ADDR   00A0H   A   
+P3 . . . . . . . .  D ADDR   00B0H   A   
+PCON . . . . . . .  D ADDR   0087H   A   
+PS . . . . . . . .  B ADDR   00B8H.4 A   
+PSW. . . . . . . .  D ADDR   00D0H   A   
+PT0. . . . . . . .  B ADDR   00B8H.1 A   
+PT1. . . . . . . .  B ADDR   00B8H.3 A   
+PT2. . . . . . . .    ----   -----       
+PX0. . . . . . . .  B ADDR   00B8H.0 A   
+PX1. . . . . . . .  B ADDR   00B8H.2 A   
+RB8. . . . . . . .  B ADDR   0098H.2 A   
+RCAP2H . . . . . .    ----   -----       
+RCAP2L . . . . . .    ----   -----       
+RCLK . . . . . . .    ----   -----       
+RD . . . . . . . .  B ADDR   00B0H.7 A   
+REN. . . . . . . .  B ADDR   0098H.4 A   
+RI . . . . . . . .  B ADDR   0098H.0 A   
+RS0. . . . . . . .  B ADDR   00D0H.3 A   
+RS1. . . . . . . .  B ADDR   00D0H.4 A   
+RXD. . . . . . . .  B ADDR   00B0H.0 A   
+SBUF . . . . . . .  D ADDR   0099H   A   
+SCON . . . . . . .  D ADDR   0098H   A   
+SM0. . . . . . . .  B ADDR   0098H.7 A   
+SM1. . . . . . . .  B ADDR   0098H.6 A   
+SM2. . . . . . . .  B ADDR   0098H.5 A   
+SP . . . . . . . .  D ADDR   0081H   A   
+T0 . . . . . . . .  B ADDR   00B0H.4 A   
+T1 . . . . . . . .  B ADDR   00B0H.5 A   
+T2 . . . . . . . .    ----   -----       
+A51 MACRO ASSEMBLER  T                                                                    11/07/2026 13:39:22 PAGE     4
+
+T2CON. . . . . . .    ----   -----       
+T2EX . . . . . . .    ----   -----       
+TB8. . . . . . . .  B ADDR   0098H.3 A   
+TCLK . . . . . . .    ----   -----       
+TCON . . . . . . .  D ADDR   0088H   A   
+TF0. . . . . . . .  B ADDR   0088H.5 A   
+TF1. . . . . . . .  B ADDR   0088H.7 A   
+TF2. . . . . . . .    ----   -----       
+TH0. . . . . . . .  D ADDR   008CH   A   
+TH1. . . . . . . .  D ADDR   008DH   A   
+TH2. . . . . . . .    ----   -----       
+TI . . . . . . . .  B ADDR   0098H.1 A   
+TL0. . . . . . . .  D ADDR   008AH   A   
+TL1. . . . . . . .  D ADDR   008BH   A   
+TL2. . . . . . . .    ----   -----       
+TMOD . . . . . . .  D ADDR   0089H   A   
+TR0. . . . . . . .  B ADDR   0088H.4 A   
+TR1. . . . . . . .  B ADDR   0088H.6 A   
+TR2. . . . . . . .    ----   -----       
+TXD. . . . . . . .  B ADDR   00B0H.1 A   
+WR . . . . . . . .  B ADDR   00B0H.6 A   
+
+
+REGISTER BANK(S) USED: 0 
+
+
+ASSEMBLY COMPLETE.  0 WARNING(S), 18 ERROR(S)

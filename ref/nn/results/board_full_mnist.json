@@ -1,0 +1,32 @@
+{
+ "made": "2026-11-08T05:20:41.321Z",
+ "by": "test/board_run.js",
+ "port": "COM13",
+ "baud": 19200,
+ "builds": [
+  {
+   "name": "MNIST 14x14",
+   "file": "ref/nn/mnist/digit_mnist.a51",
+   "inputs": 10000,
+   "equal": 10000,
+   "differ": 0,
+   "no_answer": 0,
+   "read_correctly": 9591,
+   "median_round_trip_ms": 202.7,
+   "flash_s": 10.8,
+   "first_differences": []
+  },
+  {
+   "name": "asm 5x7 (put back)",
+   "file": "ref/nn/digit_nn.a51",
+   "inputs": 4,
+   "equal": 4,
+   "differ": 0,
+   "no_answer": 0,
+   "read_correctly": null,
+   "median_round_trip_ms": 93.4,
+   "flash_s": 4.3,
+   "first_differences": []
+  }
+ ]
+}

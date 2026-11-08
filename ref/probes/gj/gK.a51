@@ -1,0 +1,6 @@
+ ORG 7F0H
+ JMP T
+L1: NOP
+ DS 20
+T: NOP
+ END

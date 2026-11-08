@@ -1,0 +1,48 @@
+       CLR  A                1
+       MOV  R6,A             1
+?C0024:
+       MOV  A,#LOW pix       1
+       ADD  A,R6             1
+       MOV  R0,A             1
+       MOV  A,@R0            1
+       JZ   ?C0026           2
+       CLR  A                1
+       MOV  R3,A             1
+?C0028:
+       MOV  B,#018H          2
+       MOV  A,R6             1
+       MUL  AB               4
+       ADD  A,#LOW W1        1
+       MOV  DPL,A            1
+       MOV  A,B              1
+       ADDC A,#HIGH W1       1
+       MOV  DPH,A            1
+       MOV  A,DPL            1
+       ADD  A,R3             1
+       MOV  DPL,A            1
+       CLR  A                1
+       ADDC A,DPH            1
+       MOV  DPH,A            1
+       CLR  A                1
+       MOVC A,@A+DPTR        2
+       MOV  R5,A             1
+       RLC  A                1
+       SUBB A,ACC            1
+       MOV  R4,A             1
+       MOV  A,R3             1
+       ADD  A,ACC            1
+       ADD  A,#LOW acc+01H   1
+       MOV  R0,A             1
+       MOV  A,R5             1
+       ADD  A,@R0            1
+       MOV  @R0,A            1
+       DEC  R0               1
+       MOV  A,R4             1
+       ADDC A,@R0            1
+       MOV  @R0,A            1
+       INC  R3               1
+       CJNE R3,#018H,?C0028  2
+?C0026:
+       INC  R6               1
+       CJNE R6,#023H,?C0024  2
+?C0025:

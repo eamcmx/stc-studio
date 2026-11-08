@@ -1,0 +1,99 @@
+A51 MACRO ASSEMBLER  T                                                                    11/07/2026 13:40:40 PAGE     1
+
+
+MACRO ASSEMBLER A51 V8.2.7.0
+NO OBJECT MODULE REQUESTED
+ASSEMBLER INVOKED BY: C:\Keil_v5\C51\BIN\A51.EXE t.a51
+
+LOC  OBJ            LINE     SOURCE
+
+0000                   1      ORG 0
+0000 1200              2      DW HIGH 1234H * 100H
+0002 0001              3      DW 2 SHL 1 EQ 4
+0004 FFFE              4      DW NOT 1 EQ 1
+0006 0003              5      DW 3 XOR 1 OR 1
+0008 0003              6      DW 1 OR 2 AND 2
+000A 0003              7      DW 1 XOR 2 AND 2
+000C 000F              8      DW NOT 0 AND 0FH
+000E 0000              9      DW HIGH -1
+0010 FFFF                    
+*** __________________________________^
+*** ERROR #A9 IN 9 (t.a51, LINE 9): SYNTAX ERROR
+0012 0000             10      DW LOW -1
+0014 FFFF                    
+*** _________________________________^
+*** ERROR #A9 IN 10 (t.a51, LINE 10): SYNTAX ERROR
+0016 0000             11      DW NOT -1
+0018 00FF             12      DW HIGH(-1)
+001A 0001             13      DW 5 EQ 5 EQ 1
+001C 0008             14      DW 1 SHL 2 + 1
+001E 0001             15      DW - 1 + 2
+0020 7FFF             16      DW 0FFFFH / 2
+0022 FFFF             17      DW -1 MOD 3
+0024 0002             18      DW 7 MOD 3 * 2
+0026 0000             19      DW NOT NOT 1
+0028 FFFE                    
+*** _________________________________^
+*** ERROR #A9 IN 19 (t.a51, LINE 19): SYNTAX ERROR
+002A 0000             20      DW 1 + NOT 1
+002C FFFE                    
+*** _________________________________^
+*** ERROR #A9 IN 20 (t.a51, LINE 20): SYNTAX ERROR
+002E 0000             21      DW 1 SHL -1
+0030 0000             22      DW 2 EQ -2
+0032 0120             23      DW HIGH 1234H SHL 4
+0034 0002             24      DW 8 SHR 1 + 1
+0036 0001             25      DW 1 EQ 1 OR 0
+0038 0012             26      DW LOW HIGH 1234H
+003A 0083             27      DW 'A' + 'B'
+003C 0001             28      DW 1 AND NOT 0
+003E FFFC             29      DW NOT 1 AND NOT 2
+0040 FFFF             30      DW 1 OR NOT 1
+0042 0001             31      DW 3 > 2 AND 1
+0044 0008             32      DW 1 SHL 1 SHL 1 + 1
+0046 0000             33      DW 'ABC'
+*** _____________________________^
+*** ERROR #A11 IN 33 (t.a51, LINE 33): STRING CONTAINS ZERO OR MORE THAN TWO CHARACTERS
+0048 0000             34      DW ''
+*** _____________________________^
+*** ERROR #A11 IN 34 (t.a51, LINE 34): STRING CONTAINS ZERO OR MORE THAN TWO CHARACTERS
+004A 0001             35      DW 1 < 2 < 3
+004C 0001             36      DW 4 LT 5 EQ 1
+004E FFEE             37      DW -HIGH 1234H
+0050 0012             38      DW HIGH (12H SHL 8)
+0052 0002             39      DW (1 OR 2) XOR 1
+0054 0004             40      DW 6 / 4 * 4
+0056 0002             41      DW 2 * 3 MOD 4
+0058 0009             42      DW 10 - 3 + 2
+A51 MACRO ASSEMBLER  T                                                                    11/07/2026 13:40:40 PAGE     2
+
+005A 0000             43      DW 1 SHR 1 SHL 1
+005C 0001             44      DW 0 - 1 SHR 15
+005E 0000             45      DW HIGH
+*** _________________________________^
+*** ERROR #A15 IN 45 (t.a51, LINE 45): MISSING FACTOR
+0060 0000             46      DW NOT
+*** ________________________________^
+*** ERROR #A15 IN 46 (t.a51, LINE 46): MISSING FACTOR
+0062 FFFE             47      DW NOT(1)
+0064 0001             48      DW HIGH(1)+LOW(1)
+0066 0000             49      DW 12H.3
+*** _____________________________^
+*** ERROR #A17 IN 49 (t.a51, LINE 49): INVALID BYTE BASE IN BIT ADDRESS EXPRESSION
+0068 0001             50      DW 3 = 3 = 1
+006A 0001             51      DW 1 SHL 2 EQ 4 AND 1
+                      52      END
+A51 MACRO ASSEMBLER  T                                                                    11/07/2026 13:40:40 PAGE     3
+
+SYMBOL TABLE LISTING
+------ ----- -------
+
+
+N A M E             T Y P E  V A L U E   ATTRIBUTES
+
+
+
+REGISTER BANK(S) USED: 0 
+
+
+ASSEMBLY COMPLETE.  0 WARNING(S), 9 ERROR(S)

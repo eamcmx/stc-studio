@@ -1,0 +1,196 @@
+{
+ "made": "2026-11-08T03:21:44.649Z",
+ "by": "test/nn_time_lit.js",
+ "lit": [
+  0,
+  5,
+  10,
+  15,
+  20,
+  25,
+  30,
+  35
+ ],
+ "series": [
+  {
+   "name": "assembly",
+   "file": "ref/nn/digit_nn.a51",
+   "bytes": 1654,
+   "ms": [
+    10.34,
+    13.13,
+    16.12,
+    18.88,
+    21.63,
+    24.38,
+    27.37,
+    30.12
+   ]
+  },
+  {
+   "name": "asm, no binary inputs",
+   "file": "ref/nn/ablation/no_binary.a51",
+   "bytes": 1665,
+   "ms": [
+    36.14,
+    36.21,
+    36.34,
+    36.31,
+    36.27,
+    36.24,
+    36.34,
+    36.35
+   ]
+  },
+  {
+   "name": "asm, no row pointer",
+   "file": "ref/nn/ablation/no_rowptr.a51",
+   "bytes": 1672,
+   "ms": [
+    10.14,
+    15.75,
+    21.48,
+    27.02,
+    32.55,
+    38.16,
+    43.84,
+    49.41
+   ]
+  },
+  {
+   "name": "asm, no MUL AB",
+   "file": "ref/nn/ablation/no_mulab.a51",
+   "bytes": 1685,
+   "ms": [
+    20.85,
+    23.63,
+    26.63,
+    29.35,
+    32.14,
+    34.93,
+    37.84,
+    40.63
+   ]
+  },
+  {
+   "name": "asm, 32-bit sums",
+   "file": "ref/nn/ablation/sum32.a51",
+   "bytes": 1670,
+   "ms": [
+    11.28,
+    14.07,
+    17.06,
+    19.83,
+    22.58,
+    25.41,
+    28.32,
+    31.11
+   ]
+  },
+  {
+   "name": "asm, no shortcuts",
+   "file": "ref/nn/ablation/no_shortcuts.a51",
+   "bytes": 1725,
+   "ms": [
+    66.84,
+    66.91,
+    67.04,
+    67.01,
+    66.97,
+    66.95,
+    67.04,
+    67.05
+   ]
+  },
+  {
+   "name": "asm, binary only (b)",
+   "file": "ref/nn/ablation/factorial/b.a51",
+   "bytes": 1714,
+   "ms": [
+    21.59,
+    27.16,
+    32.93,
+    38.47,
+    44.04,
+    49.57,
+    55.3,
+    60.91
+   ]
+  },
+  {
+   "name": "asm, 32-bit sums (brm)",
+   "file": "ref/nn/ablation/factorial/brm.a51",
+   "bytes": 1670,
+   "ms": [
+    11.28,
+    14.07,
+    17.06,
+    19.83,
+    22.58,
+    25.41,
+    28.32,
+    31.11
+   ]
+  },
+  {
+   "name": "C as written",
+   "file": "ref/nn/c/digit_nn_c.hex",
+   "bytes": 1974,
+   "ms": [
+    28.54,
+    34.53,
+    40.65,
+    46.69,
+    52.68,
+    58.72,
+    64.82,
+    70.86
+   ]
+  },
+  {
+   "name": "C, 32-bit multiply",
+   "file": "ref/nn/c/digit_nn_c_long.hex",
+   "bytes": 2058,
+   "ms": [
+    52.68,
+    58.81,
+    65.1,
+    71.27,
+    77.47,
+    83.64,
+    89.87,
+    96.08
+   ]
+  },
+  {
+   "name": "C, optimized for size",
+   "file": "ref/nn/c/digit_nn_c_size.hex",
+   "bytes": 1959,
+   "ms": [
+    31.73,
+    39.28,
+    46.96,
+    54.52,
+    62.07,
+    69.63,
+    77.29,
+    84.85
+   ]
+  },
+  {
+   "name": "C tuned for the 8051",
+   "file": "ref/nn/c/digit_nn_c_tuned.hex",
+   "bytes": 2049,
+   "ms": [
+    21.23,
+    25.88,
+    30.62,
+    35.27,
+    39.87,
+    44.53,
+    49.25,
+    53.9
+   ]
+  }
+ ]
+}

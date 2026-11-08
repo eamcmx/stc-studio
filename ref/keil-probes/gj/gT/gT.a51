@@ -1,0 +1,10 @@
+ ORG 7F8H
+ JMP T
+ JMP T
+ JMP T
+ JMP T
+T: NOP
+ ORG 900H
+ CALL U
+U: NOP
+ END

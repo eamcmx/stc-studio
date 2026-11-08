@@ -1,0 +1,3 @@
+ ORG 7FDH
+ AJMP 0
+ END

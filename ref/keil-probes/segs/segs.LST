@@ -1,0 +1,72 @@
+A51 MACRO ASSEMBLER  T                                                                    11/07/2026 13:41:35 PAGE     1
+
+
+MACRO ASSEMBLER A51 V8.2.7.0
+NO OBJECT MODULE REQUESTED
+ASSEMBLER INVOKED BY: C:\Keil_v5\C51\BIN\A51.EXE t.a51
+
+LOC  OBJ            LINE     SOURCE
+
+----                   1      DSEG AT 40H
+0040                   2     CNT: DS 1
+0041                   3     BUF: DS 4
+----                   4      BSEG AT 10H
+0010                   5     F1: DBIT 1
+0011                   6     F2: DBIT 3
+0014                   7     F3: DBIT 1
+----                   8      ISEG AT 80H
+0080                   9     STK: DS 10H
+----                  10      XSEG AT 1000H
+1000                  11     XB: DS 10
+----                  12      CSEG AT 0
+0000 754001           13      MOV CNT,#1
+0003 7841             14      MOV R0,#BUF
+0005 D214             15      SETB F3
+0007 E500             16      MOV A,STK
+*** ________________________________^
+*** ERROR #A48 IN 16 (t.a51, LINE 16): DATA-ADDRESS EXPECTED
+0009 7880             17      MOV R0,#STK
+000B 901000           18      MOV DPTR,#XB
+000E E500             19      MOV A,XB
+*** ________________________________^
+*** ERROR #A48 IN 19 (t.a51, LINE 19): DATA-ADDRESS EXPECTED
+0010 40411011         20      DB CNT, BUF, F1, F2, F3
+0014 14                      
+----                  21      DSEG
+007F                  22     NEXT: DS 1
+----                  23      CSEG
+0015 E57F             24      MOV A,NEXT
+----                  25      DSEG AT 7FH
+007F                  26     BIG: DS 2
+*** ERROR #A29 IN 26 (t.a51, LINE 26): SEGMENT LIMIT EXCEEDED
+----                  27      CSEG
+0017 E580             28      MOV A,BIG+1
+0019 01               29      DB 1
+----                  30      DSEG
+                      31      DB 5
+*** __________________________^
+*** ERROR #A37 IN 31 (t.a51, LINE 31): OPERATION INVALID IN THIS SEGMENT
+                      32      END
+A51 MACRO ASSEMBLER  T                                                                    11/07/2026 13:41:35 PAGE     2
+
+SYMBOL TABLE LISTING
+------ ----- -------
+
+
+N A M E             T Y P E  V A L U E   ATTRIBUTES
+
+BIG. . . . . . . .  D ADDR   007FH   A   
+BUF. . . . . . . .  D ADDR   0041H   A   
+CNT. . . . . . . .  D ADDR   0040H   A   
+F1 . . . . . . . .  B ADDR   0022H.0 A   
+F2 . . . . . . . .  B ADDR   0022H.1 A   
+F3 . . . . . . . .  B ADDR   0022H.4 A   
+NEXT . . . . . . .  D ADDR   007FH   A   
+STK. . . . . . . .  I ADDR   0080H   A   
+XB . . . . . . . .  X ADDR   1000H   A   
+
+
+REGISTER BANK(S) USED: 0 
+
+
+ASSEMBLY COMPLETE.  0 WARNING(S), 4 ERROR(S)

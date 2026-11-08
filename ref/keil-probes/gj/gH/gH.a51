@@ -1,0 +1,4 @@
+ ORG 7FDH
+ CALL T
+T: NOP
+ END

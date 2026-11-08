@@ -1,0 +1,17 @@
+{
+ "train": 3823,
+ "test": 1797,
+ "split": "writer-independent (UCI optdigits.tra / optdigits.tes)",
+ "bin": {
+  "float_test_accuracy": 0.9226,
+  "int8_test_accuracy": 0.9226,
+  "sh1": 1,
+  "max_abs_W1q": 127
+ },
+ "gray": {
+  "float_test_accuracy": 0.9583,
+  "int8_test_accuracy": 0.9594,
+  "sh1": 5,
+  "max_abs_W1q": 127
+ }
+}

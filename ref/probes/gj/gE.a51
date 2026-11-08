@@ -1,0 +1,6 @@
+ ORG 7FAH
+ JMP T
+ JMP T
+ JMP T
+T: NOP
+ END

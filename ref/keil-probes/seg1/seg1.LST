@@ -1,0 +1,46 @@
+A51 MACRO ASSEMBLER  T                                                                    11/07/2026 13:53:45 PAGE     1
+
+
+MACRO ASSEMBLER A51 V8.2.7.0
+OBJECT MODULE PLACED IN t.OBJ
+ASSEMBLER INVOKED BY: C:\Keil_v5\C51\BIN\A51.EXE t.a51
+
+LOC  OBJ            LINE     SOURCE
+
+----                   1      DSEG AT 30H
+0030                   2     A1: DS 2
+----                   3      CSEG AT 0
+0000 E530              4      MOV A,A1
+----                   5      DSEG
+0032                   6     B1: DS 1
+----                   7      CSEG
+0002 E532              8      MOV A,B1
+----                   9      XSEG AT 100H
+0100                  10     X1: DS 4
+----                  11      DSEG
+0033                  12     C1: DS 1
+----                  13      XSEG
+0104                  14     X2: DS 1
+----                  15      CSEG
+0004 E533             16      MOV A,C1
+0006 900104           17      MOV DPTR,#X2
+                      18      END
+A51 MACRO ASSEMBLER  T                                                                    11/07/2026 13:53:45 PAGE     2
+
+SYMBOL TABLE LISTING
+------ ----- -------
+
+
+N A M E             T Y P E  V A L U E   ATTRIBUTES
+
+A1 . . . . . . . .  D ADDR   0030H   A   
+B1 . . . . . . . .  D ADDR   0032H   A   
+C1 . . . . . . . .  D ADDR   0033H   A   
+X1 . . . . . . . .  X ADDR   0100H   A   
+X2 . . . . . . . .  X ADDR   0104H   A   
+
+
+REGISTER BANK(S) USED: 0 
+
+
+ASSEMBLY COMPLETE.  0 WARNING(S), 0 ERROR(S)

@@ -1,0 +1,51 @@
+A51 MACRO ASSEMBLER  T                                                                    11/07/2026 13:41:34 PAGE     1
+
+
+MACRO ASSEMBLER A51 V8.2.7.0
+OBJECT MODULE PLACED IN t.OBJ
+ASSEMBLER INVOKED BY: C:\Keil_v5\C51\BIN\A51.EXE t.a51
+
+LOC  OBJ            LINE     SOURCE
+
+0000                   1      ORG 0
+0000 120802            2      CALL F
+0003 020802            3      JMP F
+0006 E100              4      JMP G
+0008 F100              5      CALL G
+000A 020900            6      JMP H
+07F0                   7      ORG 7F0H
+07F0 800F              8      JMP P1X
+07F2 120801            9      CALL P1X
+07F5                  10      DS 8
+07FD 8002             11      JMP P1X
+07FF 8000             12      JMP P1X
+0801 00               13     P1X: NOP
+07FC                  14      ORG 7FCH
+07FC 8000             15      JMP NX
+07FE 00               16     NX: NOP
+07FF 1101             17      CALL NX2
+0801 00               18     NX2: NOP
+0802 22               19     F: RET
+  0700                20     G EQU 700H
+  0900                21     H CODE 900H
+                      22      END
+A51 MACRO ASSEMBLER  T                                                                    11/07/2026 13:41:34 PAGE     2
+
+SYMBOL TABLE LISTING
+------ ----- -------
+
+
+N A M E             T Y P E  V A L U E   ATTRIBUTES
+
+F. . . . . . . . .  C ADDR   0802H   A   
+G. . . . . . . . .  N NUMB   0700H   A   
+H. . . . . . . . .  C ADDR   0900H   A   
+NX . . . . . . . .  C ADDR   07FEH   A   
+NX2. . . . . . . .  C ADDR   0801H   A   
+P1X. . . . . . . .  C ADDR   0801H   A   
+
+
+REGISTER BANK(S) USED: 0 
+
+
+ASSEMBLY COMPLETE.  0 WARNING(S), 0 ERROR(S)

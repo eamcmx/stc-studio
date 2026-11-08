@@ -1,0 +1,10 @@
+{
+ "made": "2026-11-08T03:21:48.064Z",
+ "by": "test/nn_marker.js",
+ "file": "ref/nn/energy/digit_nn_marker_dark.a51",
+ "readings": 346,
+ "answers_unlike_python": 0,
+ "avg_pulse_ms": 14.185,
+ "max_gap_us": 534,
+ "bytes": 1660
+}

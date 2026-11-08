@@ -1,0 +1,34 @@
+BL51 BANKED LINKER/LOCATER V6.22.4.0                                                    11/07/2026  13:53:47  PAGE 1
+
+
+BL51 BANKED LINKER/LOCATER V6.22.4.0, INVOKED BY:
+C:\KEIL_V5\C51\BIN\BL51.EXE T.OBJ TO T
+
+
+INPUT MODULES INCLUDED:
+  T.OBJ (T)
+
+
+LINK MAP OF MODULE:  T (T)
+
+
+            TYPE    BASE      LENGTH    RELOCATION   SEGMENT NAME
+            -----------------------------------------------------
+
+            * * * * * * *   D A T A   M E M O R Y   * * * * * * *
+            REG     0000H     0008H     ABSOLUTE     "REG BANK 0"
+                    0008H     0038H                  *** GAP ***
+            DATA    0040H     0001H     ABSOLUTE     
+
+            * * * * * * *   C O D E   M E M O R Y   * * * * * * *
+                    0000H     0100H                  *** GAP ***
+            CODE    0100H     0001H     ABSOLUTE     
+                    0101H     00FFH                  *** GAP ***
+            CODE    0200H     0003H     ABSOLUTE     
+
+******************************************************************************
+* RESTRICTED VERSION WITH 0800H BYTE CODE SIZE LIMIT; USED: 0004H BYTE ( 0%) *
+******************************************************************************
+
+Program Size: data=9.0 xdata=0 code=4
+LINK/LOCATE RUN COMPLETE.  0 WARNING(S),  0 ERROR(S)

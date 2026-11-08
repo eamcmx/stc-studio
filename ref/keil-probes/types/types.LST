@@ -1,0 +1,92 @@
+A51 MACRO ASSEMBLER  T                                                                    11/07/2026 13:36:49 PAGE     1
+
+
+MACRO ASSEMBLER A51 V8.2.7.0
+OBJECT MODULE PLACED IN t.OBJ
+ASSEMBLER INVOKED BY: C:\Keil_v5\C51\BIN\A51.EXE t.a51
+
+LOC  OBJ            LINE     SOURCE
+
+0000                   1      ORG 0
+0000 00                2     L1: NOP
+0001 E500              3      MOV A,L1
+*** ________________________________^
+*** ERROR #A48 IN 3 (t.a51, LINE 3): DATA-ADDRESS EXPECTED
+0003 900000            4      MOV DPTR,#L1
+0006 D200              5      SETB L1
+*** _______________________________^
+*** ERROR #A48 IN 5 (t.a51, LINE 5): DATA-ADDRESS EXPECTED
+0008 020030            6      LJMP 30H
+  0030                 7     D1 DATA 30H
+000B 020000            8      LJMP D1
+*** _______________________________^
+*** ERROR #A46 IN 8 (t.a51, LINE 8): CODE-ADDRESS EXPECTED
+000E E530              9      MOV A,D1
+  0001                10     B1 BIT 20H.1
+0010 E500             11      MOV A,B1
+*** ________________________________^
+*** ERROR #A48 IN 11 (t.a51, LINE 11): DATA-ADDRESS EXPECTED
+0012 2000FD           12      JB D1,$
+*** _____________________________^
+*** ERROR #A48 IN 12 (t.a51, LINE 12): DATA-ADDRESS EXPECTED
+0015 7430             13      MOV A,#D1
+0017 7401             14      MOV A,#B1
+0019 7400             15      MOV A,#L1
+  1000                16     X1 XDATA 1000H
+001B 901000           17      MOV DPTR,#X1
+001E E500             18      MOV A,X1
+*** ________________________________^
+*** ERROR #A48 IN 18 (t.a51, LINE 18): DATA-ADDRESS EXPECTED
+  0080                19     I1 IDATA 80H
+0020 7880             20      MOV R0,#I1
+0022 E500             21      MOV A,I1
+*** ________________________________^
+*** ERROR #A48 IN 21 (t.a51, LINE 21): DATA-ADDRESS EXPECTED
+  0100                22     C1 CODE 100H
+0024 020100           23      LJMP C1
+0027 E500             24      MOV A,C1
+*** ________________________________^
+*** ERROR #A48 IN 24 (t.a51, LINE 24): DATA-ADDRESS EXPECTED
+  0040                25     N1 EQU 40H
+0029 020040           26      LJMP N1
+002C E540             27      MOV A,N1
+002E D240             28      SETB N1
+0030 E531             29      MOV A,D1+1
+0032 020001           30      LJMP L1+1
+0035 00               31      DB L1
+0036 0000             32      DW L1
+0038 30               33      DB D1
+0039 01               34      DB B1
+003A E530             35      MOV A,L1-L1+30H
+003C E500             36      MOV A,D1-D1
+003E 020000           37      LJMP D1-D1+L1
+0041 7400             38      MOV A,#HIGH(L1)
+0043 900030           39      MOV DPTR,#D1
+0046 80BA             40      SJMP 2
+0048 8000             41      SJMP D1
+*** _______________________________^
+A51 MACRO ASSEMBLER  T                                                                    11/07/2026 13:36:49 PAGE     2
+
+*** ERROR #A46 IN 41 (t.a51, LINE 41): CODE-ADDRESS EXPECTED
+                      42      END
+A51 MACRO ASSEMBLER  T                                                                    11/07/2026 13:36:49 PAGE     3
+
+SYMBOL TABLE LISTING
+------ ----- -------
+
+
+N A M E             T Y P E  V A L U E   ATTRIBUTES
+
+B1 . . . . . . . .  B ADDR   0020H.1 A   
+C1 . . . . . . . .  C ADDR   0100H   A   
+D1 . . . . . . . .  D ADDR   0030H   A   
+I1 . . . . . . . .  I ADDR   0080H   A   
+L1 . . . . . . . .  C ADDR   0000H   A   
+N1 . . . . . . . .  N NUMB   0040H   A   
+X1 . . . . . . . .  X ADDR   1000H   A   
+
+
+REGISTER BANK(S) USED: 0 
+
+
+ASSEMBLY COMPLETE.  0 WARNING(S), 9 ERROR(S)

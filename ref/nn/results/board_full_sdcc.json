@@ -1,0 +1,44 @@
+{
+ "made": "2026-11-08T05:12:33.532Z",
+ "by": "test/board_run.js",
+ "port": "COM13",
+ "baud": 19200,
+ "builds": [
+  {
+   "name": "SDCC as written",
+   "file": "ref/nn/c/sdcc/digit_nn.hex",
+   "inputs": 346,
+   "equal": 346,
+   "differ": 0,
+   "no_answer": 0,
+   "read_correctly": null,
+   "median_round_trip_ms": 125.1,
+   "flash_s": 4.9,
+   "first_differences": []
+  },
+  {
+   "name": "SDCC tuned",
+   "file": "ref/nn/c/sdcc_tuned/digit_nn.hex",
+   "inputs": 346,
+   "equal": 346,
+   "differ": 0,
+   "no_answer": 0,
+   "read_correctly": null,
+   "median_round_trip_ms": 123.9,
+   "flash_s": 5,
+   "first_differences": []
+  },
+  {
+   "name": "asm 5x7 (put back)",
+   "file": "ref/nn/digit_nn.a51",
+   "inputs": 4,
+   "equal": 4,
+   "differ": 0,
+   "no_answer": 0,
+   "read_correctly": null,
+   "median_round_trip_ms": 93.3,
+   "flash_s": 4.4,
+   "first_differences": []
+  }
+ ]
+}

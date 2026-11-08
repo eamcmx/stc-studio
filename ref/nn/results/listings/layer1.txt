@@ -1,0 +1,39 @@
+        MOV  DPTR,#B1        2
+        MOV  R0,#ACC1        1
+        MOV  R2,#2*NH        1
+L1B:    CLR  A               1  ; copy the 48 bias bytes
+        MOVC A,@A+DPTR       2
+        MOV  @R0,A           1
+        INC  DPTR            2
+        INC  R0              1
+        DJNZ R2,L1B          2
+        MOV  DPTR,#W1        2
+        MOV  R1,#PIX         1
+        MOV  R3,#35          1
+L1P:    MOV  A,@R1           1  ; input i: lit?
+        JZ   L1NEXT          2
+        MOV  R0,#ACC1        1
+        MOV  R4,#0           1
+L1J:    MOV  A,R4            1  ; add weight j to sum j
+        MOVC A,@A+DPTR       2
+        MOV  R5,A            1
+        ADD  A,@R0           1
+        MOV  @R0,A           1
+        INC  R0              1
+        MOV  A,R5            1
+        JB   ACC.7,L1NEG     2
+        CLR  A               1
+        SJMP L1HI            2
+L1NEG:  MOV  A,#0FFH         1  ; negative: high byte FFH
+L1HI:   ADDC A,@R0           1  ; high byte, with the carry
+        MOV  @R0,A           1
+        INC  R0              1
+        INC  R4              1
+        CJNE R4,#NH,L1J      2
+L1NEXT: MOV  A,DPL           1  ; DPTR to the next row
+        ADD  A,#NH           1
+        MOV  DPL,A           1
+        JNC  L1N2            2
+        INC  DPH             1
+L1N2:   INC  R1              1  ; next input
+        DJNZ R3,L1P          2

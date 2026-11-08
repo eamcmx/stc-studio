@@ -1,0 +1,11 @@
+# Every test input on the real board, 2026-11-08, from node through tools/serial_bridge.py (COM13, 19200 baud).
+# Each answer line (digit and ten scores) is compared with the Python reference; time = host round trip (send to end of line).
+# build                   inputs  equal  differ  no answer  read correctly  median ms  flash s
+asm 5x7                     346    346       0          0               -       93.7      4.3
+C as written                346    346       0          0               -      124.9      6.8
+C, 32-bit multiply          346    346       0          0               -      155.0      7.2
+C, optimized for size       346    346       0          0               -      126.7      6.7
+C tuned                     346    346       0          0               -      110.0      6.7
+UCI binary                 1797   1797       0          0            1658      122.5      5.2
+UCI 16 grey levels         1797   1797       0          0            1724      156.0      5.0
+asm 5x7 (put back)            4      4       0          0               -       94.0      4.4

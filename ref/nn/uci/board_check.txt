@@ -1,0 +1,7 @@
+# The UCI programs on the real board, 7 Nov 2026, from Emmanuel's Chrome (STC Studio, Web Serial, 19200 baud).
+# The first 100 digits of the UCI test set (optdigits.tes) sent as D + 64 characters; each answer line compared with
+# int_forward() in nn/train_uci.py (digit and all ten scores).
+program               flashed   sent   answers equal to Python   read correctly (true label)
+digit_uci_bin.a51     4.7 s     100    100                       88
+digit_uci_gray.a51    4.8 s     100    100                       92
+# Afterwards the 5 x 7 digit reader (ref/nn/digit_nn.a51) was flashed back; it read the test 7 with the same scores.

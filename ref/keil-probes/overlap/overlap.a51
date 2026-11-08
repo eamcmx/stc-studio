@@ -1,0 +1,5 @@
+ ORG 0
+ DB 1,2,3,4
+ ORG 2
+ DB 9
+ END

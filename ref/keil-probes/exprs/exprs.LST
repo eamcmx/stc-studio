@@ -1,0 +1,111 @@
+A51 MACRO ASSEMBLER  T                                                                    11/07/2026 13:36:45 PAGE     1
+
+
+MACRO ASSEMBLER A51 V8.2.7.0
+NO OBJECT MODULE REQUESTED
+ASSEMBLER INVOKED BY: C:\Keil_v5\C51\BIN\A51.EXE t.a51
+
+LOC  OBJ            LINE     SOURCE
+
+0000                   1      ORG 0
+0000 0E                2      DB 2+3*4
+0001 14                3      DB (2+3)*4
+0002 02                4      DB 17 MOD 5
+0003 03                5      DB 17/5
+0004 10                6      DB 1 SHL 4
+0005 08                7      DB 80H SHR 4
+0006 30                8      DB 0F0H AND 3CH
+0007 FF                9      DB 0F0H OR 0FH
+0008 55               10      DB 0FFH XOR 0AAH
+0009 FF               11      DB NOT 0
+000A FF               12      DB LOW(NOT 0)
+000B 12               13      DB HIGH 1234H
+000C 34               14      DB LOW 1234H
+000D 12               15      DB HIGH(1234H)
+000E 01               16      DB 3 EQ 3
+000F 01               17      DB LOW(3 EQ 3)
+0010 01               18      DB 3 = 3
+0011 01               19      DB 3 NE 4
+0012 01               20      DB 3 <> 4
+0013 01               21      DB 3 LT 4
+0014 01               22      DB 3 < 4
+0015 01               23      DB 4 GT 3
+0016 01               24      DB 3 LE 3
+0017 00               25      DB 3 GE 4
+0018 06               26      DB 1 + 2 SHL 1
+0019 07               27      DB 1 OR 2 + 4
+001A 0A               28      DB 6 AND 3 OR 8
+001B 00FD             29      DB 2 * -3
+*** _________________________________^
+*** ERROR #A9 IN 29 (t.a51, LINE 29): SYNTAX ERROR
+001D FA               30      DB -2 * 3
+001E 00FD             31      DB - - 3
+*** _______________________________^
+*** ERROR #A9 IN 31 (t.a51, LINE 31): SYNTAX ERROR
+0020 FD               32      DB NOT 1 + 1
+0021 13               33      DB HIGH 1234H + 1
+0022 FF               34      DB 1 - 2
+0023 FF               35      DB LOW(1 - 2)
+0024 01               36      DB 0FFFFH + 2
+0025 0001             37      DW 0FFFFH + 2
+0027 7FFD             38      DW 7FFFH * 3
+0029 000000           39      DB 10 / 0
+*** ________________________________^
+*** ERROR #A16 IN 39 (t.a51, LINE 39): DIVIDE BY ZERO ERROR
+002C 000000           40      DB 5 MOD 0
+*** _______________________________^
+*** ERROR #A16 IN 40 (t.a51, LINE 40): DIVIDE BY ZERO ERROR
+002F 0000             41      DW 1 SHL 16
+0031 42               42      DB 'A' + 1
+0032 01               43      DB 3 EQ 3 AND 1
+0033 0001             44      DW 3 EQ 3
+0035 0000             45      DW 3 > 2 + 5
+0037 02               46      DB 7 AND 3 XOR 1
+0038 00               47      DB 1 XOR 3 AND 1
+0039 00               48      DB 1 OR 3 XOR 3
+003A 0000             49      DW -1 / 2
+003C 7FFE             50      DW -4 SHR 1
+A51 MACRO ASSEMBLER  T                                                                    11/07/2026 13:36:45 PAGE     2
+
+003E FFFF             51      DW NOT 1 SHR 8
+0040 86A0             52      DW 100 * 1000
+0042 0000             53      DW 1 SHL 15 * 2
+0044 08               54      DB 8 / 2 * 2
+0045 04               55      DB 9 - 3 - 2
+0046 08               56      DB 2 SHL 1 SHL 1
+0047 05               57      DB +5
+0048 01               58      DB (((1)))
+0049 00               59      DB (1
+*** _______________________________^
+*** ERROR #A13 IN 59 (t.a51, LINE 59): ')' EXPECTED
+004A 0000             60      DB 1)
+*** ______________________________^
+*** ERROR #A34 IN 60 (t.a51, LINE 60): ',' EXPECTED
+004C 00               61      DB 1 +
+*** ________________________________^
+*** ERROR #A15 IN 61 (t.a51, LINE 61): MISSING FACTOR
+004D 00               62      DB HIGH
+*** _________________________________^
+*** ERROR #A15 IN 62 (t.a51, LINE 62): MISSING FACTOR
+004E F0               63      DB 0FFH AND NOT 0FH
+004F 0001             64      DW 0FFFFH > 1
+0051 0001             65      DW -1 > 1
+0053 0000             66      DW 3 MOD -2
+0055 FFFE                    
+*** ___________________________________^
+*** ERROR #A9 IN 66 (t.a51, LINE 66): SYNTAX ERROR
+                      67      END
+A51 MACRO ASSEMBLER  T                                                                    11/07/2026 13:36:45 PAGE     3
+
+SYMBOL TABLE LISTING
+------ ----- -------
+
+
+N A M E             T Y P E  V A L U E   ATTRIBUTES
+
+
+
+REGISTER BANK(S) USED: 0 
+
+
+ASSEMBLY COMPLETE.  0 WARNING(S), 9 ERROR(S)

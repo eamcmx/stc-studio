@@ -1,0 +1,37 @@
+A51 MACRO ASSEMBLER  T                                                                    11/07/2026 13:53:47 PAGE     1
+
+
+MACRO ASSEMBLER A51 V8.2.7.0
+OBJECT MODULE PLACED IN t.OBJ
+ASSEMBLER INVOKED BY: C:\Keil_v5\C51\BIN\A51.EXE t.a51
+
+LOC  OBJ            LINE     SOURCE
+
+----                   1      CSEG AT 100H
+0100 00                2      NOP
+----                   3      CSEG AT 200H
+0200 00                4      NOP
+----                   5      CSEG
+0201 00                6     L1: NOP
+----                   7      DSEG AT 40H
+0040                   8     V1: DS 1
+----                   9      CSEG
+0202 00               10     L2: NOP
+                      11      END
+A51 MACRO ASSEMBLER  T                                                                    11/07/2026 13:53:47 PAGE     2
+
+SYMBOL TABLE LISTING
+------ ----- -------
+
+
+N A M E             T Y P E  V A L U E   ATTRIBUTES
+
+L1 . . . . . . . .  C ADDR   0201H   A   
+L2 . . . . . . . .  C ADDR   0202H   A   
+V1 . . . . . . . .  D ADDR   0040H   A   
+
+
+REGISTER BANK(S) USED: 0 
+
+
+ASSEMBLY COMPLETE.  0 WARNING(S), 0 ERROR(S)

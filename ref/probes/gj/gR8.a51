@@ -1,0 +1,6 @@
+ ORG 0
+T0: NOP
+ DS 700H
+ NOP
+L1: NOP
+ END

@@ -1,0 +1,66 @@
+A51 MACRO ASSEMBLER  T                                                                    11/07/2026 16:37:15 PAGE     1
+
+
+MACRO ASSEMBLER A51 V8.2.7.0
+OBJECT MODULE PLACED IN t.OBJ
+ASSEMBLER INVOKED BY: C:\Keil_v5\C51\BIN\A51.EXE t.a51
+
+LOC  OBJ            LINE     SOURCE
+
+                       1     ; STC Studio gate, 7 Nov 2026: shows StC1 and counts the last digit
+0000                   2             ORG 0
+0000 7B00              3             MOV R3,#0
+0002 7CC8              4     LOOP:   MOV R4,#200
+0004 7A00              5     SHOW:   MOV R2,#0
+0006 EA                6     NEXT:   MOV A,R2
+0007 900031            7             MOV DPTR,#SEG
+000A 93                8             MOVC A,@A+DPTR
+000B BA0305            9             CJNE R2,#3,PUT
+000E EB               10             MOV A,R3
+000F 900038           11             MOV DPTR,#NUM
+0012 93               12             MOVC A,@A+DPTR
+0013 F580             13     PUT:    MOV P0,A
+0015 EA               14             MOV A,R2
+0016 900034           15             MOV DPTR,#DIG
+0019 93               16             MOVC A,@A+DPTR
+001A F590             17             MOV P1,A
+001C 7FFA             18             MOV R7,#250
+001E DFFE             19     WAIT:   DJNZ R7,WAIT
+0020 7590FF           20             MOV P1,#0FFH
+0023 0A               21             INC R2
+0024 BA04DF           22             CJNE R2,#4,NEXT
+0027 DCDB             23             DJNZ R4,SHOW
+0029 0B               24             INC R3
+002A BB0AD5           25             CJNE R3,#10,LOOP
+002D 7B00             26             MOV R3,#0
+002F 80D1             27             SJMP LOOP
+0031 9287C6           28     SEG:    DB 92H,87H,0C6H
+0034 F7EFDFBF         29     DIG:    DB 0F7H,0EFH,0DFH,0BFH
+0038 C0F9A4B0         30     NUM:    DB 0C0H,0F9H,0A4H,0B0H,99H,92H,82H,0F8H,80H,90H
+003C 999282F8                
+0040 8090                    
+                      31             END
+A51 MACRO ASSEMBLER  T                                                                    11/07/2026 16:37:15 PAGE     2
+
+SYMBOL TABLE LISTING
+------ ----- -------
+
+
+N A M E             T Y P E  V A L U E   ATTRIBUTES
+
+DIG. . . . . . . .  C ADDR   0034H   A   
+LOOP . . . . . . .  C ADDR   0002H   A   
+NEXT . . . . . . .  C ADDR   0006H   A   
+NUM. . . . . . . .  C ADDR   0038H   A   
+P0 . . . . . . . .  D ADDR   0080H   A   
+P1 . . . . . . . .  D ADDR   0090H   A   
+PUT. . . . . . . .  C ADDR   0013H   A   
+SEG. . . . . . . .  C ADDR   0031H   A   
+SHOW . . . . . . .  C ADDR   0004H   A   
+WAIT . . . . . . .  C ADDR   001EH   A   
+
+
+REGISTER BANK(S) USED: 0 
+
+
+ASSEMBLY COMPLETE.  0 WARNING(S), 0 ERROR(S)

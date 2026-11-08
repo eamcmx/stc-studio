@@ -1,0 +1,22 @@
+cff-version: 1.2.0
+message: "If you use this software or the digit readers, please cite it as below."
+title: "STC Studio and neural networks in 8051 assembly"
+abstract: >-
+  An 8051 assembler that produces Keil's bytes, a cycle-accurate simulator of the STC89C52RC board, a Web Serial
+  programmer, and multilayer perceptrons for handwritten digit recognition in 8051 assembly with the generator that
+  writes them, the C versions for Keil C51 and SDCC, and the scripts behind the paper "Extreme Edge AI: Neural
+  Network Digit Recognition in 8051 Assembly".
+authors:
+  - family-names: "Merchán-Cruz"
+    given-names: "Emmanuel"
+    affiliation: "Transport and Telecommunication Institute"
+repository-code: "https://github.com/eamcmx/stc-studio"
+license: MIT
+date-released: 2026-11-08
+keywords:
+  - 8051
+  - STC89C52RC
+  - assembler
+  - simulator
+  - TinyML
+  - neural network

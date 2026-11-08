@@ -1,0 +1,166 @@
+A51 MACRO ASSEMBLER  T                                                                    11/07/2026 13:45:04 PAGE     1
+
+
+MACRO ASSEMBLER A51 V8.2.7.0
+NO OBJECT MODULE REQUESTED
+ASSEMBLER INVOKED BY: C:\Keil_v5\C51\BIN\A51.EXE t.a51
+
+LOC  OBJ            LINE     SOURCE
+
+0000                   1      ORG 0
+0000 020000            2      LJMP B1
+*** _______________________________^
+*** ERROR #A46 IN 2 (t.a51, LINE 2): CODE-ADDRESS EXPECTED
+0003 120000            3      LCALL D1
+*** ________________________________^
+*** ERROR #A46 IN 3 (t.a51, LINE 3): CODE-ADDRESS EXPECTED
+0006 1100              4      ACALL D1
+*** ________________________________^
+*** ERROR #A46 IN 4 (t.a51, LINE 4): CODE-ADDRESS EXPECTED
+0008 8000              5      SJMP B1
+*** _______________________________^
+*** ERROR #A46 IN 5 (t.a51, LINE 5): CODE-ADDRESS EXPECTED
+000A 2000FD            6      JB L1,$
+*** _____________________________^
+*** ERROR #A48 IN 6 (t.a51, LINE 6): DATA-ADDRESS EXPECTED
+000D 200012            7      JB B1,L1
+0010 200000            8      JB B1,D1
+*** ________________________________^
+*** ERROR #A46 IN 8 (t.a51, LINE 8): CODE-ADDRESS EXPECTED
+0013 D800              9      DJNZ R0,D1
+*** __________________________________^
+*** ERROR #A46 IN 9 (t.a51, LINE 9): CODE-ADDRESS EXPECTED
+0015 B40100           10      CJNE A,#1,D1
+*** ____________________________________^
+*** ERROR #A46 IN 10 (t.a51, LINE 10): CODE-ADDRESS EXPECTED
+0018 A200             11      MOV C,D1
+*** ________________________________^
+*** ERROR #A48 IN 11 (t.a51, LINE 11): DATA-ADDRESS EXPECTED
+001A 9200             12      MOV D1,C
+*** ______________________________^
+*** ERROR #A48 IN 12 (t.a51, LINE 12): DATA-ADDRESS EXPECTED
+001C                  13      MOV C,#1
+*** ______________________________^
+*** ERROR #A40 IN 13 (t.a51, LINE 13): INVALID REGISTER
+001C                  14      MOV A,#1,
+*** __________________________________^
+*** ERROR #A9 IN 14 (t.a51, LINE 14): SYNTAX ERROR
+001E                  15      MOV @R0,@R1
+*** ______________________________^
+*** ERROR #A40 IN 15 (t.a51, LINE 15): INVALID REGISTER
+001E                  16      MOV @DPTR,A
+*** ______________________________^
+*** ERROR #A40 IN 16 (t.a51, LINE 16): INVALID REGISTER
+001E                  17      MOVX A,@R2
+*** _________________________________^
+*** __________________________________^
+*** ERROR #A4 IN 17 (t.a51, LINE 17): BAD INDIRECT REGISTER
+*** ERROR #A9 IN 17 (t.a51, LINE 17): SYNTAX ERROR
+001E                  18      MOVX @R0,#1
+*** ____________________________________^
+*** ERROR #A39 IN 18 (t.a51, LINE 18): REGISTER OPERAND EXPECTED
+001E                  19      MOVC A,@A+R0
+*** _________________________________^
+*** __________________________________^
+*** ___________________________________^
+*** ____________________________________^
+*** ERROR #A9 IN 19 (t.a51, LINE 19): SYNTAX ERROR
+A51 MACRO ASSEMBLER  T                                                                    11/07/2026 13:45:04 PAGE     2
+
+*** ERROR #A9 IN 19 (t.a51, LINE 19): SYNTAX ERROR
+*** ERROR #A9 IN 19 (t.a51, LINE 19): SYNTAX ERROR
+*** ERROR #A4 IN 19 (t.a51, LINE 19): BAD INDIRECT REGISTER
+001E                  20      MOVC A,@DPTR
+*** _________________________________^
+*** ERROR #A39 IN 20 (t.a51, LINE 20): REGISTER OPERAND EXPECTED
+001E                  21      JMP @DPTR
+*** ______________________________^
+*** ERROR #A40 IN 21 (t.a51, LINE 21): INVALID REGISTER
+001E                  22      JMP @A+PC
+*** ______________________________^
+*** ERROR #A40 IN 22 (t.a51, LINE 22): INVALID REGISTER
+001E                  23      XCH A,#1
+*** _________________________________^
+*** ERROR #A22 IN 23 (t.a51, LINE 23): EXPRESSION TYPE DOES NOT MATCH INSTRUCTION
+001E                  24      XCH R0,A
+*** ______________________________^
+*** ERROR #A40 IN 24 (t.a51, LINE 24): INVALID REGISTER
+001E                  25      INC C
+*** ______________________________^
+*** ERROR #A40 IN 25 (t.a51, LINE 25): INVALID REGISTER
+001E                  26      CPL A,C
+*** __________________________^
+*** ERROR #A38 IN 26 (t.a51, LINE 26): NUMBER OF OPERANDS DOES NOT MATCH INSTRUCTION
+001E                  27      SETB A
+*** _______________________________^
+*** ERROR #A40 IN 27 (t.a51, LINE 27): INVALID REGISTER
+001E                  28      MUL R0
+*** ______________________________^
+*** ERROR #A40 IN 28 (t.a51, LINE 28): INVALID REGISTER
+001E                  29      DIV A
+*** ______________________________^
+*** ERROR #A40 IN 29 (t.a51, LINE 29): INVALID REGISTER
+001E                  30      SWAP R0
+*** _______________________________^
+*** ERROR #A40 IN 30 (t.a51, LINE 30): INVALID REGISTER
+001E                  31      DA R0
+*** _____________________________^
+*** ERROR #A40 IN 31 (t.a51, LINE 31): INVALID REGISTER
+001E                  32      POP A
+*** ______________________________^
+*** ERROR #A22 IN 32 (t.a51, LINE 32): EXPRESSION TYPE DOES NOT MATCH INSTRUCTION
+001E 8230             33      ANL C,30H
+0020 B000             34      ANL C,/D1
+*** _________________________________^
+*** ERROR #A48 IN 34 (t.a51, LINE 34): DATA-ADDRESS EXPECTED
+0022                  35      ORL C,#1
+*** _________________________________^
+*** ERROR #A22 IN 35 (t.a51, LINE 35): EXPRESSION TYPE DOES NOT MATCH INSTRUCTION
+0022                  36      MOV A,@R0+1
+*** __________________________^
+*** ___________________________________^
+*** ERROR #A38 IN 36 (t.a51, LINE 36): NUMBER OF OPERANDS DOES NOT MATCH INSTRUCTION
+*** ERROR #A9 IN 36 (t.a51, LINE 36): SYNTAX ERROR
+0022                  37      MOV A,R0+1
+*** __________________________^
+*** __________________________________^
+*** ERROR #A38 IN 37 (t.a51, LINE 37): NUMBER OF OPERANDS DOES NOT MATCH INSTRUCTION
+*** ERROR #A9 IN 37 (t.a51, LINE 37): SYNTAX ERROR
+0022                  38      ADD A,@A+DPTR
+*** ________________________________^
+*** ERROR #A40 IN 38 (t.a51, LINE 38): INVALID REGISTER
+0022                  39      CJNE R0,30H,$
+*** __________________________________^
+*** ERROR #A22 IN 39 (t.a51, LINE 39): EXPRESSION TYPE DOES NOT MATCH INSTRUCTION
+0022                  40      CJNE @R0,30H,$
+A51 MACRO ASSEMBLER  T                                                                    11/07/2026 13:45:04 PAGE     3
+
+*** ___________________________________^
+*** ERROR #A22 IN 40 (t.a51, LINE 40): EXPRESSION TYPE DOES NOT MATCH INSTRUCTION
+0022                  41      DJNZ A,$
+*** _______________________________^
+*** ERROR #A40 IN 41 (t.a51, LINE 41): INVALID REGISTER
+0022                  42      DJNZ @R0,$
+*** _______________________________^
+*** ERROR #A40 IN 42 (t.a51, LINE 42): INVALID REGISTER
+0022 00               43     L1: NOP
+  0030                44     D1 DATA 30H
+  0000                45     B1 BIT 20H.0
+                      46      END
+A51 MACRO ASSEMBLER  T                                                                    11/07/2026 13:45:04 PAGE     4
+
+SYMBOL TABLE LISTING
+------ ----- -------
+
+
+N A M E             T Y P E  V A L U E   ATTRIBUTES
+
+B1 . . . . . . . .  B ADDR   0020H.0 A   
+D1 . . . . . . . .  D ADDR   0030H   A   
+L1 . . . . . . . .  C ADDR   0022H   A   
+
+
+REGISTER BANK(S) USED: 0 
+
+
+ASSEMBLY COMPLETE.  0 WARNING(S), 45 ERROR(S)

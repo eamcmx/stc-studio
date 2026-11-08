@@ -1,0 +1,625 @@
+A51 MACRO ASSEMBLER  T                                                                    11/07/2026 13:55:34 PAGE     1
+
+
+MACRO ASSEMBLER A51 V8.2.7.0
+OBJECT MODULE PLACED IN t.OBJ
+ASSEMBLER INVOKED BY: C:\Keil_v5\C51\BIN\A51.EXE t.a51
+
+LOC  OBJ            LINE     SOURCE
+
+0000                   1      ORG 0
+0000                   2     TOP:
+0000 28                3      ADD A,R0
+0001 29                4      ADD A,R1
+0002 2A                5      ADD A,R2
+0003 2B                6      ADD A,R3
+0004 2C                7      ADD A,R4
+0005 2D                8      ADD A,R5
+0006 2E                9      ADD A,R6
+0007 2F               10      ADD A,R7
+0008 2530             11      ADD A,30H
+000A 257F             12      ADD A,7FH
+000C 2590             13      ADD A,P1
+000E 25E0             14      ADD A,ACC
+0010 2500             15      ADD A,0
+0012 25FF             16      ADD A,0FFH
+0014 26               17      ADD A,@R0
+0015 27               18      ADD A,@R1
+0016 2400             19      ADD A,#0
+0018 245A             20      ADD A,#5AH
+001A 24FF             21      ADD A,#0FFH
+001C 24FF             22      ADD A,#-1
+001E 2441             23      ADD A,#'A'
+0020 38               24      ADDC A,R0
+0021 39               25      ADDC A,R1
+0022 3A               26      ADDC A,R2
+0023 3B               27      ADDC A,R3
+0024 3C               28      ADDC A,R4
+0025 3D               29      ADDC A,R5
+0026 3E               30      ADDC A,R6
+0027 3F               31      ADDC A,R7
+0028 3530             32      ADDC A,30H
+002A 357F             33      ADDC A,7FH
+002C 3590             34      ADDC A,P1
+002E 35E0             35      ADDC A,ACC
+0030 3500             36      ADDC A,0
+0032 35FF             37      ADDC A,0FFH
+0034 36               38      ADDC A,@R0
+0035 37               39      ADDC A,@R1
+0036 3400             40      ADDC A,#0
+0038 345A             41      ADDC A,#5AH
+003A 34FF             42      ADDC A,#0FFH
+003C 34FF             43      ADDC A,#-1
+003E 3441             44      ADDC A,#'A'
+0040 98               45      SUBB A,R0
+0041 99               46      SUBB A,R1
+0042 9A               47      SUBB A,R2
+0043 9B               48      SUBB A,R3
+0044 9C               49      SUBB A,R4
+0045 9D               50      SUBB A,R5
+0046 9E               51      SUBB A,R6
+0047 9F               52      SUBB A,R7
+0048 9530             53      SUBB A,30H
+004A 957F             54      SUBB A,7FH
+004C 9590             55      SUBB A,P1
+004E 95E0             56      SUBB A,ACC
+0050 9500             57      SUBB A,0
+0052 95FF             58      SUBB A,0FFH
+A51 MACRO ASSEMBLER  T                                                                    11/07/2026 13:55:34 PAGE     2
+
+0054 96               59      SUBB A,@R0
+0055 97               60      SUBB A,@R1
+0056 9400             61      SUBB A,#0
+0058 945A             62      SUBB A,#5AH
+005A 94FF             63      SUBB A,#0FFH
+005C 94FF             64      SUBB A,#-1
+005E 9441             65      SUBB A,#'A'
+0060 58               66      ANL A,R0
+0061 59               67      ANL A,R1
+0062 5A               68      ANL A,R2
+0063 5B               69      ANL A,R3
+0064 5C               70      ANL A,R4
+0065 5D               71      ANL A,R5
+0066 5E               72      ANL A,R6
+0067 5F               73      ANL A,R7
+0068 5530             74      ANL A,30H
+006A 557F             75      ANL A,7FH
+006C 5590             76      ANL A,P1
+006E 55E0             77      ANL A,ACC
+0070 5500             78      ANL A,0
+0072 55FF             79      ANL A,0FFH
+0074 56               80      ANL A,@R0
+0075 57               81      ANL A,@R1
+0076 5400             82      ANL A,#0
+0078 545A             83      ANL A,#5AH
+007A 54FF             84      ANL A,#0FFH
+007C 54FF             85      ANL A,#-1
+007E 5441             86      ANL A,#'A'
+0080 5230             87      ANL 30H,A
+0082 533033           88      ANL 30H,#33H
+0085 527F             89      ANL 7FH,A
+0087 537F33           90      ANL 7FH,#33H
+008A 5290             91      ANL P1,A
+008C 539033           92      ANL P1,#33H
+008F 8203             93      ANL C,20H.3
+0091 B003             94      ANL C,/20H.3
+0093 8292             95      ANL C,P1.2
+0095 B092             96      ANL C,/P1.2
+0097 82E7             97      ANL C,ACC.7
+0099 B0E7             98      ANL C,/ACC.7
+009B 82D7             99      ANL C,CY
+009D B0D7            100      ANL C,/CY
+009F 48              101      ORL A,R0
+00A0 49              102      ORL A,R1
+00A1 4A              103      ORL A,R2
+00A2 4B              104      ORL A,R3
+00A3 4C              105      ORL A,R4
+00A4 4D              106      ORL A,R5
+00A5 4E              107      ORL A,R6
+00A6 4F              108      ORL A,R7
+00A7 4530            109      ORL A,30H
+00A9 457F            110      ORL A,7FH
+00AB 4590            111      ORL A,P1
+00AD 45E0            112      ORL A,ACC
+00AF 4500            113      ORL A,0
+00B1 45FF            114      ORL A,0FFH
+00B3 46              115      ORL A,@R0
+00B4 47              116      ORL A,@R1
+00B5 4400            117      ORL A,#0
+00B7 445A            118      ORL A,#5AH
+00B9 44FF            119      ORL A,#0FFH
+00BB 44FF            120      ORL A,#-1
+00BD 4441            121      ORL A,#'A'
+00BF 4230            122      ORL 30H,A
+00C1 433033          123      ORL 30H,#33H
+00C4 427F            124      ORL 7FH,A
+A51 MACRO ASSEMBLER  T                                                                    11/07/2026 13:55:34 PAGE     3
+
+00C6 437F33          125      ORL 7FH,#33H
+00C9 4290            126      ORL P1,A
+00CB 439033          127      ORL P1,#33H
+00CE 7203            128      ORL C,20H.3
+00D0 A003            129      ORL C,/20H.3
+00D2 7292            130      ORL C,P1.2
+00D4 A092            131      ORL C,/P1.2
+00D6 72E7            132      ORL C,ACC.7
+00D8 A0E7            133      ORL C,/ACC.7
+00DA 72D7            134      ORL C,CY
+00DC A0D7            135      ORL C,/CY
+00DE 68              136      XRL A,R0
+00DF 69              137      XRL A,R1
+00E0 6A              138      XRL A,R2
+00E1 6B              139      XRL A,R3
+00E2 6C              140      XRL A,R4
+00E3 6D              141      XRL A,R5
+00E4 6E              142      XRL A,R6
+00E5 6F              143      XRL A,R7
+00E6 6530            144      XRL A,30H
+00E8 657F            145      XRL A,7FH
+00EA 6590            146      XRL A,P1
+00EC 65E0            147      XRL A,ACC
+00EE 6500            148      XRL A,0
+00F0 65FF            149      XRL A,0FFH
+00F2 66              150      XRL A,@R0
+00F3 67              151      XRL A,@R1
+00F4 6400            152      XRL A,#0
+00F6 645A            153      XRL A,#5AH
+00F8 64FF            154      XRL A,#0FFH
+00FA 64FF            155      XRL A,#-1
+00FC 6441            156      XRL A,#'A'
+00FE 6230            157      XRL 30H,A
+0100 633033          158      XRL 30H,#33H
+0103 627F            159      XRL 7FH,A
+0105 637F33          160      XRL 7FH,#33H
+0108 6290            161      XRL P1,A
+010A 639033          162      XRL P1,#33H
+010D 04              163      INC A
+010E 08              164      INC R0
+010F 09              165      INC R1
+0110 0A              166      INC R2
+0111 0B              167      INC R3
+0112 0C              168      INC R4
+0113 0D              169      INC R5
+0114 0E              170      INC R6
+0115 0F              171      INC R7
+0116 0530            172      INC 30H
+0118 057F            173      INC 7FH
+011A 0590            174      INC P1
+011C 05E0            175      INC ACC
+011E 0500            176      INC 0
+0120 05FF            177      INC 0FFH
+0122 06              178      INC @R0
+0123 07              179      INC @R1
+0124 14              180      DEC A
+0125 18              181      DEC R0
+0126 19              182      DEC R1
+0127 1A              183      DEC R2
+0128 1B              184      DEC R3
+0129 1C              185      DEC R4
+012A 1D              186      DEC R5
+012B 1E              187      DEC R6
+012C 1F              188      DEC R7
+012D 1530            189      DEC 30H
+012F 157F            190      DEC 7FH
+A51 MACRO ASSEMBLER  T                                                                    11/07/2026 13:55:34 PAGE     4
+
+0131 1590            191      DEC P1
+0133 15E0            192      DEC ACC
+0135 1500            193      DEC 0
+0137 15FF            194      DEC 0FFH
+0139 16              195      DEC @R0
+013A 17              196      DEC @R1
+013B A3              197      INC DPTR
+013C A4              198      MUL AB
+013D 84              199      DIV AB
+013E D4              200      DA A
+013F E4              201      CLR A
+0140 C3              202      CLR C
+0141 C203            203      CLR 20H.3
+0143 C292            204      CLR P1.2
+0145 C2E7            205      CLR ACC.7
+0147 C2D7            206      CLR CY
+0149 C200            207      CLR 0
+014B C27F            208      CLR 7FH
+014D C2FF            209      CLR 0FFH
+014F C28C            210      CLR TR0
+0151 F4              211      CPL A
+0152 B3              212      CPL C
+0153 B203            213      CPL 20H.3
+0155 B292            214      CPL P1.2
+0157 B2E7            215      CPL ACC.7
+0159 B2D7            216      CPL CY
+015B B200            217      CPL 0
+015D B27F            218      CPL 7FH
+015F B2FF            219      CPL 0FFH
+0161 B28C            220      CPL TR0
+0163 D3              221      SETB C
+0164 D203            222      SETB 20H.3
+0166 D292            223      SETB P1.2
+0168 D2E7            224      SETB ACC.7
+016A D2D7            225      SETB CY
+016C D200            226      SETB 0
+016E D27F            227      SETB 7FH
+0170 D2FF            228      SETB 0FFH
+0172 D28C            229      SETB TR0
+0174 23              230      RL A
+0175 33              231      RLC A
+0176 03              232      RR A
+0177 13              233      RRC A
+0178 C4              234      SWAP A
+0179 E8              235      MOV A,R0
+017A F8              236      MOV R0,A
+017B A830            237      MOV R0,30H
+017D 7812            238      MOV R0,#12H
+017F 8840            239      MOV 40H,R0
+0181 E9              240      MOV A,R1
+0182 F9              241      MOV R1,A
+0183 A930            242      MOV R1,30H
+0185 7912            243      MOV R1,#12H
+0187 8940            244      MOV 40H,R1
+0189 EA              245      MOV A,R2
+018A FA              246      MOV R2,A
+018B AA30            247      MOV R2,30H
+018D 7A12            248      MOV R2,#12H
+018F 8A40            249      MOV 40H,R2
+0191 EB              250      MOV A,R3
+0192 FB              251      MOV R3,A
+0193 AB30            252      MOV R3,30H
+0195 7B12            253      MOV R3,#12H
+0197 8B40            254      MOV 40H,R3
+0199 EC              255      MOV A,R4
+019A FC              256      MOV R4,A
+A51 MACRO ASSEMBLER  T                                                                    11/07/2026 13:55:34 PAGE     5
+
+019B AC30            257      MOV R4,30H
+019D 7C12            258      MOV R4,#12H
+019F 8C40            259      MOV 40H,R4
+01A1 ED              260      MOV A,R5
+01A2 FD              261      MOV R5,A
+01A3 AD30            262      MOV R5,30H
+01A5 7D12            263      MOV R5,#12H
+01A7 8D40            264      MOV 40H,R5
+01A9 EE              265      MOV A,R6
+01AA FE              266      MOV R6,A
+01AB AE30            267      MOV R6,30H
+01AD 7E12            268      MOV R6,#12H
+01AF 8E40            269      MOV 40H,R6
+01B1 EF              270      MOV A,R7
+01B2 FF              271      MOV R7,A
+01B3 AF30            272      MOV R7,30H
+01B5 7F12            273      MOV R7,#12H
+01B7 8F40            274      MOV 40H,R7
+01B9 E530            275      MOV A,30H
+01BB F530            276      MOV 30H,A
+01BD 753009          277      MOV 30H,#9
+01C0 853130          278      MOV 30H,31H
+01C3 853032          279      MOV 32H,30H
+01C6 E57F            280      MOV A,7FH
+01C8 F57F            281      MOV 7FH,A
+01CA 757F09          282      MOV 7FH,#9
+01CD 85317F          283      MOV 7FH,31H
+01D0 857F32          284      MOV 32H,7FH
+01D3 E590            285      MOV A,P1
+01D5 F590            286      MOV P1,A
+01D7 759009          287      MOV P1,#9
+01DA 853190          288      MOV P1,31H
+01DD 859032          289      MOV 32H,P1
+01E0 E5E0            290      MOV A,ACC
+01E2 F5E0            291      MOV ACC,A
+01E4 75E009          292      MOV ACC,#9
+01E7 8531E0          293      MOV ACC,31H
+01EA 85E032          294      MOV 32H,ACC
+01ED E500            295      MOV A,0
+01EF F500            296      MOV 0,A
+01F1 750009          297      MOV 0,#9
+01F4 853100          298      MOV 0,31H
+01F7 850032          299      MOV 32H,0
+01FA E5FF            300      MOV A,0FFH
+01FC F5FF            301      MOV 0FFH,A
+01FE 75FF09          302      MOV 0FFH,#9
+0201 8531FF          303      MOV 0FFH,31H
+0204 85FF32          304      MOV 32H,0FFH
+0207 E6              305      MOV A,@R0
+0208 F6              306      MOV @R0,A
+0209 A633            307      MOV @R0,33H
+020B 7644            308      MOV @R0,#44H
+020D 8634            309      MOV 34H,@R0
+020F E7              310      MOV A,@R1
+0210 F7              311      MOV @R1,A
+0211 A733            312      MOV @R1,33H
+0213 7744            313      MOV @R1,#44H
+0215 8734            314      MOV 34H,@R1
+0217 7400            315      MOV A,#0
+0219 745A            316      MOV A,#5AH
+021B 74FF            317      MOV A,#0FFH
+021D 74FF            318      MOV A,#-1
+021F 7441            319      MOV A,#'A'
+0221 A203            320      MOV C,20H.3
+0223 9203            321      MOV 20H.3,C
+0225 A292            322      MOV C,P1.2
+A51 MACRO ASSEMBLER  T                                                                    11/07/2026 13:55:34 PAGE     6
+
+0227 9292            323      MOV P1.2,C
+0229 A2E7            324      MOV C,ACC.7
+022B 92E7            325      MOV ACC.7,C
+022D A2D7            326      MOV C,CY
+022F 92D7            327      MOV CY,C
+0231 A200            328      MOV C,0
+0233 9200            329      MOV 0,C
+0235 A27F            330      MOV C,7FH
+0237 927F            331      MOV 7FH,C
+0239 A2FF            332      MOV C,0FFH
+023B 92FF            333      MOV 0FFH,C
+023D A28C            334      MOV C,TR0
+023F 928C            335      MOV TR0,C
+0241 901234          336      MOV DPTR,#1234H
+0244 900000          337      MOV DPTR,#0
+0247 900000          338      MOV DPTR,#TOP
+024A 90FFFE          339      MOV DPTR,#-2
+024D 93              340      MOVC A,@A+DPTR
+024E 83              341      MOVC A,@A+PC
+024F E0              342      MOVX A,@DPTR
+0250 F0              343      MOVX @DPTR,A
+0251 E2              344      MOVX A,@R0
+0252 F2              345      MOVX @R0,A
+0253 E3              346      MOVX A,@R1
+0254 F3              347      MOVX @R1,A
+0255 C030            348      PUSH 30H
+0257 D030            349      POP 30H
+0259 C07F            350      PUSH 7FH
+025B D07F            351      POP 7FH
+025D C090            352      PUSH P1
+025F D090            353      POP P1
+0261 C0E0            354      PUSH ACC
+0263 D0E0            355      POP ACC
+0265 C000            356      PUSH 0
+0267 D000            357      POP 0
+0269 C0FF            358      PUSH 0FFH
+026B D0FF            359      POP 0FFH
+026D C8              360      XCH A,R0
+026E C9              361      XCH A,R1
+026F CA              362      XCH A,R2
+0270 CB              363      XCH A,R3
+0271 CC              364      XCH A,R4
+0272 CD              365      XCH A,R5
+0273 CE              366      XCH A,R6
+0274 CF              367      XCH A,R7
+0275 C530            368      XCH A,30H
+0277 C57F            369      XCH A,7FH
+0279 C590            370      XCH A,P1
+027B C5E0            371      XCH A,ACC
+027D C500            372      XCH A,0
+027F C5FF            373      XCH A,0FFH
+0281 C6              374      XCH A,@R0
+0282 D6              375      XCHD A,@R0
+0283 C7              376      XCH A,@R1
+0284 D7              377      XCHD A,@R1
+0285                 378     BACK1:
+0285 40FE            379      JC BACK1
+0287 4002            380      JC FWD1
+0289 40FE            381      JC $
+028B                 382     FWD1:
+028B                 383     BACK2:
+028B 50FE            384      JNC BACK2
+028D 5002            385      JNC FWD2
+028F 50FE            386      JNC $
+0291                 387     FWD2:
+0291                 388     BACK3:
+A51 MACRO ASSEMBLER  T                                                                    11/07/2026 13:55:34 PAGE     7
+
+0291 60FE            389      JZ BACK3
+0293 6002            390      JZ FWD3
+0295 60FE            391      JZ $
+0297                 392     FWD3:
+0297                 393     BACK4:
+0297 70FE            394      JNZ BACK4
+0299 7002            395      JNZ FWD4
+029B 70FE            396      JNZ $
+029D                 397     FWD4:
+029D                 398     BACK5:
+029D 80FE            399      SJMP BACK5
+029F 8002            400      SJMP FWD5
+02A1 80FE            401      SJMP $
+02A3                 402     FWD5:
+02A3                 403     BACK6:
+02A3 2003FD          404      JB 20H.3,BACK6
+02A6 200312          405      JB 20H.3,FWD6
+02A9 2092F7          406      JB P1.2,BACK6
+02AC 20920C          407      JB P1.2,FWD6
+02AF 20E7F1          408      JB ACC.7,BACK6
+02B2 20E706          409      JB ACC.7,FWD6
+02B5 20D7EB          410      JB CY,BACK6
+02B8 20D700          411      JB CY,FWD6
+02BB                 412     FWD6:
+02BB                 413     BACK7:
+02BB 3003FD          414      JNB 20H.3,BACK7
+02BE 300312          415      JNB 20H.3,FWD7
+02C1 3092F7          416      JNB P1.2,BACK7
+02C4 30920C          417      JNB P1.2,FWD7
+02C7 30E7F1          418      JNB ACC.7,BACK7
+02CA 30E706          419      JNB ACC.7,FWD7
+02CD 30D7EB          420      JNB CY,BACK7
+02D0 30D700          421      JNB CY,FWD7
+02D3                 422     FWD7:
+02D3                 423     BACK8:
+02D3 1003FD          424      JBC 20H.3,BACK8
+02D6 100312          425      JBC 20H.3,FWD8
+02D9 1092F7          426      JBC P1.2,BACK8
+02DC 10920C          427      JBC P1.2,FWD8
+02DF 10E7F1          428      JBC ACC.7,BACK8
+02E2 10E706          429      JBC ACC.7,FWD8
+02E5 10D7EB          430      JBC CY,BACK8
+02E8 10D700          431      JBC CY,FWD8
+02EB                 432     FWD8:
+02EB                 433     BACK9:
+02EB D8FE            434      DJNZ R0,BACK9
+02ED D81C            435      DJNZ R0,FWD9
+02EF D9FA            436      DJNZ R1,BACK9
+02F1 D918            437      DJNZ R1,FWD9
+02F3 DAF6            438      DJNZ R2,BACK9
+02F5 DA14            439      DJNZ R2,FWD9
+02F7 DBF2            440      DJNZ R3,BACK9
+02F9 DB10            441      DJNZ R3,FWD9
+02FB DCEE            442      DJNZ R4,BACK9
+02FD DC0C            443      DJNZ R4,FWD9
+02FF DDEA            444      DJNZ R5,BACK9
+0301 DD08            445      DJNZ R5,FWD9
+0303 DEE6            446      DJNZ R6,BACK9
+0305 DE04            447      DJNZ R6,FWD9
+0307 DFE2            448      DJNZ R7,BACK9
+0309 DF00            449      DJNZ R7,FWD9
+030B                 450     FWD9:
+030B                 451     BACK10:
+030B D530FD          452      DJNZ 30H,BACK10
+030E D57FFA          453      DJNZ 7FH,BACK10
+0311 D590F7          454      DJNZ P1,BACK10
+A51 MACRO ASSEMBLER  T                                                                    11/07/2026 13:55:34 PAGE     8
+
+0314 D5E0F4          455      DJNZ ACC,BACK10
+0317 D500F1          456      DJNZ 0,BACK10
+031A D5FFEE          457      DJNZ 0FFH,BACK10
+031D                 458     FWD10:
+031D                 459     BACK11:
+031D B5300F          460      CJNE A,30H,FWD11
+0320 B57F0C          461      CJNE A,7FH,FWD11
+0323 B59009          462      CJNE A,P1,FWD11
+0326 B5E006          463      CJNE A,ACC,FWD11
+0329 B50003          464      CJNE A,0,FWD11
+032C B5FF00          465      CJNE A,0FFH,FWD11
+032F                 466     FWD11:
+032F                 467     BACK12:
+032F B400FD          468      CJNE A,#0,BACK12
+0332 B45AFA          469      CJNE A,#5AH,BACK12
+0335 B4FFF7          470      CJNE A,#0FFH,BACK12
+0338 B4FFF4          471      CJNE A,#-1,BACK12
+033B B441F1          472      CJNE A,#'A',BACK12
+033E                 473     FWD12:
+033E                 474     BACK13:
+033E B8071B          475      CJNE R0,#7,FWD13
+0341 B90718          476      CJNE R1,#7,FWD13
+0344 BA0715          477      CJNE R2,#7,FWD13
+0347 BB0712          478      CJNE R3,#7,FWD13
+034A BC070F          479      CJNE R4,#7,FWD13
+034D BD070C          480      CJNE R5,#7,FWD13
+0350 BE0709          481      CJNE R6,#7,FWD13
+0353 BF0706          482      CJNE R7,#7,FWD13
+0356 B608E5          483      CJNE @R0,#8,BACK13
+0359 B708E2          484      CJNE @R1,#8,BACK13
+035C                 485     FWD13:
+035C                 486     BACK:
+035C 00              487      NOP
+035D                 488     FWD:
+035D 0100            489      AJMP TOP
+035F 1100            490      ACALL TOP
+0361 615D            491      AJMP FWD
+0363 715D            492      ACALL FWD
+0365 615C            493      AJMP BACK
+0367 715C            494      ACALL BACK
+0369 6169            495      AJMP $
+036B 716B            496      ACALL $
+036D 2123            497      AJMP 123H
+036F 3123            498      ACALL 123H
+0371 4100            499      AJMP 200H
+0373 5100            500      ACALL 200H
+0375 8100            501      AJMP 400H
+0377 9100            502      ACALL 400H
+0379 A100            503      AJMP 500H
+037B B100            504      ACALL 500H
+037D C100            505      AJMP 600H
+037F D100            506      ACALL 600H
+0381 E1FF            507      AJMP 7FFH
+0383 F1FF            508      ACALL 7FFH
+0385 020000          509      LJMP TOP
+0388 120000          510      LCALL TOP
+038B 02035D          511      LJMP FWD
+038E 12035D          512      LCALL FWD
+0391 02035C          513      LJMP BACK
+0394 12035C          514      LCALL BACK
+0397 021000          515      LJMP FAR
+039A 121000          516      LCALL FAR
+039D 02039D          517      LJMP $
+03A0 1203A0          518      LCALL $
+03A3 020123          519      LJMP 123H
+03A6 120123          520      LCALL 123H
+A51 MACRO ASSEMBLER  T                                                                    11/07/2026 13:55:34 PAGE     9
+
+03A9 02FFFF          521      LJMP 0FFFFH
+03AC 12FFFF          522      LCALL 0FFFFH
+03AF 73              523      JMP @A+DPTR
+03B0 80AA            524      JMP BACK
+03B2 80A9            525      JMP FWD
+03B4 0100            526      JMP TOP
+03B6 021000          527      JMP FAR
+03B9 1100            528      CALL TOP
+03BB 121000          529      CALL FAR
+03BE 71C0            530      CALL AHEAD
+03C0 00              531     AHEAD: NOP
+03C1 22              532      RET
+03C2 32              533      RETI
+03C3 00              534      NOP
+03C4 00017F80        535      DB 0,1,7FH,80H,0FFH,-1,-128,'Hello',"x""y",''
+03C8 FFFF8048                
+03CC 656C6C6F                
+03D0 782279                  
+03D3 0000            536      DW 0,1234H,TOP,FAR,'AB',-1
+03D5 1234                    
+03D7 0000                    
+03D9 1000                    
+03DB 4142                    
+03DD FFFF                    
+1000                 537      ORG 1000H
+1000 00              538     FAR: NOP
+1001 80FD            539      JMP FAR
+1003 120000          540      CALL TOP
+1006 020000          541      JMP TOP
+1009 1100            542      CALL FAR
+                     543      END
+A51 MACRO ASSEMBLER  T                                                                    11/07/2026 13:55:34 PAGE    10
+
+SYMBOL TABLE LISTING
+------ ----- -------
+
+
+N A M E             T Y P E  V A L U E   ATTRIBUTES
+
+ACC. . . . . . . .  D ADDR   00E0H   A   
+AHEAD. . . . . . .  C ADDR   03C0H   A   
+BACK . . . . . . .  C ADDR   035CH   A   
+BACK1. . . . . . .  C ADDR   0285H   A   
+BACK10 . . . . . .  C ADDR   030BH   A   
+BACK11 . . . . . .  C ADDR   031DH   A   
+BACK12 . . . . . .  C ADDR   032FH   A   
+BACK13 . . . . . .  C ADDR   033EH   A   
+BACK2. . . . . . .  C ADDR   028BH   A   
+BACK3. . . . . . .  C ADDR   0291H   A   
+BACK4. . . . . . .  C ADDR   0297H   A   
+BACK5. . . . . . .  C ADDR   029DH   A   
+BACK6. . . . . . .  C ADDR   02A3H   A   
+BACK7. . . . . . .  C ADDR   02BBH   A   
+BACK8. . . . . . .  C ADDR   02D3H   A   
+BACK9. . . . . . .  C ADDR   02EBH   A   
+CY . . . . . . . .  B ADDR   00D0H.7 A   
+FAR. . . . . . . .  C ADDR   1000H   A   
+FWD. . . . . . . .  C ADDR   035DH   A   
+FWD1 . . . . . . .  C ADDR   028BH   A   
+FWD10. . . . . . .  C ADDR   031DH   A   
+FWD11. . . . . . .  C ADDR   032FH   A   
+FWD12. . . . . . .  C ADDR   033EH   A   
+FWD13. . . . . . .  C ADDR   035CH   A   
+FWD2 . . . . . . .  C ADDR   0291H   A   
+FWD3 . . . . . . .  C ADDR   0297H   A   
+FWD4 . . . . . . .  C ADDR   029DH   A   
+FWD5 . . . . . . .  C ADDR   02A3H   A   
+FWD6 . . . . . . .  C ADDR   02BBH   A   
+FWD7 . . . . . . .  C ADDR   02D3H   A   
+FWD8 . . . . . . .  C ADDR   02EBH   A   
+FWD9 . . . . . . .  C ADDR   030BH   A   
+P1 . . . . . . . .  D ADDR   0090H   A   
+TOP. . . . . . . .  C ADDR   0000H   A   
+TR0. . . . . . . .  B ADDR   0088H.4 A   
+
+
+REGISTER BANK(S) USED: 0 
+
+
+ASSEMBLY COMPLETE.  0 WARNING(S), 0 ERROR(S)

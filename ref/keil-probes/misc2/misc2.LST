@@ -1,0 +1,83 @@
+A51 MACRO ASSEMBLER  T                                                                    11/07/2026 13:41:35 PAGE     1
+
+
+MACRO ASSEMBLER A51 V8.2.7.0
+NO OBJECT MODULE REQUESTED
+ASSEMBLER INVOKED BY: C:\Keil_v5\C51\BIN\A51.EXE t.a51
+
+LOC  OBJ            LINE     SOURCE
+
+0000                   1      ORG 0
+                       2      USING 0
+0000 C007              3      PUSH AR7
+                       4      USING 3
+0002 C01F              5      PUSH AR7
+0004 E519              6      MOV A,AR0+1
+0006 612C6263          7      DB 'a,b', "c;d"   ; comma and semicolon inside strings
+000A 3B64                    
+000C 010203            8      DB 1 , 2,3
+000F 000F              9      DW $, $+1
+0011 0012                    
+0015                  10      ORG $+2
+0015 07               11      DB 7
+0020                  12      ORG F2
+  0020                13     F2 EQU 20H
+0020 08               14      DB 8
+0021                  15      DS F3
+*** _____________________________^
+*** ERROR #A21 IN 15 (t.a51, LINE 15): EXPRESSION WITH FORWARD REFERENCE NOT PERMITTED
+  0002                16     F3 EQU 2
+0023 09               17      DB 9
+0024                  18     X: DS 0
+0024 24               19      DB X
+0025                  20     Y:
+0025 01               21     Z: DB 1
+0026 7425             22      MOV A,#Z
+0028 7425             23      MOV A,#Y
+002A B41000           24      CJNE A,#16,$+3
+002D 00               25      NOP
+002E                  26     lbl: lbl2: NOP
+*** ______________________________^
+*** ERROR #A7 IN 26 (t.a51, LINE 26): LABEL NOT PERMITTED
+002E 00               27      DB 1,
+*** ______________________________^
+*** ERROR #A9 IN 27 (t.a51, LINE 27): SYNTAX ERROR
+002F 0001             28      DB ,1
+*** _____________________________^
+*** ERROR #A15 IN 28 (t.a51, LINE 28): MISSING FACTOR
+0031                  29      DW
+0031                  30      DS
+*** ____________________________^
+*** ERROR #A15 IN 30 (t.a51, LINE 30): MISSING FACTOR
+                      31      ORG
+*** _____________________________^
+*** ERROR #A15 IN 31 (t.a51, LINE 31): MISSING FACTOR
+                      32      USING
+*** _______________________________^
+*** ERROR #A15 IN 32 (t.a51, LINE 32): MISSING FACTOR
+0031                  33      DBIT 1
+*** __________________________^
+*** ERROR #A37 IN 33 (t.a51, LINE 33): OPERATION INVALID IN THIS SEGMENT
+                      34      END
+A51 MACRO ASSEMBLER  T                                                                    11/07/2026 13:41:35 PAGE     2
+
+SYMBOL TABLE LISTING
+------ ----- -------
+
+
+N A M E             T Y P E  V A L U E   ATTRIBUTES
+
+AR0. . . . . . . .  D ADDR   0018H   A   
+AR7. . . . . . . .  D ADDR   001FH   A   
+F2 . . . . . . . .  N NUMB   0020H   A   
+F3 . . . . . . . .  N NUMB   0002H   A   
+LBL. . . . . . . .  C ADDR   002EH   A   
+X. . . . . . . . .  C ADDR   0024H   A   
+Y. . . . . . . . .  C ADDR   0025H   A   
+Z. . . . . . . . .  C ADDR   0025H   A   
+
+
+REGISTER BANK(S) USED: 0 3 
+
+
+ASSEMBLY COMPLETE.  0 WARNING(S), 8 ERROR(S)

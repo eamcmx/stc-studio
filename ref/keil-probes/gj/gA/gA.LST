@@ -1,0 +1,31 @@
+A51 MACRO ASSEMBLER  T                                                                    11/07/2026 13:42:53 PAGE     1
+
+
+MACRO ASSEMBLER A51 V8.2.7.0
+OBJECT MODULE PLACED IN t.OBJ
+ASSEMBLER INVOKED BY: C:\Keil_v5\C51\BIN\A51.EXE t.a51
+
+LOC  OBJ            LINE     SOURCE
+
+0100                   1      ORG 100H
+0100 21CB              2      JMP TA
+0102 00                3     LA: NOP
+0103                   4      DS 200
+01CB 00                5     TA: NOP
+                       6      END
+A51 MACRO ASSEMBLER  T                                                                    11/07/2026 13:42:53 PAGE     2
+
+SYMBOL TABLE LISTING
+------ ----- -------
+
+
+N A M E             T Y P E  V A L U E   ATTRIBUTES
+
+LA . . . . . . . .  C ADDR   0102H   A   
+TA . . . . . . . .  C ADDR   01CBH   A   
+
+
+REGISTER BANK(S) USED: 0 
+
+
+ASSEMBLY COMPLETE.  0 WARNING(S), 0 ERROR(S)

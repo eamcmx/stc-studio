@@ -1,0 +1,29 @@
+A51 MACRO ASSEMBLER  T                                                                    11/07/2026 13:36:49 PAGE     1
+
+
+MACRO ASSEMBLER A51 V8.2.7.0
+NO OBJECT MODULE REQUESTED
+ASSEMBLER INVOKED BY: C:\Keil_v5\C51\BIN\A51.EXE t.a51
+
+LOC  OBJ            LINE     SOURCE
+
+0000                   1      ORG 0
+0000 756F01            2      MOV 0FFFFH,#1
+FFFF                   3      ORG 0FFFFH
+FFFF 0102              4      DB 1,2
+*** ERROR #A29 IN 4 (t.a51, LINE 4): SEGMENT LIMIT EXCEEDED
+                       5      END
+A51 MACRO ASSEMBLER  T                                                                    11/07/2026 13:36:49 PAGE     2
+
+SYMBOL TABLE LISTING
+------ ----- -------
+
+
+N A M E             T Y P E  V A L U E   ATTRIBUTES
+
+
+
+REGISTER BANK(S) USED: 0 
+
+
+ASSEMBLY COMPLETE.  0 WARNING(S), 1 ERROR(S)

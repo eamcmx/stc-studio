@@ -1,0 +1,184 @@
+A51 MACRO ASSEMBLER  T                                                                    11/07/2026 13:36:46 PAGE     1
+
+
+MACRO ASSEMBLER A51 V8.2.7.0
+NO OBJECT MODULE REQUESTED
+ASSEMBLER INVOKED BY: C:\Keil_v5\C51\BIN\A51.EXE t.a51
+
+LOC  OBJ            LINE     SOURCE
+
+0000                   1      ORG 0
+0000 E5E0              2      MOV A,ACC
+0002 F5E0              3      MOV ACC,A
+0004 E5E0              4      MOV A,0E0H
+0006 05E0              5      INC ACC
+0008                   6      PUSH A
+*** _______________________________^
+*** ERROR #A22 IN 6 (t.a51, LINE 6): EXPRESSION TYPE DOES NOT MATCH INSTRUCTION
+0008 C0E0              7      PUSH ACC
+000A                   8      PUSH AR0
+*** _______________________________^
+*** ERROR #A53 IN 8 (t.a51, LINE 8): MISSING 'USING' INFORMATION
+                       9      USING 1
+000A C008             10      PUSH AR0
+000C A809             11      MOV R0,AR1
+000E 8809             12      MOV AR1,R0
+                      13      USING 0
+0010 E6               14      MOV A,@R0
+0011 E6               15      MOV A, @ R0
+0012 93               16      MOVC A,@A+DPTR
+0013 93               17      MOVC A,@A + DPTR
+0014 E0               18      MOVX A,@DPTR
+0015 73               19      JMP @A+DPTR
+0016 853130           20      MOV 30H,31H
+0019 8730             21      MOV 30H,@R1
+001B A730             22      MOV @R1,30H
+001D 901234           23      MOV DPTR,#1234H
+0020 A4               24      MUL AB
+0021 84               25      DIV AB
+0022                  26      MUL A,B
+*** __________________________^
+*** ERROR #A38 IN 26 (t.a51, LINE 26): NUMBER OF OPERANDS DOES NOT MATCH INSTRUCTION
+0022 B530FD           27      CJNE A,30H,$
+0025 B405FD           28      CJNE A,#5,$
+0028 BF05FD           29      CJNE R7,#5,$
+002B B705FD           30      CJNE @R1,#5,$
+002E D530FD           31      DJNZ 30H,$
+0031 D6               32      XCHD A,@R0
+0032 EF               33      mov a , r7
+0033 7461             34      Mov A,#'a'
+0035 00               35     lbl:nop
+0036 00               36     lbl2 :  nop
+0037 22               37      RET
+0038 32               38      RETI
+0039                  39      MOV A,R8
+*** ________________________________^
+*** ERROR #A45 IN 39 (t.a51, LINE 39): UNDEFINED SYMBOL (PASS-2)
+003B                  40      MOV R0,R1
+*** ______________________________^
+*** ERROR #A40 IN 40 (t.a51, LINE 40): INVALID REGISTER
+003B                  41      ADD R0,A
+*** ______________________________^
+*** ERROR #A40 IN 41 (t.a51, LINE 41): INVALID REGISTER
+003B                  42      MOV A,@R2
+*** ________________________________^
+*** _________________________________^
+*** ERROR #A4 IN 42 (t.a51, LINE 42): BAD INDIRECT REGISTER
+*** ERROR #A9 IN 42 (t.a51, LINE 42): SYNTAX ERROR
+A51 MACRO ASSEMBLER  T                                                                    11/07/2026 13:36:46 PAGE     2
+
+003B                  43      MOV A,
+*** __________________________^
+*** _______________________________^
+*** ERROR #A38 IN 43 (t.a51, LINE 43): NUMBER OF OPERANDS DOES NOT MATCH INSTRUCTION
+*** ERROR #A9 IN 43 (t.a51, LINE 43): SYNTAX ERROR
+003B                  44      MOV A,#
+*** _________________________________^
+*** ERROR #A15 IN 44 (t.a51, LINE 44): MISSING FACTOR
+                      45      FOO A
+*** __________________________^
+*** ERROR #A9 IN 45 (t.a51, LINE 45): SYNTAX ERROR
+003B                  46      NOP A
+*** __________________________^
+*** ERROR #A38 IN 46 (t.a51, LINE 46): NUMBER OF OPERANDS DOES NOT MATCH INSTRUCTION
+                      47     LOOP MOV A,R0
+*** _________________________^
+*** ERROR #A9 IN 47 (t.a51, LINE 47): SYNTAX ERROR
+003B                  48      MOV A,#(1
+*** ___________________________________^
+*** ERROR #A13 IN 48 (t.a51, LINE 48): ')' EXPECTED
+003B                  49      DB
+003B                  50      MOV
+*** __________________________^
+*** ERROR #A38 IN 50 (t.a51, LINE 50): NUMBER OF OPERANDS DOES NOT MATCH INSTRUCTION
+003B                  51      MOV A,R0,R1
+*** __________________________^
+*** ERROR #A38 IN 51 (t.a51, LINE 51): NUMBER OF OPERANDS DOES NOT MATCH INSTRUCTION
+003B                  52      MOV R0 A
+*** _________________________________^
+*** ERROR #A9 IN 52 (t.a51, LINE 52): SYNTAX ERROR
+003C 7405             53      MOV  A ,  # 5
+003E 7405             54      MOV A,#5 ; comment
+0040 7406             55             MOV     A,#6    ;tabs
+0042 A2E0             56      MOV C,ACC.0
+0044 92E0             57      MOV ACC.0,C
+0046                  58      MOV A,C
+*** ________________________________^
+*** ERROR #A40 IN 58 (t.a51, LINE 58): INVALID REGISTER
+0046                  59      PUSH R0
+*** _______________________________^
+*** ERROR #A22 IN 59 (t.a51, LINE 59): EXPRESSION TYPE DOES NOT MATCH INSTRUCTION
+0046 A3               60      INC DPTR
+0047                  61      DEC DPTR
+*** ______________________________^
+*** ERROR #A40 IN 61 (t.a51, LINE 61): INVALID REGISTER
+0047 E4               62      CLR A
+0048 C200             63      CLR ACC
+*** ______________________________^
+*** ERROR #A48 IN 63 (t.a51, LINE 63): DATA-ADDRESS EXPECTED
+004A C4               64      SWAP A
+004B D4               65      DA A
+004C 33               66      RLC A
+004D                  67      RL ACC
+*** _____________________________^
+*** ERROR #A39 IN 67 (t.a51, LINE 67): REGISTER OPERAND EXPECTED
+004D                  68      MOV DPTR,A
+*** ___________________________________^
+*** ERROR #A40 IN 68 (t.a51, LINE 68): INVALID REGISTER
+004D 83               69      MOVC A,@A+PC
+004E F2               70      MOVX @R0,A
+004F E3               71      MOVX A,@R1
+0050 CB               72      XCH A,R3
+0051 C530             73      XCH A,30H
+0053 C7               74      XCH A,@R1
+0054 433001           75      ORL 30H,#1
+0057 4230             76      ORL 30H,A
+A51 MACRO ASSEMBLER  T                                                                    11/07/2026 13:36:46 PAGE     3
+
+0059 56               77      ANL A,@R0
+005A 6401             78      XRL A,#1
+005C 9A               79      SUBB A,R2
+005D 3530             80      ADDC A,30H
+005F 7605             81      MOV @R0,#5
+0061 AF30             82      MOV R7,30H
+0063 8F30             83      MOV 30H,R7
+0065 F530             84      MOV 30H,A
+0067 F7               85      MOV @R1,A
+0068 F8               86      MOV R0,A
+0069 E8               87      MOV A,R0
+006A D030             88      POP 30H
+006C 06               89      INC @R0
+006D 1530             90      DEC 30H
+006F 60FE             91      JZ $
+0071 70FE             92      JNZ $
+0073 40FE             93      JC $
+0075 50FE             94      JNC $
+0077 0177             95      AJMP $
+0079 120079           96      LCALL $
+007C 02007C           97      LJMP $
+007F 75D000           98      MOV PSW,#0
+                      99      END
+A51 MACRO ASSEMBLER  T                                                                    11/07/2026 13:36:46 PAGE     4
+
+SYMBOL TABLE LISTING
+------ ----- -------
+
+
+N A M E             T Y P E  V A L U E   ATTRIBUTES
+
+ACC. . . . . . . .  D ADDR   00E0H   A   
+AR0. . . . . . . .  D ADDR   0000H   A   
+AR1. . . . . . . .  D ADDR   0001H   A   
+B. . . . . . . . .  D ADDR   00F0H   A   
+FOO. . . . . . . .    ----   -----       
+LBL. . . . . . . .  C ADDR   0035H   A   
+LBL2 . . . . . . .  C ADDR   0036H   A   
+LOOP . . . . . . .    ----   -----       
+PSW. . . . . . . .  D ADDR   00D0H   A   
+R8 . . . . . . . .    ----   -----       
+
+
+REGISTER BANK(S) USED: 0 1 
+
+
+ASSEMBLY COMPLETE.  0 WARNING(S), 24 ERROR(S)

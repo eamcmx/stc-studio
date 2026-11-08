@@ -1,0 +1,5 @@
+$MOD52
+ ORG 0
+ MOV T2CON,#1
+ SETB TR2
+ END

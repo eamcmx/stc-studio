@@ -1,0 +1,7 @@
+ ORG 0
+T0: NOP
+ DS 7FCH
+ NOP
+ NOP
+ NOP
+ END

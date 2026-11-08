@@ -1,0 +1,22 @@
+COM13 open, DTR=True RTS=True before the restart
+NO ANSWER after 10 s (dtr); stray bytes: 
+COM13 open, DTR=True RTS=True before the restart
+NO ANSWER after 6 s (rts); stray bytes: 
+COM13 open, DTR=True RTS=True before the restart
+NO ANSWER after 6 s (dtr-inv); stray bytes: 
+COM13 open, DTR=True RTS=True before the restart
+answer after 0.58 s (rts-inv)
+raw: 46 b9 68 00 3a 00 0a 79 0a 79 0a 79 0a 79 0a 79 0a 79 0a 79 0a 79 66 43 fd f0 02 82 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 04 d8 16
+protocol: stc89
+checksum ok: True
+model magic F002H = STC89C52RC/LE52RC
+bootloader 6.6C, option byte FDH (12T), clock measured 11.0304 MHz
+sent 82H (run the program in flash)
+answer after 0.58 s (rts-inv)
+bootloader 6.6C, option byte FDH (12T), clock measured 11.0304 MHz
+answer after 0.58 s (rts-inv)
+bootloader 6.6C, option byte FDH (12T), clock measured 11.0304 MHz
+NO ANSWER after 5 s (rts); stray bytes: 
+NO ANSWER after 5 s (dtr); stray bytes: 
+answer after 0.58 s (rts-inv)
+bootloader 6.6C, option byte FDH (12T), clock measured 11.0304 MHz

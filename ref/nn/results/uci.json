@@ -1,0 +1,37 @@
+{
+ "made": "2026-11-08T03:22:20.523Z",
+ "by": "test/nn_uci.js",
+ "problems": 0,
+ "columns": [
+  "coding",
+  "bytes",
+  "test_digits",
+  "accuracy_pct",
+  "answers_unlike_python",
+  "avg_ms",
+  "max_ms",
+  "display_faults"
+ ],
+ "rows": [
+  [
+   "bin",
+   2350,
+   1797,
+   "92.26",
+   0,
+   "22.7",
+   "28.0",
+   0
+  ],
+  [
+   "gray",
+   2363,
+   1797,
+   "95.94",
+   0,
+   "58.2",
+   "58.5",
+   0
+  ]
+ ]
+}

@@ -1,0 +1,35 @@
+A51 MACRO ASSEMBLER  T                                                                    11/07/2026 13:36:46 PAGE     1
+
+
+MACRO ASSEMBLER A51 V8.2.7.0
+OBJECT MODULE PLACED IN t.OBJ
+ASSEMBLER INVOKED BY: C:\Keil_v5\C51\BIN\A51.EXE t.a51
+
+LOC  OBJ            LINE     SOURCE
+
+                       1     $mod52 
+*** ERROR #A68 IN 1 (t.a51, LINE -3): UNKNOWN CONTROL OR BAD ARGUMENT(S)
+0000                   2      ORG 0
+0000                   3      MOV T2CON,#1
+*** ______________________________^
+*** ERROR #A45 IN 3 (t.a51, LINE 3): UNDEFINED SYMBOL (PASS-2)
+0003                   4      SETB TR2
+*** _______________________________^
+*** ERROR #A45 IN 4 (t.a51, LINE 4): UNDEFINED SYMBOL (PASS-2)
+                       5      END
+A51 MACRO ASSEMBLER  T                                                                    11/07/2026 13:36:46 PAGE     2
+
+SYMBOL TABLE LISTING
+------ ----- -------
+
+
+N A M E             T Y P E  V A L U E   ATTRIBUTES
+
+T2CON. . . . . . .    ----   -----       
+TR2. . . . . . . .    ----   -----       
+
+
+REGISTER BANK(S) USED: 0 
+
+
+ASSEMBLY COMPLETE.  0 WARNING(S), 3 ERROR(S)

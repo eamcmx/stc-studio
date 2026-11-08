@@ -1,0 +1,484 @@
+; SWEEP BUILD (nn/study.py), H = 28. Digit reader on the UCI handwritten digits (8 x 8, 16 grey levels): a 64-24-10 neural network on the STC89C52RC.
+; Made by nn/train_uci.py from ref/nn/digit_nn.a51 (same code, 64 inputs, new memory map). Do not edit by hand.
+; The page sends D and 64 characters (hex digits 0-F, the grey level), row by row from the top left; the board answers "=", the
+; digit and its 10 scores in hex, and shows the digit. Serial: 19200 baud. Board: as in digit_nn.a51.
+
+PIX     EQU     30H             ; NIN bytes: the pixels                    (30H-6FH)
+ACC1    EQU     70H             ; NH x 16-bit sums of the hidden layer    (70H-9FH)
+HID     EQU     ACC1+2*NH       ; NH hidden values, 0 to 255               (A0H-B7H; above 7FH only @R0/@R1 reach)
+SCORE   EQU     HID+NH          ; 10 x 24-bit scores, low byte first       (B8H-D5H)
+DBUF    EQU     2CH             ; 4 segment patterns, digit 1 to digit 4
+DIGI    EQU     2BH             ; the digit the display is showing now (0-3)
+
+        ORG     0000H
+        LJMP    MAIN
+        ORG     000BH
+        LJMP    T0ISR
+
+        ORG     0030H
+MAIN:   MOV     SP,#0E1H        ; stack from D8H, in the upper 128 bytes of the 8052's RAM
+        MOV     DBUF,#0ABH      ; "nn--" until the first digit arrives
+        MOV     DBUF+1,#0ABH
+        MOV     DBUF+2,#0BFH
+        MOV     DBUF+3,#0BFH
+        MOV     DIGI,#0
+        MOV     TMOD,#22H       ; Timer 1: baud rate, Timer 0: display, both 8-bit auto-reload
+        MOV     TH1,#0FDH
+        MOV     TL1,#0FDH
+        ORL     PCON,#80H       ; SMOD = 1: 19200 baud
+        MOV     SCON,#50H       ; mode 1, receiver on
+        MOV     TH0,#0          ; Timer 0 overflows every 256 machine cycles
+        MOV     TL0,#0
+        SETB    TR1
+        SETB    TR0
+        SETB    ET0
+        SETB    EA
+        MOV     DPTR,#HELLO
+        ACALL   PUTS
+
+; ---- wait for D, then read 35 pixels
+WAITD:  ACALL   GETC
+        CJNE    A,#'D',WAITD
+        MOV     R0,#PIX
+        MOV     R2,#NIN
+RDPIX:  ACALL   GETC            ; a hex digit, 0-9 or A-F
+        CLR     C
+        SUBB    A,#'0'
+        CJNE    A,#10,HEX1
+HEX1:   JC      HEX2            ; 0-9
+        SUBB    A,#7            ; A-F become 10-15
+HEX2:   MOV     @R0,A
+        INC     R0
+        DJNZ    R2,RDPIX
+
+; ---- layer 1: start every sum at its bias
+        MOV     DPTR,#B1
+        MOV     R0,#ACC1
+        MOV     R2,#2*NH
+L1B:    CLR     A
+        MOVC    A,@A+DPTR
+        MOV     @R0,A
+        INC     DPTR
+        INC     R0
+        DJNZ    R2,L1B
+; for every pixel, add pixel x weight to the NH sums (the 0/1 inputs are not used)
+        MOV     DPTR,#W1
+        MOV     R1,#PIX
+        MOV     R3,#NIN
+L1P:    MOV     R0,#ACC1
+        MOV     R4,#0
+L1J:    MOV     A,R4
+        MOVC    A,@A+DPTR       ; the weight, -128 to 127
+        JB      ACC.7,L1NEG
+        MOV     B,@R1           ; the pixel, 0 or 1
+        MUL     AB              ; pixel x weight
+        ADD     A,@R0
+        MOV     @R0,A
+        INC     R0
+        MOV     A,B
+        ADDC    A,@R0
+        MOV     @R0,A
+        SJMP    L1HI
+L1NEG:  CPL     A               ; a negative weight: pixel x its size, subtracted
+        INC     A
+        MOV     B,@R1
+        MUL     AB
+        XCH     A,@R0           ; A = the sum, @R0 = the product (low bytes)
+        CLR     C
+        SUBB    A,@R0
+        MOV     @R0,A
+        INC     R0
+        MOV     A,@R0
+        SUBB    A,B
+        MOV     @R0,A
+L1HI:   INC     R0
+        INC     R4
+        CJNE    R4,#NH,L1J
+L1NEXT: MOV     A,DPL           ; on to the next pixel's row
+        ADD     A,#NH
+        MOV     DPL,A
+        JNC     L1N2
+        INC     DPH
+L1N2:   INC     R1
+        DJNZ    R3,L1P
+
+; ---- ReLU and scaling: hidden = 0 for a negative sum, else sum >> SH1, at most 255
+        MOV     R0,#ACC1
+        MOV     R1,#HID
+        MOV     R2,#NH
+RL1:    MOV     A,@R0
+        MOV     R6,A            ; low byte
+        INC     R0
+        MOV     A,@R0
+        MOV     R7,A            ; high byte
+        INC     R0
+        JB      ACC.7,RZERO
+        MOV     R5,#SH1
+RSH:    MOV     A,R5
+        JZ      RSAT
+        CLR     C
+        MOV     A,R7
+        RRC     A
+        MOV     R7,A
+        MOV     A,R6
+        RRC     A
+        MOV     R6,A
+        DEC     R5
+        SJMP    RSH
+RSAT:   MOV     A,R7
+        JZ      RLOW
+        MOV     A,#0FFH         ; too big for a byte: 255
+        SJMP    RSTORE
+RLOW:   MOV     A,R6
+        SJMP    RSTORE
+RZERO:  CLR     A
+RSTORE: MOV     @R1,A
+        INC     R1
+        DJNZ    R2,RL1
+
+; ---- layer 2: score k = bias + sum of hidden j * weight, 24 bits in R7:R6:R5
+        MOV     DPTR,#W2        ; each row: 3 bytes of bias, then NH weights
+        MOV     R1,#SCORE
+        MOV     R3,#10
+L2K:    CLR     A
+        MOVC    A,@A+DPTR
+        MOV     R5,A
+        MOV     A,#1
+        MOVC    A,@A+DPTR
+        MOV     R6,A
+        MOV     A,#2
+        MOVC    A,@A+DPTR
+        MOV     R7,A
+        MOV     R0,#HID
+        MOV     R2,#3
+L2J:    MOV     A,R2
+        MOVC    A,@A+DPTR       ; the weight
+        JB      ACC.7,L2NEG
+        MOV     B,@R0
+        MUL     AB              ; hidden * weight: B = high byte, A = low byte
+        ADD     A,R5
+        MOV     R5,A
+        MOV     A,B
+        ADDC    A,R6
+        MOV     R6,A
+        CLR     A
+        ADDC    A,R7
+        MOV     R7,A
+        SJMP    L2NEXT
+L2NEG:  CPL     A               ; a negative weight: multiply by its size and subtract
+        INC     A
+        MOV     B,@R0
+        MUL     AB
+        XCH     A,R5            ; A = the score's low byte, R5 = the product's low byte
+        CLR     C
+        SUBB    A,R5
+        MOV     R5,A
+        MOV     A,R6
+        SUBB    A,B
+        MOV     R6,A
+        MOV     A,R7
+        SUBB    A,#0
+        MOV     R7,A
+L2NEXT: INC     R0
+        INC     R2
+        CJNE    R2,#NH+3,L2J
+        MOV     A,R5            ; keep the score
+        MOV     @R1,A
+        INC     R1
+        MOV     A,R6
+        MOV     @R1,A
+        INC     R1
+        MOV     A,R7
+        MOV     @R1,A
+        INC     R1
+        MOV     A,DPL           ; on to the next digit's row
+        ADD     A,#NH+3
+        MOV     DPL,A
+        JNC     L2N2
+        INC     DPH
+L2N2:   DJNZ    R3,L2K
+
+; ---- the largest score: compare with the sign bit flipped, so that unsigned order is signed order
+        MOV     R1,#SCORE
+        MOV     A,@R1
+        MOV     R5,A
+        INC     R1
+        MOV     A,@R1
+        MOV     R6,A
+        INC     R1
+        MOV     A,@R1
+        XRL     A,#80H
+        MOV     R7,A            ; R7:R6:R5 = the best so far
+        INC     R1
+        MOV     R4,#0           ; its digit
+        MOV     R3,#1
+AMAX:   CLR     C               ; best - score: a borrow means this score is larger
+        MOV     A,R5
+        SUBB    A,@R1
+        INC     R1
+        MOV     A,R6
+        SUBB    A,@R1
+        INC     R1
+        MOV     A,@R1
+        XRL     A,#80H
+        MOV     B,A
+        MOV     A,R7
+        SUBB    A,B
+        JNC     AMNEXT
+        DEC     R1              ; a new best
+        DEC     R1
+        MOV     A,@R1
+        MOV     R5,A
+        INC     R1
+        MOV     A,@R1
+        MOV     R6,A
+        INC     R1
+        MOV     A,@R1
+        XRL     A,#80H
+        MOV     R7,A
+        MOV     A,R3
+        MOV     R4,A
+AMNEXT: INC     R1
+        INC     R3
+        CJNE    R3,#10,AMAX
+
+; ---- show it ("nn 7") and send "=7" and the 10 scores
+        MOV     A,R4
+        MOV     DPTR,#SEGS
+        MOVC    A,@A+DPTR
+        MOV     DBUF+3,A
+        MOV     DBUF+2,#0FFH
+        MOV     A,#'='
+        ACALL   PUTC
+        MOV     A,R4
+        ADD     A,#'0'
+        ACALL   PUTC
+        MOV     R1,#SCORE+2     ; the high byte of score 0
+        MOV     R3,#10
+SEND:   MOV     A,#' '
+        ACALL   PUTC
+        MOV     A,@R1
+        ACALL   PUTHEX
+        DEC     R1
+        MOV     A,@R1
+        ACALL   PUTHEX
+        DEC     R1
+        MOV     A,@R1
+        ACALL   PUTHEX
+        MOV     A,R1
+        ADD     A,#5            ; the high byte of the next score
+        MOV     R1,A
+        DJNZ    R3,SEND
+        MOV     A,#13
+        ACALL   PUTC
+        MOV     A,#10
+        ACALL   PUTC
+        LJMP    WAITD
+
+; ---- serial port
+GETC:   JNB     RI,GETC
+        MOV     A,SBUF
+        CLR     RI
+        RET
+PUTC:   MOV     SBUF,A
+        JNB     TI,$
+        CLR     TI
+        RET
+PUTHEX: PUSH    ACC             ; two hex characters for A
+        SWAP    A
+        ACALL   NIBBLE
+        POP     ACC
+NIBBLE: ANL     A,#0FH
+        CJNE    A,#10,NIB1
+NIB1:   JC      NIB2            ; 0-9
+        ADD     A,#7            ; A-F
+NIB2:   ADD     A,#'0'
+        ACALL   PUTC
+        RET
+PUTS:   CLR     A               ; the text at DPTR, up to a 0 byte
+        MOVC    A,@A+DPTR
+        JZ      PUTS9
+        ACALL   PUTC
+        INC     DPTR
+        SJMP    PUTS
+PUTS9:  RET
+
+; ---- Timer 0, every 256 machine cycles: the next digit of the display (register bank 1)
+T0ISR:  PUSH    PSW
+        PUSH    ACC
+        PUSH    DPL
+        PUSH    DPH
+        MOV     PSW,#08H
+        MOV     P1,#0FFH        ; all digits off while the segments change
+        MOV     A,DIGI
+        INC     A
+        ANL     A,#03H
+        MOV     DIGI,A
+        ADD     A,#DBUF
+        MOV     R0,A
+        MOV     P0,@R0
+        MOV     A,DIGI
+        MOV     DPTR,#DSEL
+        MOVC    A,@A+DPTR
+        MOV     P1,A
+        POP     DPH
+        POP     DPL
+        POP     ACC
+        POP     PSW
+        RETI
+
+DSEL:   DB      0F7H,0EFH,0DFH,0BFH            ; digit 1 to digit 4: P1.3 to P1.6 low
+SEGS:   DB      0C0H,0F9H,0A4H,0B0H,99H,92H,82H,0F8H,80H,90H
+HELLO:  DB      'NN READY',13,10,0
+
+; ---- WEIGHTS (written by nn/train_uci.py)
+NIN     EQU     64              ; inputs
+NH      EQU     28              ; hidden neurons
+SH1     EQU     5               ; hidden values are (sum >> SH1), 0 to 255
+
+B1:
+        DB      033H,001H,0FFH,000H,0CBH,0FFH,0ECH,0FFH,04CH,002H,0A6H,0FFH,0C4H,0FFH,0EAH,0FCH
+        DB      005H,000H,0DCH,000H,0C7H,0FFH,002H,0FFH,056H,0FFH,0F2H,0FCH,0EFH,0FFH,0ADH,001H
+        DB      0BCH,0FFH,0BFH,0FFH,069H,001H,0A6H,000H,0C2H,0FFH,04DH,001H,07AH,0FFH,089H,001H
+        DB      0CFH,0FFH,081H,0FFH,0FCH,002H,082H,001H
+W1:
+        DB      000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+        DB      000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+        DB      0E9H,0FCH,000H,0F8H,0FCH,000H,000H,0F2H,001H,016H,000H,0FBH,006H,0FEH,0FAH,009H
+        DB      000H,000H,007H,017H,000H,0FAH,000H,0EAH,0FCH,001H,01FH,005H
+        DB      021H,028H,000H,0EBH,0CCH,000H,000H,0E7H,0E1H,013H,000H,00FH,0D0H,0EFH,0EBH,034H
+        DB      000H,000H,0ECH,0EAH,000H,020H,000H,019H,0E4H,0F5H,005H,0FDH
+        DB      0E0H,021H,000H,005H,0EAH,000H,000H,021H,0FCH,003H,000H,0E8H,00AH,020H,005H,037H
+        DB      000H,000H,00CH,021H,000H,02CH,000H,0F0H,0EEH,02AH,00FH,016H
+        DB      018H,00BH,000H,0ECH,0DFH,000H,000H,015H,02FH,017H,000H,003H,010H,0E0H,0E6H,033H
+        DB      000H,000H,0DDH,014H,000H,02AH,000H,0F9H,00BH,015H,00AH,0FFH
+        DB      0F6H,005H,000H,0F6H,0CAH,000H,000H,011H,022H,029H,000H,02FH,0D6H,0DCH,0EEH,05BH
+        DB      000H,000H,0A1H,019H,000H,0F3H,000H,015H,00DH,01AH,00EH,009H
+        DB      003H,019H,000H,0D2H,0DDH,000H,000H,002H,0F6H,012H,000H,040H,0B0H,0D7H,0D6H,054H
+        DB      000H,000H,007H,0EFH,000H,013H,000H,00DH,0F0H,0E6H,0FDH,004H
+        DB      00BH,00EH,000H,0FEH,017H,000H,000H,0EFH,0FAH,0EAH,000H,026H,0ABH,0F3H,0E7H,028H
+        DB      000H,000H,0FBH,0EAH,000H,0FEH,000H,022H,0F6H,0E9H,0FBH,0F0H
+        DB      0F4H,000H,000H,0FBH,007H,000H,000H,0F3H,019H,000H,000H,0FAH,0FBH,0FAH,001H,007H
+        DB      000H,000H,00FH,010H,000H,0FFH,000H,0FBH,0FCH,0FFH,00BH,001H
+        DB      0E7H,01AH,000H,0E9H,0D5H,000H,000H,0ECH,022H,025H,000H,0ECH,0F5H,0F4H,0E9H,035H
+        DB      000H,000H,009H,024H,000H,025H,000H,0DEH,0F8H,01BH,006H,0FEH
+        DB      0EBH,015H,000H,0DAH,0F2H,000H,000H,0E8H,0F7H,016H,000H,010H,0F5H,004H,0FBH,023H
+        DB      000H,000H,015H,019H,000H,041H,000H,0CCH,007H,01FH,01FH,029H
+        DB      014H,03EH,000H,0F5H,0EAH,000H,000H,00DH,0E9H,010H,000H,02AH,0C7H,0F5H,0D4H,038H
+        DB      000H,000H,0E4H,0FCH,000H,038H,000H,002H,0FCH,0F6H,0FCH,009H
+        DB      0E4H,027H,000H,0EDH,0CBH,000H,000H,01FH,0E6H,060H,000H,012H,0D5H,01FH,0CFH,042H
+        DB      000H,000H,010H,002H,000H,013H,000H,0F6H,01DH,0FCH,0F5H,006H
+        DB      0DEH,025H,000H,0F7H,0F4H,000H,000H,01CH,0FAH,015H,000H,0FFH,0EAH,015H,00FH,02EH
+        DB      000H,000H,0D7H,02DH,000H,010H,000H,023H,00AH,00FH,007H,025H
+        DB      0D7H,008H,000H,00CH,011H,000H,000H,0FEH,0DEH,012H,000H,0F4H,0FCH,0ECH,04CH,0C4H
+        DB      000H,000H,0FDH,0F8H,000H,00EH,000H,006H,002H,018H,016H,009H
+        DB      002H,0F7H,000H,0EEH,019H,000H,000H,0EAH,000H,00DH,000H,00CH,0E8H,0EEH,0FDH,0FFH
+        DB      000H,000H,0F8H,0F1H,000H,005H,000H,0F7H,019H,0FCH,015H,005H
+        DB      000H,000H,000H,001H,000H,000H,000H,000H,001H,000H,000H,000H,001H,000H,001H,000H
+        DB      000H,000H,000H,0FFH,000H,0FFH,000H,001H,0FFH,001H,000H,000H
+        DB      0D0H,0EEH,000H,01DH,036H,000H,000H,0F6H,000H,00DH,000H,02CH,0F7H,025H,041H,008H
+        DB      000H,000H,0F9H,01AH,000H,0E3H,000H,0E1H,014H,014H,0F8H,0EFH
+        DB      0FAH,022H,000H,01EH,051H,000H,000H,003H,019H,0B4H,000H,010H,0E9H,00EH,046H,0EDH
+        DB      000H,000H,0E0H,012H,000H,0EDH,000H,035H,0CDH,00CH,0D1H,0F7H
+        DB      02AH,0FEH,000H,00BH,0F4H,000H,000H,05AH,0B7H,0A2H,000H,0FEH,043H,01EH,04FH,0F7H
+        DB      000H,000H,0B2H,0DCH,000H,0C7H,000H,030H,0D2H,029H,0BDH,0FFH
+        DB      0E5H,0F2H,000H,017H,0D9H,000H,000H,049H,0C0H,03BH,000H,0F4H,027H,02CH,033H,0F9H
+        DB      000H,000H,0FCH,0E4H,000H,00EH,000H,0F3H,0F8H,01BH,008H,0DBH
+        DB      09FH,041H,000H,018H,024H,000H,000H,000H,0CFH,039H,000H,0AEH,002H,027H,04EH,0E0H
+        DB      000H,000H,04DH,02FH,000H,015H,000H,0E1H,0F0H,01FH,023H,034H
+        DB      0A7H,019H,000H,00DH,011H,000H,000H,01EH,0D5H,04AH,000H,0EEH,001H,01AH,012H,0C7H
+        DB      000H,000H,040H,045H,000H,026H,000H,0C0H,01AH,02DH,02AH,02DH
+        DB      0F9H,004H,000H,0FEH,0FDH,000H,000H,001H,001H,002H,000H,0FBH,0FFH,0FFH,0FEH,005H
+        DB      000H,000H,0FEH,002H,000H,002H,000H,0FEH,000H,003H,002H,003H
+        DB      000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+        DB      000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+        DB      02EH,003H,000H,005H,020H,000H,000H,0DEH,0F2H,0FCH,000H,00FH,00BH,001H,014H,0F1H
+        DB      000H,000H,014H,0FDH,000H,0EAH,000H,009H,007H,0EEH,0C8H,000H
+        DB      046H,03FH,000H,013H,0F1H,000H,000H,0F4H,009H,0B2H,000H,0F4H,0F9H,0F2H,021H,007H
+        DB      000H,000H,013H,0EAH,000H,0D7H,000H,037H,0DEH,0F8H,0B1H,004H
+        DB      02CH,0BFH,000H,02BH,0EBH,000H,000H,0EBH,0F0H,0BDH,000H,0D3H,031H,0E3H,03CH,008H
+        DB      000H,000H,0E5H,0F1H,000H,0DCH,000H,002H,0D7H,028H,02CH,0EAH
+        DB      0DCH,0DAH,000H,018H,008H,000H,000H,00EH,01EH,013H,000H,0E6H,027H,0F5H,0FDH,000H
+        DB      000H,000H,0EDH,0F8H,000H,043H,000H,0E4H,008H,043H,0FFH,0E9H
+        DB      0D0H,04BH,000H,032H,0E5H,000H,000H,006H,018H,01FH,000H,0F4H,0F7H,027H,014H,010H
+        DB      000H,000H,0EDH,0F1H,000H,01DH,000H,025H,0C6H,011H,0E9H,0F7H
+        DB      025H,044H,000H,03BH,0FEH,000H,000H,0C1H,0E5H,01BH,000H,004H,0CFH,004H,00EH,0E8H
+        DB      000H,000H,03CH,0C3H,000H,00DH,000H,044H,0CCH,0EAH,004H,0E6H
+        DB      000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+        DB      000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+        DB      000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+        DB      000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+        DB      028H,01DH,000H,0F9H,0E2H,000H,000H,0FFH,0FBH,0E0H,000H,0E2H,0F2H,0DAH,0EBH,003H
+        DB      000H,000H,0F5H,0F5H,000H,00DH,000H,024H,002H,0F8H,0E7H,00CH
+        DB      013H,017H,000H,02CH,0E0H,000H,000H,0F2H,0F1H,0DDH,000H,0D4H,004H,0FCH,0F8H,0E9H
+        DB      000H,000H,0FEH,005H,000H,0E1H,000H,027H,005H,001H,023H,006H
+        DB      0E6H,0EFH,000H,007H,0FDH,000H,000H,0EEH,02AH,00AH,000H,003H,04BH,0D2H,0FAH,012H
+        DB      000H,000H,0DEH,026H,000H,0FAH,000H,024H,0E3H,024H,028H,0FBH
+        DB      0E8H,0E2H,000H,036H,0F4H,000H,000H,0F0H,040H,005H,000H,0F1H,03AH,01BH,0FBH,004H
+        DB      000H,000H,0FDH,000H,000H,03EH,000H,0EBH,016H,029H,013H,0D3H
+        DB      007H,001H,000H,02EH,0EFH,000H,000H,0E6H,01BH,02CH,000H,0E0H,049H,007H,0F8H,0C8H
+        DB      000H,000H,0F0H,0B6H,000H,033H,000H,013H,007H,02EH,0D2H,0E4H
+        DB      023H,02AH,000H,00AH,0EFH,000H,000H,09AH,008H,044H,000H,004H,012H,0CCH,009H,0F2H
+        DB      000H,000H,00DH,0C3H,000H,0FDH,000H,036H,0F8H,0F6H,004H,0F1H
+        DB      000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+        DB      000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+        DB      001H,000H,000H,000H,000H,000H,000H,0FFH,0FFH,000H,000H,000H,000H,000H,001H,000H
+        DB      000H,000H,000H,0FFH,000H,000H,000H,000H,000H,000H,000H,000H
+        DB      021H,0EEH,000H,046H,0FEH,000H,000H,0B5H,0EEH,0E5H,000H,0D0H,009H,0F7H,019H,0D5H
+        DB      000H,000H,00EH,0D7H,000H,0FCH,000H,013H,0F1H,0FBH,036H,0EBH
+        DB      0CEH,0C9H,000H,05AH,054H,000H,000H,0DEH,0F7H,0ACH,000H,015H,0F2H,030H,0CAH,0B6H
+        DB      000H,000H,049H,03AH,000H,0A4H,000H,01AH,03AH,0C1H,04DH,0EDH
+        DB      00FH,0DBH,000H,05CH,031H,000H,000H,018H,01BH,0BEH,000H,04EH,0E3H,04CH,0D9H,0C5H
+        DB      000H,000H,01DH,0E6H,000H,004H,000H,039H,022H,0EEH,020H,081H
+        DB      02DH,0DAH,000H,03BH,01DH,000H,000H,003H,0D8H,002H,000H,0DBH,037H,0F6H,036H,0FCH
+        DB      000H,000H,0BCH,0E4H,000H,0F9H,000H,01EH,00AH,027H,01EH,0E9H
+        DB      01DH,0F2H,000H,0EEH,013H,000H,000H,0E5H,01EH,025H,000H,0EFH,01CH,0E9H,027H,0FAH
+        DB      000H,000H,027H,00AH,000H,0D2H,000H,005H,008H,0F3H,00FH,024H
+        DB      006H,0E8H,000H,0E8H,019H,000H,000H,0B5H,04FH,041H,000H,002H,016H,0D1H,0E9H,00EH
+        DB      000H,000H,005H,001H,000H,0C5H,000H,028H,024H,0E7H,006H,017H
+        DB      000H,0FEH,000H,0FCH,001H,000H,000H,000H,008H,0FFH,000H,002H,000H,0FCH,0FEH,002H
+        DB      000H,000H,0FEH,000H,000H,0FDH,000H,003H,001H,0FDH,0FDH,001H
+        DB      006H,000H,000H,0FDH,0FDH,000H,000H,000H,000H,000H,000H,002H,0FCH,002H,0FDH,0FFH
+        DB      000H,000H,003H,0FEH,000H,006H,000H,0FDH,003H,0FEH,0FFH,000H
+        DB      026H,0E2H,000H,022H,0CEH,000H,000H,0DEH,0E6H,0FCH,000H,0FFH,0DEH,029H,02EH,0F8H
+        DB      000H,000H,00AH,0E9H,000H,0E4H,000H,0D5H,0F1H,0F7H,024H,0F1H
+        DB      002H,0EEH,000H,0FBH,011H,000H,000H,005H,02DH,0ECH,000H,0FEH,002H,005H,014H,005H
+        DB      000H,000H,021H,016H,000H,0E8H,000H,0FDH,0FEH,0FAH,009H,02EH
+        DB      01AH,0F0H,000H,0F5H,01CH,000H,000H,007H,0F2H,0E4H,000H,029H,002H,0FFH,0F0H,0F2H
+        DB      000H,000H,03EH,0E4H,000H,00BH,000H,0FBH,02EH,0D8H,0E9H,0FDH
+        DB      044H,0EDH,000H,002H,02BH,000H,000H,019H,09DH,0E0H,000H,049H,0DEH,01DH,008H,017H
+        DB      000H,000H,00BH,010H,000H,0C1H,000H,0FEH,02EH,0B2H,0FAH,023H
+        DB      011H,0E3H,000H,0D1H,01DH,000H,000H,0F9H,02EH,02EH,000H,01EH,0F2H,00DH,0FFH,000H
+        DB      000H,000H,045H,031H,000H,0E3H,000H,0E4H,048H,0D1H,00BH,024H
+        DB      01EH,0E8H,000H,019H,0F2H,000H,000H,00FH,01BH,011H,000H,003H,0F2H,01EH,00CH,008H
+        DB      000H,000H,0F7H,0F8H,000H,0EEH,000H,00EH,0F4H,0FAH,015H,0D9H
+        DB      0FDH,0FBH,000H,0FCH,005H,000H,000H,00AH,000H,0F0H,000H,00FH,0F6H,00AH,0FDH,0FCH
+        DB      000H,000H,007H,002H,000H,0FEH,000H,001H,008H,0F9H,0FCH,001H
+        DB      001H,000H,000H,0FFH,000H,000H,000H,000H,000H,000H,000H,001H,0FFH,000H,0FFH,000H
+        DB      000H,000H,000H,000H,000H,001H,000H,0FFH,001H,000H,000H,000H
+        DB      00CH,0FFH,000H,0F2H,0F4H,000H,000H,006H,0F5H,012H,000H,00AH,007H,009H,001H,0F9H
+        DB      000H,000H,001H,0F7H,000H,0FDH,000H,0EBH,00DH,0FDH,004H,000H
+        DB      017H,0F0H,000H,0D0H,0EBH,000H,000H,00EH,0CDH,027H,000H,018H,010H,0FBH,008H,014H
+        DB      000H,000H,00EH,001H,000H,015H,000H,0E8H,015H,018H,01DH,02FH
+        DB      0F0H,0FBH,000H,0C7H,0EBH,000H,000H,01FH,024H,0EDH,000H,027H,0FBH,003H,0FEH,045H
+        DB      000H,000H,016H,048H,000H,005H,000H,0FAH,0F6H,000H,000H,040H
+        DB      008H,0FCH,000H,0F6H,030H,000H,000H,023H,031H,0C6H,000H,015H,00FH,00DH,01BH,0E9H
+        DB      000H,000H,010H,019H,000H,0DAH,000H,0FBH,031H,010H,0CEH,020H
+        DB      01FH,0EEH,000H,0FCH,029H,000H,000H,02CH,00EH,011H,000H,01AH,011H,00FH,0DEH,0C5H
+        DB      000H,000H,02DH,008H,000H,018H,000H,017H,01AH,0EBH,0F1H,0C4H
+        DB      023H,0EDH,000H,018H,001H,000H,000H,041H,018H,0AAH,000H,025H,0F3H,032H,0F9H,0F8H
+        DB      000H,000H,000H,005H,000H,033H,000H,0F4H,006H,006H,011H,0D7H
+        DB      002H,0F5H,000H,025H,003H,000H,000H,01CH,0F0H,0CFH,000H,012H,002H,022H,002H,0F2H
+        DB      000H,000H,0FEH,002H,000H,009H,000H,007H,0F9H,005H,002H,0ECH
+W2:
+        DB      0EAH,0FEH,0FFH,0D4H,059H,000H,002H,019H,000H,000H,0CCH,0FFH,0A8H,000H,0FDH,0D3H,019H,008H,0E9H,000H,000H,049H,0F9H,000H,0A7H,000H,020H,029H,099H,0DFH,030H
+        DB      0F1H,0FAH,0FFH,0F9H,0C6H,000H,03DH,0F3H,000H,000H,047H,0A3H,061H,000H,020H,023H,037H,01BH,0E4H,000H,000H,0B2H,0E5H,000H,0C8H,000H,00FH,0F8H,013H,0EEH,0A6H
+        DB      008H,000H,000H,023H,0E7H,000H,0D3H,0EEH,000H,000H,01FH,0DCH,0AAH,000H,041H,09CH,048H,0C8H,0F7H,000H,000H,049H,02FH,000H,049H,000H,0A1H,023H,0E8H,010H,003H
+        DB      046H,000H,000H,017H,0C9H,000H,099H,008H,000H,000H,0F3H,016H,04CH,000H,0FEH,043H,0BEH,0FCH,008H,000H,000H,0E2H,001H,000H,008H,000H,0B5H,035H,016H,018H,02AH
+        DB      04FH,003H,000H,058H,006H,000H,042H,004H,000H,000H,081H,099H,0C2H,000H,0CFH,010H,0DAH,041H,0A0H,000H,000H,000H,0A2H,000H,01DH,000H,022H,0F8H,01CH,01DH,0C0H
+        DB      0B0H,000H,000H,025H,01CH,000H,0A0H,0ACH,000H,000H,014H,057H,0CAH,000H,035H,09DH,0D9H,0F4H,06FH,000H,000H,0A0H,0F4H,000H,0E5H,000H,012H,0F6H,0EFH,0A9H,015H
+        DB      0A2H,0FFH,0FFH,005H,0BEH,000H,0FEH,049H,000H,000H,02DH,04BH,0ECH,000H,014H,013H,0C7H,0B2H,0ADH,000H,000H,01FH,00AH,000H,0C2H,000H,03AH,02CH,0B3H,0F6H,00DH
+        DB      0DAH,000H,000H,0F4H,023H,000H,02AH,0DAH,000H,000H,0AFH,0BFH,03DH,000H,0E4H,003H,0DDH,08FH,025H,000H,000H,0C7H,0D4H,000H,051H,000H,00AH,0F6H,00EH,037H,0B6H
+        DB      0E4H,001H,000H,0A9H,0D8H,000H,019H,01FH,000H,000H,0FBH,038H,081H,000H,0F8H,001H,010H,022H,010H,000H,000H,00DH,041H,000H,0BEH,000H,0EAH,0DCH,00AH,02EH,008H
+        DB      05CH,001H,000H,0AFH,027H,000H,0F7H,0A0H,000H,000H,01CH,003H,0F9H,000H,09DH,00EH,0FDH,01FH,00CH,000H,000H,021H,016H,000H,011H,000H,0F5H,0ADH,036H,0B0H,010H
+        END

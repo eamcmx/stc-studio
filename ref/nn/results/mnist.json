@@ -1,0 +1,48 @@
+{
+ "train": 60000,
+ "test": 10000,
+ "H": 32,
+ "threshold": 96,
+ "epochs": 20,
+ "lit_per_image_test": 30.5,
+ "seeds": [
+  {
+   "seed": 1,
+   "float_pct": 95.96,
+   "int8_pct": 95.91,
+   "sh1": 1
+  },
+  {
+   "seed": 2,
+   "float_pct": 96.22,
+   "int8_pct": 96.16,
+   "sh1": 1
+  },
+  {
+   "seed": 3,
+   "float_pct": 96.05,
+   "int8_pct": 96.05,
+   "sh1": 1
+  },
+  {
+   "seed": 4,
+   "float_pct": 95.78,
+   "int8_pct": 95.71,
+   "sh1": 1
+  },
+  {
+   "seed": 5,
+   "float_pct": 95.73,
+   "int8_pct": 95.78,
+   "sh1": 1
+  }
+ ],
+ "int8_mean": 95.92,
+ "int8_sd": 0.19,
+ "shipped_int8_pct": 95.91,
+ "baselines": {
+  "1-NN, 14 x 14 binary": 94.31,
+  "1-NN, 28 x 28, 256 grey levels": 96.91,
+  "float MLP 784-128-10, 28 x 28 grey": 97.62
+ }
+}

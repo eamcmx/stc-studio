@@ -1,0 +1,67 @@
+ ORG 0
+ DB 2+3*4
+ DB (2+3)*4
+ DB 17 MOD 5
+ DB 17/5
+ DB 1 SHL 4
+ DB 80H SHR 4
+ DB 0F0H AND 3CH
+ DB 0F0H OR 0FH
+ DB 0FFH XOR 0AAH
+ DB NOT 0
+ DB LOW(NOT 0)
+ DB HIGH 1234H
+ DB LOW 1234H
+ DB HIGH(1234H)
+ DB 3 EQ 3
+ DB LOW(3 EQ 3)
+ DB 3 = 3
+ DB 3 NE 4
+ DB 3 <> 4
+ DB 3 LT 4
+ DB 3 < 4
+ DB 4 GT 3
+ DB 3 LE 3
+ DB 3 GE 4
+ DB 1 + 2 SHL 1
+ DB 1 OR 2 + 4
+ DB 6 AND 3 OR 8
+ DB 2 * -3
+ DB -2 * 3
+ DB - - 3
+ DB NOT 1 + 1
+ DB HIGH 1234H + 1
+ DB 1 - 2
+ DB LOW(1 - 2)
+ DB 0FFFFH + 2
+ DW 0FFFFH + 2
+ DW 7FFFH * 3
+ DB 10 / 0
+ DB 5 MOD 0
+ DW 1 SHL 16
+ DB 'A' + 1
+ DB 3 EQ 3 AND 1
+ DW 3 EQ 3
+ DW 3 > 2 + 5
+ DB 7 AND 3 XOR 1
+ DB 1 XOR 3 AND 1
+ DB 1 OR 3 XOR 3
+ DW -1 / 2
+ DW -4 SHR 1
+ DW NOT 1 SHR 8
+ DW 100 * 1000
+ DW 1 SHL 15 * 2
+ DB 8 / 2 * 2
+ DB 9 - 3 - 2
+ DB 2 SHL 1 SHL 1
+ DB +5
+ DB (((1)))
+ DB (1
+ DB 1)
+ DB 1 +
+ DB HIGH
+ DB 0FFH AND NOT 0FH
+ DW 0FFFFH > 1
+ DW -1 > 1
+ DW 3 MOD -2
+ END

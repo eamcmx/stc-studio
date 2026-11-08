@@ -1,0 +1,107 @@
+A51 MACRO ASSEMBLER  T                                                                    11/07/2026 13:36:44 PAGE     1
+
+
+MACRO ASSEMBLER A51 V8.2.7.0
+NO OBJECT MODULE REQUESTED
+ASSEMBLER INVOKED BY: C:\Keil_v5\C51\BIN\A51.EXE t.a51
+
+LOC  OBJ            LINE     SOURCE
+
+0000                   1      ORG 0
+0000 D2B6              2      SETB P3.6
+0002 D200              3      SETB 20H.0
+0004 D27F              4      SETB 2FH.7
+0006                   5      SETB 30H.0
+*** _______________________________^
+*** ERROR #A17 IN 5 (t.a51, LINE 5): INVALID BYTE BASE IN BIT ADDRESS EXPRESSION
+0006                   6      SETB P0.8
+*** __________________________________^
+*** ERROR #A18 IN 6 (t.a51, LINE 6): OUT OF RANGE OR NON-TYPELESS BIT-OFFSET
+0006 D2E7              7      SETB ACC.7
+0008 D2E7              8      SETB 0E0H.7
+000A                   9      SETB 0E1H.0
+*** _______________________________^
+*** ERROR #A17 IN 9 (t.a51, LINE 9): INVALID BYTE BASE IN BIT ADDRESS EXPRESSION
+000A D27F             10      SETB 7FH
+000C D280             11      SETB 80H
+000E D2G0             12      SETB 100H
+0010 D3               13      SETB C
+0011 D2D7             14      SETB CY
+0013 C2D7             15      CLR  CY
+0015 B3               16      CPL  C
+0016 A2D0             17      MOV  C,P
+0018 A2D0             18      MOV  C,PSW.0
+001A A2E0             19      MOV  C,ACC.0
+001C B0B2             20      ANL  C,/P3.2
+001E A000             21      ORL  C,/0
+0020 9290             22      MOV  P1.0,C
+0022 20E7FD           23      JB   ACC.7,$
+0025 1001FD           24      JBC  20H.1,$
+  00B6                25     X EQU P3.6
+0028 D2B6             26      SETB X
+  0003                27     Y BIT 20H.3
+002A D203             28      SETB Y
+  0002                29     Z BIT 2
+002C D202             30      SETB Z
+  0021                31     W DATA 21H
+002E D208             32      SETB W.0
+0030 D200             33      SETB W
+*** _______________________________^
+*** ERROR #A48 IN 33 (t.a51, LINE 33): DATA-ADDRESS EXPECTED
+  0021                34     V EQU 21H
+0032 D209             35      SETB V.1
+0034 D221             36      SETB V
+0036 D28C             37      SETB TR0
+0038 D28D             38      SETB TR0+1
+003A D2B3             39      SETB P3.2+1
+003C D2B2             40      SETB P3.(1+1)
+003E                  41      SETB 1FH.0
+*** _______________________________^
+*** ERROR #A17 IN 41 (t.a51, LINE 41): INVALID BYTE BASE IN BIT ADDRESS EXPRESSION
+003E D2B6             42      SETB P3 . 6
+0040                  43      SETB P3.-1
+*** __________________________________^
+*** ERROR #A18 IN 43 (t.a51, LINE 43): OUT OF RANGE OR NON-TYPELESS BIT-OFFSET
+0040                  44      SETB X.1
+*** _______________________________^
+*** ERROR #A17 IN 44 (t.a51, LINE 44): INVALID BYTE BASE IN BIT ADDRESS EXPRESSION
+A51 MACRO ASSEMBLER  T                                                                    11/07/2026 13:36:44 PAGE     2
+
+0040 A2B6             45      MOV C,X
+0042 92B6             46      MOV X,C
+0044 B2B6             47      CPL X
+0046 D2FF             48      SETB 0FFH
+0048 D2FF             49      SETB 0F8H.7
+004A D2F0             50      SETB B.0
+004C E500             51      MOV A,X
+*** ________________________________^
+*** ERROR #A48 IN 51 (t.a51, LINE 51): DATA-ADDRESS EXPECTED
+                      52      END
+A51 MACRO ASSEMBLER  T                                                                    11/07/2026 13:36:44 PAGE     3
+
+SYMBOL TABLE LISTING
+------ ----- -------
+
+
+N A M E             T Y P E  V A L U E   ATTRIBUTES
+
+ACC. . . . . . . .  D ADDR   00E0H   A   
+B. . . . . . . . .  D ADDR   00F0H   A   
+CY . . . . . . . .  B ADDR   00D0H.7 A   
+P. . . . . . . . .  B ADDR   00D0H.0 A   
+P0 . . . . . . . .  D ADDR   0080H   A   
+P1 . . . . . . . .  D ADDR   0090H   A   
+P3 . . . . . . . .  D ADDR   00B0H   A   
+PSW. . . . . . . .  D ADDR   00D0H   A   
+TR0. . . . . . . .  B ADDR   0088H.4 A   
+V. . . . . . . . .  N NUMB   0021H   A   
+W. . . . . . . . .  D ADDR   0021H   A   
+X. . . . . . . . .  B ADDR   00B0H.6 A   
+Y. . . . . . . . .  B ADDR   0020H.3 A   
+Z. . . . . . . . .  B ADDR   0020H.2 A   
+
+
+REGISTER BANK(S) USED: 0 
+
+
+ASSEMBLY COMPLETE.  0 WARNING(S), 8 ERROR(S)

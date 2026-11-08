@@ -1,0 +1,5 @@
+ ORG 0
+ MOV 0FFFFH,#1
+ ORG 0FFFFH
+ DB 1,2
+ END

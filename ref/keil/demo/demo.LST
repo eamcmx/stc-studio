@@ -1,0 +1,1260 @@
+A51 MACRO ASSEMBLER  T                                                                    11/07/2026 13:34:11 PAGE     1
+
+
+MACRO ASSEMBLER A51 V8.2.7.0
+OBJECT MODULE PLACED IN t.OBJ
+ASSEMBLER INVOKED BY: C:\Keil_v5\C51\BIN\A51.EXE t.a51
+
+LOC  OBJ            LINE     SOURCE
+
+                       1     ;=======================================================================
+                       2     ; STC89C52RC board demo: four games with sound and light
+                       3     ;
+                       4     ; Power on: a light runs along the LEDs while the buzzer slides up and
+                       5     ; down, the display scrolls HELLO to a short tune, then the menu shows
+                       6     ;
+                       7     ;       P   E   5   r        (one letter above each button)
+                       8     ;      S5  S4  S3  S2
+                       9     ;
+                      10     ;   S5  P  Binary piano  the four buttons are the bits 8 4 2 1 of a
+                      11     ;                        number; the display shows the bits, the
+                      12     ;                        buzzer plays note number 1..15 of the scale
+                      13     ;   S4  E  Echo          the board plays a growing tune of four notes,
+                      14     ;                        you play it back (memory game, 20 rounds)
+                      15     ;   S3  5  Song          Ode to Joy, the LEDs bounce with the music
+                      16     ;   S2  r  Reaction      wait for Go, press any button, the display
+                      17     ;                        shows your reaction time in milliseconds
+                      18     ;
+                      19     ; Leave the menu alone for 12 s and the board plays the song by itself.
+                      20     ;
+                      21     ; Board wiring (TSI STC89C52RC board):
+                      22     ;   P0.0-P0.7  segments a-g, dp (lit by 0) and LEDs D1-D8 (lit by 0)
+                      23     ;   P1.3-P1.6  digit enables, left to right (digit on at 0)
+                      24     ;   P3.5-P3.2  buttons S5, S4, S3, S2 (a pressed button reads 0)
+                      25     ;   P3.6       buzzer LS1 (it sounds while the pin toggles)
+                      26     ; Clock 11.0592 MHz, 12 clocks per machine cycle: 1 cycle = 1.085 us
+                      27     ;
+                      28     ; How it works:
+                      29     ;   Timer 0 (high priority) flips P3.6 every half period of the note.
+                      30     ;   Timer 1 interrupts every 1 ms. It lights one digit per interrupt
+                      31     ;   (all four every 4 ms), counts milliseconds, runs the wait timer
+                      32     ;   and plays tunes in the background, so the main program can scroll
+                      33     ;   text or move lights while music plays.
+                      34     ;=======================================================================
+                      35     
+                      36     ;--------------------------- RAM ---------------------------------------
+                      37     ; bit flags in 20H
+  0000                38     LEDMODE BIT     00H             ; 1: digits off, P0 shows LEDPAT on the LEDs
+  0001                39     PLAYING BIT     01H             ; 1: Timer 1 is playing a tune
+  0002                40     LEGATO  BIT     02H             ; 1: this note runs into the next (no gap)
+  0003                41     DLYRUN  BIT     03H             ; 1: the millisecond wait timer is running
+  0004                42     NZFLAG  BIT     04H             ; used by SHOWDEC to blank leading zeros
+                      43     
+  0030                44     DISP    EQU     30H             ; 30H-33H segment codes of digits 1-4
+  0034                45     LEDPAT  EQU     34H             ; LED pattern for LEDMODE (0 = LED on)
+  0035                46     NOTEH   EQU     35H             ; Timer 0 reload for the note now playing
+  0036                47     NOTEL   EQU     36H
+  0037                48     TICKL   EQU     37H             ; milliseconds since power on (16 bits)
+  0038                49     TICKH   EQU     38H
+  0039                50     DLYL    EQU     39H             ; wait timer, counts down in ms
+  003A                51     DLYH    EQU     3AH
+  003B                52     SONGL   EQU     3BH             ; where the tune player is in the tune
+  003C                53     SONGH   EQU     3CH
+  003D                54     PRE     EQU     3DH             ; 10 ms prescaler for the tune player
+  003E                55     NOTECNT EQU     3EH             ; 10 ms steps left of the current note
+  003F                56     CURNOTE EQU     3FH             ; note sounding now (0 = silence)
+  0040                57     RND     EQU     40H             ; random number generator state
+  0041                58     LEN     EQU     41H             ; Echo: length of the tune
+A51 MACRO ASSEMBLER  T                                                                    11/07/2026 13:34:11 PAGE     2
+
+  0042                59     CNT     EQU     42H             ; Echo: notes left to play or check
+  0043                60     PADV    EQU     43H             ; Echo: button the player pressed
+  0044                61     PN      EQU     44H             ; Piano: number held on the buttons
+  0045                62     LEVEL   EQU     45H             ; Song: height of the LED bar
+  0046                63     TSTL    EQU     46H             ; Reaction: time of Go (16 bits)
+  0047                64     TSTH    EQU     47H
+  0048                65     SEQ     EQU     48H             ; Echo: the tune, 48H-5BH (20 steps)
+  0014                66     MAXLEN  EQU     20
+                      67     ; stack 60H-7FH (SP starts at 5FH)
+                      68     
+  00B6                69     BUZ     BIT     P3.6
+                      70     
+                      71     ;--------------------------- constants ---------------------------------
+  FC6D                72     T1RL    EQU     0FC6DH          ; 1 ms: 65536-922 cycles, +7 for the reload delay
+                      73     
+                      74     ; 7-segment codes (a = bit 0 ... g = bit 6, dp = bit 7, a 0 lights it)
+  00C0                75     SG_0    EQU     0C0H
+  00F9                76     SG_1    EQU     0F9H
+  00A4                77     SG_2    EQU     0A4H
+  00B0                78     SG_3    EQU     0B0H
+  0099                79     SG_4    EQU     099H
+  0092                80     SG_5    EQU     092H
+  0082                81     SG_6    EQU     082H
+  00F8                82     SG_7    EQU     0F8H
+  0080                83     SG_8    EQU     080H
+  0090                84     SG_9    EQU     090H
+  0088                85     SG_A    EQU     088H
+  00C6                86     SG_UC   EQU     0C6H            ; C
+  00A7                87     SG_LC   EQU     0A7H            ; c
+  00A1                88     SG_LD   EQU     0A1H            ; d
+  0086                89     SG_E    EQU     086H
+  00C2                90     SG_G    EQU     0C2H
+  0089                91     SG_H    EQU     089H
+  00F9                92     SG_I    EQU     0F9H
+  00E1                93     SG_J    EQU     0E1H
+  00C7                94     SG_L    EQU     0C7H
+  00AB                95     SG_LN   EQU     0ABH            ; n
+  00A3                96     SG_LO   EQU     0A3H            ; o
+  00C0                97     SG_O    EQU     0C0H
+  008C                98     SG_P    EQU     08CH
+  00AF                99     SG_LR   EQU     0AFH            ; r
+  0092               100     SG_S    EQU     092H
+  0087               101     SG_LT   EQU     087H            ; t
+  00C1               102     SG_U    EQU     0C1H
+  0091               103     SG_LY   EQU     091H            ; y
+  00BF               104     SG_DASH EQU     0BFH
+  00FF               105     SG_SP   EQU     0FFH            ; blank
+                     106     
+                     107     ; note numbers (the tune data uses these; 0 = rest, +LEG = no gap)
+  0001               108     N_C5    EQU     1
+  0002               109     N_D5    EQU     2
+  0003               110     N_E5    EQU     3
+  0004               111     N_F5    EQU     4
+  0005               112     N_G5    EQU     5
+  0006               113     N_A5    EQU     6
+  0007               114     N_B5    EQU     7
+  0008               115     N_C6    EQU     8
+  0009               116     N_D6    EQU     9
+  000A               117     N_E6    EQU     10
+  000B               118     N_F6    EQU     11
+  000C               119     N_G6    EQU     12
+  000D               120     N_A6    EQU     13
+  000E               121     N_B6    EQU     14
+  000F               122     N_C7    EQU     15
+  0010               123     N_D7    EQU     16
+  0011               124     N_E7    EQU     17
+A51 MACRO ASSEMBLER  T                                                                    11/07/2026 13:34:11 PAGE     3
+
+  0012               125     N_F7    EQU     18
+  0013               126     N_G7    EQU     19
+  0014               127     N_A7    EQU     20
+  0015               128     N_B7    EQU     21
+  0016               129     N_C8    EQU     22
+  0017               130     N_LOW   EQU     23
+  0080               131     LEG     EQU     80H
+                     132     
+                     133     ;--------------------------- vectors -----------------------------------
+0000                 134             ORG     0000H
+0000 020030          135             LJMP    START
+                     136     
+000B                 137             ORG     000BH           ; Timer 0: one half period of the note is over
+000B 85358C          138             MOV     TH0,NOTEH       ; reload first, so the next half period is exact
+000E 85368A          139             MOV     TL0,NOTEL
+0011 B2B6            140             CPL     BUZ             ; flip the buzzer pin
+0013 32              141             RETI                    ; (runs into 0013H: INT1 is not used)
+                     142     
+001B                 143             ORG     001BH           ; Timer 1: every millisecond
+001B 02043A          144             LJMP    T1_ISR
+                     145     
+                     146     ;--------------------------- start -------------------------------------
+0030                 147             ORG     0030H
+0030 75815F          148     START:  MOV     SP,#5FH
+0033 7580FF          149             MOV     P0,#0FFH        ; segments and LEDs off
+0036 7590FF          150             MOV     P1,#0FFH        ; digits off
+0039 D2B6            151             SETB    BUZ             ; buzzer transistor off
+003B 7820            152             MOV     R0,#20H         ; clear the flags and variables 20H-5FH
+003D 7600            153     CLRRAM: MOV     @R0,#0
+003F 08              154             INC     R0
+0040 B860FA          155             CJNE    R0,#60H,CLRRAM
+0043 5105            156             ACALL   BLANK
+0045 7534FF          157             MOV     LEDPAT,#0FFH
+0048 75405A          158             MOV     RND,#5AH
+004B 758911          159             MOV     TMOD,#11H       ; Timer 0 and Timer 1 in mode 1 (16 bits)
+004E 758DFC          160             MOV     TH1,#HIGH(T1RL)
+0051 758B6D          161             MOV     TL1,#LOW(T1RL)
+0054 D28E            162             SETB    TR1
+0056 75B802          163             MOV     IP,#02H         ; PT0: the tone interrupt may interrupt Timer 1
+0059 75A88A          164             MOV     IE,#8AH         ; EA + ET1 + ET0
+                     165     
+                     166     ; intro 1: a light runs along the LEDs and follows the pitch
+005C D200            167             SETB    LEDMODE
+005E 9005B1          168             MOV     DPTR,#T_SWEEP
+0061 718A            169             ACALL   PLAY
+0063 E53F            170     IN_L:   MOV     A,CURNOTE       ; notes C6 (8) .. C8 (22) -> LED 0..7
+0065 C3              171             CLR     C
+0066 9408            172             SUBB    A,#N_C6
+0068 4008            173             JC      IN_W            ; silence: keep the last LED
+006A C3              174             CLR     C
+006B 13              175             RRC     A               ; (note - 8) / 2
+006C 90050C          176             MOV     DPTR,#ONEHOT
+006F 93              177             MOVC    A,@A+DPTR
+0070 F534            178             MOV     LEDPAT,A
+0072 2001EE          179     IN_W:   JB      PLAYING,IN_L
+0075 7534FF          180             MOV     LEDPAT,#0FFH
+0078 C200            181             CLR     LEDMODE
+                     182     
+                     183     ; intro 2: HELLO scrolls in while a tune plays, then the menu legend
+007A 9005ED          184             MOV     DPTR,#T_HELLO
+007D 718A            185             ACALL   PLAY
+007F 900525          186             MOV     DPTR,#M_HELLO
+0082 7414            187             MOV     A,#20           ; 200 ms per step
+0084 71AC            188             ACALL   SCROLL
+0086 4009            189             JC      MENU            ; a button skips the intro
+0088 719D            190             ACALL   WAITSONG
+A51 MACRO ASSEMBLER  T                                                                    11/07/2026 13:34:11 PAGE     4
+
+008A 900532          191             MOV     DPTR,#M_LEGEND
+008D 7412            192             MOV     A,#18           ; 180 ms per step
+008F 71AC            193             ACALL   SCROLL
+                     194     
+                     195     ;--------------------------- menu --------------------------------------
+0091 71A1            196     MENU:   ACALL   STOPSONG
+0093 C200            197             CLR     LEDMODE
+0095 900599          198             MOV     DPTR,#M_MENU
+0098 71D3            199             ACALL   SHOW4           ; P E 5 r
+009A 7DF0            200             MOV     R5,#240         ; 240 x 50 ms = 12 s
+009C 710A            201             ACALL   WAITKEY
+009E 501A            202             JNC     MN_IDLE
+00A0 C0E0            203             PUSH    ACC
+00A2 9005FB          204             MOV     DPTR,#T_CLICK
+00A5 718A            205             ACALL   PLAY
+00A7 713D            206             ACALL   WAITREL
+00A9 719D            207             ACALL   WAITSONG
+00AB D0E0            208             POP     ACC
+00AD 23              209             RL      A               ; each AJMP below takes 2 bytes
+00AE 9000B2          210             MOV     DPTR,#MN_JMP
+00B1 73              211             JMP     @A+DPTR
+00B2 01BC            212     MN_JMP: AJMP    PIANO           ; S5
+00B4 2110            213             AJMP    ECHO            ; S4
+00B6 4112            214             AJMP    SONG            ; S3
+00B8 415F            215             AJMP    REACT           ; S2
+00BA 4112            216     MN_IDLE:AJMP    SONG            ; nobody there: play the song
+                     217     
+                     218     ;======================= mode 1: binary piano ==========================
+                     219     ; The buttons S5 S4 S3 S2 are the bits 8 4 2 1 of a number n. Hold one
+                     220     ; or more: the display shows the four bits and the buzzer plays note n
+                     221     ; of the scale (1 = C6 ... 8 = C7 ... 15 = C8). 10 s idle: back to menu.
+00BC 900554          222     PIANO:  MOV     DPTR,#M_PIANO
+00BF 7414            223             MOV     A,#20
+00C1 71AC            224             ACALL   SCROLL
+00C3 713D            225             ACALL   WAITREL
+00C5 754400          226             MOV     PN,#0
+00C8 E4              227             CLR     A
+00C9 11F2            228             ACALL   P_SHOW          ; 0000
+00CB 7DC8            229     PI_W:   MOV     R5,#200         ; 10 s
+00CD 710A            230             ACALL   WAITKEY
+00CF 501F            231             JNC     PI_X
+00D1 7102            232     PI_H:   ACALL   KEYS            ; A = n (bit 3 = S5 ... bit 0 = S2)
+00D3 600F            233             JZ      PI_R
+00D5 B54402          234             CJNE    A,PN,PI_N
+00D8 8004            235             SJMP    PI_D
+00DA F544            236     PI_N:   MOV     PN,A            ; the number changed: show it, play it
+00DC 11F2            237             ACALL   P_SHOW
+00DE 7401            238     PI_D:   MOV     A,#1
+00E0 714A            239             ACALL   WAITA           ; look again in 10 ms
+00E2 80ED            240             SJMP    PI_H
+00E4 754400          241     PI_R:   MOV     PN,#0           ; all buttons up
+00E7 E4              242             CLR     A
+00E8 11F2            243             ACALL   P_SHOW
+00EA 7402            244             MOV     A,#2
+00EC 714A            245             ACALL   WAITA           ; release bounce
+00EE 80DB            246             SJMP    PI_W
+00F0 0191            247     PI_X:   AJMP    MENU
+                     248     
+                     249     ; show n (A = 0..15) as four bits and play note n + 7 (0 = silence)
+00F2 FA              250     P_SHOW: MOV     R2,A
+00F3 C4              251             SWAP    A               ; bit 3 of n to bit 7
+00F4 7830            252             MOV     R0,#DISP
+00F6 7B04            253             MOV     R3,#4
+00F8 33              254     PS_L:   RLC     A               ; next bit, S5 first, into C
+00F9 C0E0            255             PUSH    ACC
+00FB 74C0            256             MOV     A,#SG_0
+A51 MACRO ASSEMBLER  T                                                                    11/07/2026 13:34:11 PAGE     5
+
+00FD 5002            257             JNC     PS_Z
+00FF 74F9            258             MOV     A,#SG_1
+0101 F6              259     PS_Z:   MOV     @R0,A
+0102 08              260             INC     R0
+0103 D0E0            261             POP     ACC
+0105 DBF1            262             DJNZ    R3,PS_L
+0107 EA              263             MOV     A,R2
+0108 6004            264             JZ      PS_OFF
+010A 2407            265             ADD     A,#N_C6-1       ; n = 1 is C6
+010C 6166            266             AJMP    TONE
+010E 6183            267     PS_OFF: AJMP    TONE_OFF
+                     268     
+                     269     ;========================= mode 2: Echo ================================
+                     270     ; The board plays a tune of 1, 2, 3 ... notes. Each button has its own
+                     271     ; note and lights its own digit: S5 C6, S4 E6, S3 G6, S2 C7. Play the
+                     272     ; tune back; every round adds one note and the board plays faster.
+0110 900561          273     ECHO:   MOV     DPTR,#M_ECHO
+0113 7414            274             MOV     A,#20
+0115 71AC            275             ACALL   SCROLL
+0117 713D            276             ACALL   WAITREL
+0119 E537            277             MOV     A,TICKL         ; seed the random numbers from the time
+011B 6540            278             XRL     A,RND
+011D 7001            279             JNZ     EC_S
+011F 04              280             INC     A
+0120 F540            281     EC_S:   MOV     RND,A
+0122 754100          282             MOV     LEN,#0
+0125 912F            283     EC_RND: ACALL   RAND            ; add one random step to the tune
+0127 6537            284             XRL     A,TICKL         ; mix in the player's timing
+0129 5403            285             ANL     A,#03H
+012B C0E0            286             PUSH    ACC
+012D E541            287             MOV     A,LEN
+012F 2448            288             ADD     A,#SEQ
+0131 F8              289             MOV     R0,A
+0132 D0E0            290             POP     ACC
+0134 F6              291             MOV     @R0,A
+0135 0541            292             INC     LEN
+0137 7530AF          293             MOV     DISP+0,#SG_LR   ; show the round: r 05
+013A 7531FF          294             MOV     DISP+1,#SG_SP
+013D E541            295             MOV     A,LEN
+013F 71E0            296             ACALL   SHOW2
+0141 7446            297             MOV     A,#70
+0143 714A            298             ACALL   WAITA
+0145 5105            299             ACALL   BLANK
+0147 7419            300             MOV     A,#25
+0149 714A            301             ACALL   WAITA
+014B 7948            302             MOV     R1,#SEQ         ; the board plays the tune
+014D 854142          303             MOV     CNT,LEN
+0150 E7              304     EC_P:   MOV     A,@R1
+0151 31EB            305             ACALL   PAD_ON
+0153 E541            306             MOV     A,LEN           ; note time = 420 - 20 x LEN ms, at least 160
+0155 23              307             RL      A
+0156 F5F0            308             MOV     B,A
+0158 742A            309             MOV     A,#42
+015A C3              310             CLR     C
+015B 95F0            311             SUBB    A,B
+015D 4005            312             JC      EC_MIN
+015F B41000          313             CJNE    A,#16,$+3       ; C = 1 when A < 16
+0162 5002            314             JNC     EC_T
+0164 7410            315     EC_MIN: MOV     A,#16
+0166 714A            316     EC_T:   ACALL   WAITA
+0168 5103            317             ACALL   PAD_OFF
+016A 7408            318             MOV     A,#8
+016C 714A            319             ACALL   WAITA
+016E 09              320             INC     R1
+016F D542DE          321             DJNZ    CNT,EC_P
+0172 7948            322             MOV     R1,#SEQ         ; now the player
+A51 MACRO ASSEMBLER  T                                                                    11/07/2026 13:34:11 PAGE     6
+
+0174 854142          323             MOV     CNT,LEN
+0177 7D3C            324     EC_I:   MOV     R5,#60          ; 3 s for each press
+0179 710A            325             ACALL   WAITKEY
+017B 5043            326             JNC     EC_FAIL         ; too slow
+017D F543            327             MOV     PADV,A
+017F 31EB            328             ACALL   PAD_ON
+0181 740F            329             MOV     A,#15
+0183 714A            330             ACALL   WAITA           ; sound at least 150 ms
+0185 7102            331     EC_H:   ACALL   KEYS
+0187 70FC            332             JNZ     EC_H            ; until the button is let go
+0189 5103            333             ACALL   PAD_OFF
+018B 7402            334             MOV     A,#2
+018D 714A            335             ACALL   WAITA
+018F E543            336             MOV     A,PADV
+0191 67              337             XRL     A,@R1
+0192 702C            338             JNZ     EC_FAIL         ; wrong button
+0194 09              339             INC     R1
+0195 D542DF          340             DJNZ    CNT,EC_I
+0198 7414            341             MOV     A,#20           ; round complete
+019A 714A            342             ACALL   WAITA
+019C 9005FF          343             MOV     DPTR,#T_OK
+019F 718A            344             ACALL   PLAY
+01A1 719D            345             ACALL   WAITSONG
+01A3 741E            346             MOV     A,#30
+01A5 714A            347             ACALL   WAITA
+01A7 E541            348             MOV     A,LEN
+01A9 B41412          349             CJNE    A,#MAXLEN,EC_MORE
+01AC 900607          350             MOV     DPTR,#T_WIN     ; all 20 rounds
+01AF 718A            351             ACALL   PLAY
+01B1 90058C          352             MOV     DPTR,#M_SUPER
+01B4 7414            353             MOV     A,#20
+01B6 71AC            354             ACALL   SCROLL
+01B8 719D            355             ACALL   WAITSONG
+01BA E541            356             MOV     A,LEN
+01BC 8017            357             SJMP    EC_SC
+01BE 2125            358     EC_MORE:AJMP    EC_RND          ; (too far for CJNE)
+01C0 5103            359     EC_FAIL:ACALL   PAD_OFF
+01C2 900615          360             MOV     DPTR,#T_LOSE
+01C5 718A            361             ACALL   PLAY
+01C7 90059D          362             MOV     DPTR,#M_LOST
+01CA 71D3            363             ACALL   SHOW4           ; LoSt
+01CC 719D            364             ACALL   WAITSONG
+01CE 7432            365             MOV     A,#50
+01D0 714A            366             ACALL   WAITA
+01D2 E541            367             MOV     A,LEN
+01D4 14              368             DEC     A               ; rounds completed
+01D5 753092          369     EC_SC:  MOV     DISP+0,#SG_S    ; score: Sc07
+01D8 7531A7          370             MOV     DISP+1,#SG_LC
+01DB 71E0            371             ACALL   SHOW2
+01DD 713D            372             ACALL   WAITREL
+01DF 7D64            373             MOV     R5,#100         ; a button within 5 s: play again
+01E1 710A            374             ACALL   WAITKEY
+01E3 5004            375             JNC     EC_X
+01E5 713D            376             ACALL   WAITREL
+01E7 2110            377             AJMP    ECHO
+01E9 0191            378     EC_X:   AJMP    MENU
+                     379     
+                     380     ; A = button 0..3 (0 = S5): light its digit, play its note
+01EB 5105            381     PAD_ON: ACALL   BLANK
+01ED C0E0            382             PUSH    ACC
+01EF 2430            383             ADD     A,#DISP
+01F1 F8              384             MOV     R0,A
+01F2 D0E0            385             POP     ACC
+01F4 C0E0            386             PUSH    ACC
+01F6 90051D          387             MOV     DPTR,#PADSEG
+01F9 93              388             MOVC    A,@A+DPTR
+A51 MACRO ASSEMBLER  T                                                                    11/07/2026 13:34:11 PAGE     7
+
+01FA F6              389             MOV     @R0,A
+01FB D0E0            390             POP     ACC
+01FD 900521          391             MOV     DPTR,#PADNOTE
+0200 93              392             MOVC    A,@A+DPTR
+0201 6166            393             AJMP    TONE
+0203 7183            394     PAD_OFF:ACALL   TONE_OFF
+0205 7530FF          395     BLANK:  MOV     DISP+0,#SG_SP
+0208 7531FF          396             MOV     DISP+1,#SG_SP
+020B 7532FF          397             MOV     DISP+2,#SG_SP
+020E 7533FF          398             MOV     DISP+3,#SG_SP
+0211 22              399             RET
+                     400     
+                     401     ;========================= mode 3: Song ================================
+                     402     ; Ode to Joy (Beethoven). The digits go dark and the LEDs become a bar
+                     403     ; that jumps with each note and falls back between notes. A button stops.
+0212 90056D          404     SONG:   MOV     DPTR,#M_ODE
+0215 7414            405             MOV     A,#20
+0217 71AC            406             ACALL   SCROLL
+0219 713D            407             ACALL   WAITREL
+021B 900627          408             MOV     DPTR,#T_ODE
+021E 718A            409             ACALL   PLAY
+0220 754500          410             MOV     LEVEL,#0
+0223 D200            411             SETB    LEDMODE
+0225 E53F            412     SO_L:   MOV     A,CURNOTE       ; bar height: G5 = 1 ... G6 = 8, silence = 0
+0227 600E            413             JZ      SO_T
+0229 C3              414             CLR     C
+022A 9404            415             SUBB    A,#N_G5-1
+022C 5002            416             JNC     SO_HI
+022E 7401            417             MOV     A,#1
+0230 B40900          418     SO_HI:  CJNE    A,#9,$+3        ; C = 1 when A < 9
+0233 4002            419             JC      SO_T
+0235 7408            420             MOV     A,#8
+0237 B54500          421     SO_T:   CJNE    A,LEVEL,$+3     ; C = 1 when the note is lower than the bar
+023A 5003            422             JNC     SO_SET          ; higher or equal: jump up
+023C E545            423             MOV     A,LEVEL         ; lower: the bar falls one LED
+023E 14              424             DEC     A
+023F F545            425     SO_SET: MOV     LEVEL,A
+0241 900514          426             MOV     DPTR,#BARS
+0244 93              427             MOVC    A,@A+DPTR
+0245 F534            428             MOV     LEDPAT,A
+0247 7102            429             ACALL   KEYS
+0249 7009            430             JNZ     SO_STOP
+024B 7403            431             MOV     A,#3
+024D 714A            432             ACALL   WAITA           ; 30 ms per frame
+024F 2001D3          433             JB      PLAYING,SO_L
+0252 8004            434             SJMP    SO_END
+0254 71A1            435     SO_STOP:ACALL   STOPSONG
+0256 713D            436             ACALL   WAITREL
+0258 7534FF          437     SO_END: MOV     LEDPAT,#0FFH
+025B C200            438             CLR     LEDMODE
+025D 0191            439             AJMP    MENU
+                     440     
+                     441     ;======================= mode 4: Reaction ==============================
+                     442     ; ---- , then after a random 1.5-4.5 s the display says Go and beeps.
+                     443     ; Press any button: the display shows the time in ms. Pressing before
+                     444     ; Go is a false start (Err). Any button: again; 5 s idle: menu.
+025F 90057F          445     REACT:  MOV     DPTR,#M_REACT
+0262 7414            446             MOV     A,#20
+0264 71AC            447             ACALL   SCROLL
+0266 713D            448             ACALL   WAITREL
+0268 E537            449             MOV     A,TICKL
+026A 6540            450             XRL     A,RND
+026C 7001            451             JNZ     RE_S
+026E 04              452             INC     A
+026F F540            453     RE_S:   MOV     RND,A
+0271 9005A1          454     RE_GO:  MOV     DPTR,#M_DASH
+A51 MACRO ASSEMBLER  T                                                                    11/07/2026 13:34:11 PAGE     8
+
+0274 71D3            455             ACALL   SHOW4           ; ----
+0276 912F            456             ACALL   RAND            ; wait 1500 + 12 x (0..255) ms
+0278 75F00C          457             MOV     B,#12
+027B A4              458             MUL     AB
+027C 24DC            459             ADD     A,#LOW(1500)
+027E FF              460             MOV     R7,A
+027F E5F0            461             MOV     A,B
+0281 3405            462             ADDC    A,#HIGH(1500)
+0283 FE              463             MOV     R6,A
+0284 7157            464             ACALL   STARTMS
+0286 7102            465     RE_W:   ACALL   KEYS
+0288 704E            466             JNZ     RE_FALSE        ; pressed too early
+028A 2003F9          467             JB      DLYRUN,RE_W
+028D C2AB            468             CLR     ET1             ; Go: note the time
+028F 853746          469             MOV     TSTL,TICKL
+0292 853847          470             MOV     TSTH,TICKH
+0295 D2AB            471             SETB    ET1
+0297 9005A5          472             MOV     DPTR,#M_GO
+029A 71D3            473             ACALL   SHOW4
+029C 90061F          474             MOV     DPTR,#T_GO
+029F 718A            475             ACALL   PLAY
+02A1 51F2            476     RE_K:   ACALL   ELAPSED         ; R6:R7 = ms since Go
+02A3 7102            477             ACALL   KEYS
+02A5 7016            478             JNZ     RE_HIT
+02A7 EE              479             MOV     A,R6            ; 2000 ms or more: too slow
+02A8 B40704          480             CJNE    A,#HIGH(2000),RE_C
+02AB EF              481             MOV     A,R7
+02AC B4D000          482             CJNE    A,#LOW(2000),RE_C
+02AF 40F0            483     RE_C:   JC      RE_K
+02B1 9005A9          484             MOV     DPTR,#M_LATE
+02B4 71D3            485             ACALL   SHOW4           ; LAtE
+02B6 900615          486             MOV     DPTR,#T_LOSE
+02B9 718A            487             ACALL   PLAY
+02BB 8025            488             SJMP    RE_NEXT
+02BD 8F46            489     RE_HIT: MOV     TSTL,R7         ; keep the result (SHOWDEC uses R6:R7)
+02BF 8E47            490             MOV     TSTH,R6
+02C1 71F0            491             ACALL   SHOWDEC         ; e.g.  256
+02C3 9005FF          492             MOV     DPTR,#T_OK
+02C6 E547            493             MOV     A,TSTH          ; under 250 ms: fanfare
+02C8 700A            494             JNZ     RE_PLY
+02CA E546            495             MOV     A,TSTL
+02CC C3              496             CLR     C
+02CD 94FA            497             SUBB    A,#250
+02CF 5003            498             JNC     RE_PLY
+02D1 900607          499             MOV     DPTR,#T_WIN
+02D4 718A            500     RE_PLY: ACALL   PLAY
+02D6 800A            501             SJMP    RE_NEXT
+02D8                 502     RE_FALSE:
+02D8 9005AD          503             MOV     DPTR,#M_ERR
+02DB 71D3            504             ACALL   SHOW4           ; Err
+02DD 900623          505             MOV     DPTR,#T_BUZZ
+02E0 718A            506             ACALL   PLAY
+02E2 719D            507     RE_NEXT:ACALL   WAITSONG
+02E4 713D            508             ACALL   WAITREL
+02E6 7D64            509             MOV     R5,#100         ; 5 s
+02E8 710A            510             ACALL   WAITKEY
+02EA 5004            511             JNC     RE_X
+02EC 713D            512             ACALL   WAITREL
+02EE 8081            513             SJMP    RE_GO
+02F0 0191            514     RE_X:   AJMP    MENU
+                     515     
+                     516     ; ELAPSED: R6:R7 = milliseconds since Go
+02F2 C2AB            517     ELAPSED:CLR     ET1
+02F4 C3              518             CLR     C
+02F5 E537            519             MOV     A,TICKL
+02F7 9546            520             SUBB    A,TSTL
+A51 MACRO ASSEMBLER  T                                                                    11/07/2026 13:34:11 PAGE     9
+
+02F9 FF              521             MOV     R7,A
+02FA E538            522             MOV     A,TICKH
+02FC 9547            523             SUBB    A,TSTH
+02FE FE              524             MOV     R6,A
+02FF D2AB            525             SETB    ET1
+0301 22              526             RET
+                     527     
+                     528     ;========================= helpers =====================================
+                     529     ; KEYS: A = buttons now down, 1 = pressed: bit 3 = S5 ... bit 0 = S2
+0302 E5B0            530     KEYS:   MOV     A,P3
+0304 F4              531             CPL     A
+0305 03              532             RR      A
+0306 03              533             RR      A
+0307 540F            534             ANL     A,#0FH
+0309 22              535             RET
+                     536     
+                     537     ; WAITKEY: wait for a press. R5 = time limit in 50 ms steps (0 = none).
+                     538     ; Out: C = 1, A = button 0..3 (0 = S5, the left one); C = 0: time is up.
+030A                 539     WAITKEY:
+030A 7C05            540     WK_U:   MOV     R4,#5
+030C 7102            541     WK_P:   ACALL   KEYS
+030E 700D            542             JNZ     WK_HIT
+0310 7401            543             MOV     A,#1
+0312 714A            544             ACALL   WAITA           ; 10 ms
+0314 DCF6            545             DJNZ    R4,WK_P
+0316 ED              546             MOV     A,R5
+0317 60F1            547             JZ      WK_U            ; no limit
+0319 DDEF            548             DJNZ    R5,WK_U
+031B C3              549             CLR     C
+031C 22              550             RET
+031D 7402            551     WK_HIT: MOV     A,#2
+031F 714A            552             ACALL   WAITA           ; 20 ms, then look again (bounce)
+0321 7102            553             ACALL   KEYS
+0323 60E5            554             JZ      WK_U
+0325 20E30A          555             JB      ACC.3,WK_0      ; the leftmost button pressed wins
+0328 20E20A          556             JB      ACC.2,WK_1
+032B 20E10B          557             JB      ACC.1,WK_2
+032E 7403            558             MOV     A,#3
+0330 D3              559             SETB    C
+0331 22              560             RET
+0332 E4              561     WK_0:   CLR     A
+0333 D3              562             SETB    C
+0334 22              563             RET
+0335 7401            564     WK_1:   MOV     A,#1
+0337 D3              565             SETB    C
+0338 22              566             RET
+0339 7402            567     WK_2:   MOV     A,#2
+033B D3              568             SETB    C
+033C 22              569             RET
+                     570     
+                     571     ; WAITREL: wait until every button is up (and stays up for 20 ms)
+033D 7102            572     WAITREL:ACALL   KEYS
+033F 70FC            573             JNZ     WAITREL
+0341 7402            574             MOV     A,#2
+0343 714A            575             ACALL   WAITA
+0345 7102            576             ACALL   KEYS
+0347 70F4            577             JNZ     WAITREL
+0349 22              578             RET
+                     579     
+                     580     ; WAITA: wait A x 10 ms (A = 1..255). Uses R6, R7, B.
+034A 75F00A          581     WAITA:  MOV     B,#10
+034D A4              582             MUL     AB
+034E FF              583             MOV     R7,A
+034F AEF0            584             MOV     R6,B
+                     585     ; WAITMS: wait R6:R7 ms (R6 = high byte)
+0351 7157            586     WAITMS: ACALL   STARTMS
+A51 MACRO ASSEMBLER  T                                                                    11/07/2026 13:34:11 PAGE    10
+
+0353 2003FD          587     WM_L:   JB      DLYRUN,WM_L
+0356 22              588             RET
+                     589     ; STARTMS: start the wait timer with R6:R7 ms and return at once;
+                     590     ; DLYRUN goes to 0 when the time is up
+0357 EF              591     STARTMS:MOV     A,R7
+0358 4E              592             ORL     A,R6
+0359 600A            593             JZ      SM_X            ; 0 ms: nothing to wait for
+035B C2AB            594             CLR     ET1             ; Timer 1 must not count while we write
+035D 8F39            595             MOV     DLYL,R7
+035F 8E3A            596             MOV     DLYH,R6
+0361 D203            597             SETB    DLYRUN
+0363 D2AB            598             SETB    ET1
+0365 22              599     SM_X:   RET
+                     600     
+                     601     ; TONE: play note A (1..23) until told otherwise; A = 0 means silence
+0366 601B            602     TONE:   JZ      TONE_OFF
+0368 14              603             DEC     A
+0369 23              604             RL      A               ; 2 bytes per note in the table
+036A 9004D4          605             MOV     DPTR,#NOTES
+036D C0E0            606             PUSH    ACC
+036F 93              607             MOVC    A,@A+DPTR
+0370 F535            608             MOV     NOTEH,A
+0372 D0E0            609             POP     ACC
+0374 04              610             INC     A
+0375 93              611             MOVC    A,@A+DPTR
+0376 F536            612             MOV     NOTEL,A
+0378 C28C            613             CLR     TR0
+037A 85358C          614             MOV     TH0,NOTEH
+037D 85368A          615             MOV     TL0,NOTEL
+0380 D28C            616             SETB    TR0
+0382 22              617             RET
+0383                 618     TONE_OFF:
+0383 C28C            619             CLR     TR0
+0385 C28D            620             CLR     TF0
+0387 D2B6            621             SETB    BUZ             ; leave the transistor off
+0389 22              622             RET
+                     623     
+                     624     ; PLAY: play the tune at DPTR in the background (pairs: note, 10 ms
+                     625     ; steps; a step count of 0 ends the tune)
+038A C2AB            626     PLAY:   CLR     ET1
+038C 85823B          627             MOV     SONGL,DPL
+038F 85833C          628             MOV     SONGH,DPH
+0392 753D01          629             MOV     PRE,#1
+0395 753E01          630             MOV     NOTECNT,#1      ; the next Timer 1 tick starts note 1
+0398 D201            631             SETB    PLAYING
+039A D2AB            632             SETB    ET1
+039C 22              633             RET
+039D                 634     WAITSONG:
+039D 2001FD          635             JB      PLAYING,WAITSONG
+03A0 22              636             RET
+03A1                 637     STOPSONG:
+03A1 C2AB            638             CLR     ET1
+03A3 C201            639             CLR     PLAYING
+03A5 753F00          640             MOV     CURNOTE,#0
+03A8 D2AB            641             SETB    ET1
+03AA 6183            642             AJMP    TONE_OFF
+                     643     
+                     644     ; SCROLL: move a message (segment codes ending with 00H, DPTR) from
+                     645     ; right to left, A x 10 ms per step. Out: C = 1 if a button cut it short.
+03AC FB              646     SCROLL: MOV     R3,A
+03AD 7830            647     SC_F:   MOV     R0,#DISP
+03AF 7A00            648             MOV     R2,#0
+03B1 EA              649     SC_C:   MOV     A,R2
+03B2 93              650             MOVC    A,@A+DPTR
+03B3 601A            651             JZ      SC_END          ; the end came into the window
+03B5 F6              652             MOV     @R0,A
+A51 MACRO ASSEMBLER  T                                                                    11/07/2026 13:34:11 PAGE    11
+
+03B6 08              653             INC     R0
+03B7 0A              654             INC     R2
+03B8 BA04F6          655             CJNE    R2,#4,SC_C
+03BB EB              656             MOV     A,R3
+03BC 75F00A          657             MOV     B,#10
+03BF A4              658             MUL     AB
+03C0 FF              659             MOV     R7,A
+03C1 AEF0            660             MOV     R6,B
+03C3 7157            661             ACALL   STARTMS
+03C5 7102            662     SC_W:   ACALL   KEYS
+03C7 7008            663             JNZ     SC_KEY
+03C9 2003F9          664             JB      DLYRUN,SC_W
+03CC A3              665             INC     DPTR
+03CD 80DE            666             SJMP    SC_F
+03CF C3              667     SC_END: CLR     C
+03D0 22              668             RET
+03D1 D3              669     SC_KEY: SETB    C
+03D2 22              670             RET
+                     671     
+                     672     ; SHOW4: copy 4 segment codes from DPTR to the display
+03D3 7830            673     SHOW4:  MOV     R0,#DISP
+03D5 7A00            674             MOV     R2,#0
+03D7 EA              675     S4_L:   MOV     A,R2
+03D8 93              676             MOVC    A,@A+DPTR
+03D9 F6              677             MOV     @R0,A
+03DA 08              678             INC     R0
+03DB 0A              679             INC     R2
+03DC BA04F8          680             CJNE    R2,#4,S4_L
+03DF 22              681             RET
+                     682     
+                     683     ; SHOW2: A = 0..99 on digits 3 and 4 (with a leading 0)
+03E0 75F00A          684     SHOW2:  MOV     B,#10
+03E3 84              685             DIV     AB              ; A = tens, B = units
+03E4 900502          686             MOV     DPTR,#DIGSEG
+03E7 93              687             MOVC    A,@A+DPTR
+03E8 F532            688             MOV     DISP+2,A
+03EA E5F0            689             MOV     A,B
+03EC 93              690             MOVC    A,@A+DPTR
+03ED F533            691             MOV     DISP+3,A
+03EF 22              692             RET
+                     693     
+                     694     ; SHOWDEC: R6:R7 (0..9999) in decimal on all four digits, no leading zeros
+03F0 C204            695     SHOWDEC:CLR     NZFLAG
+03F2 7830            696             MOV     R0,#DISP
+03F4 7A03            697             MOV     R2,#HIGH(1000)
+03F6 7BE8            698             MOV     R3,#LOW(1000)
+03F8 910B            699             ACALL   SD_DIG
+03FA 7A00            700             MOV     R2,#0
+03FC 7B64            701             MOV     R3,#100
+03FE 910B            702             ACALL   SD_DIG
+0400 7A00            703             MOV     R2,#0
+0402 7B0A            704             MOV     R3,#10
+0404 910B            705             ACALL   SD_DIG
+0406 D204            706             SETB    NZFLAG          ; the units digit is always shown
+0408 EF              707             MOV     A,R7
+0409 8012            708             SJMP    SD_PUT
+040B 7C00            709     SD_DIG: MOV     R4,#0           ; A = how many times R2:R3 fits into R6:R7
+040D C3              710     SD_SUB: CLR     C
+040E EF              711             MOV     A,R7
+040F 9B              712             SUBB    A,R3
+0410 F5F0            713             MOV     B,A
+0412 EE              714             MOV     A,R6
+0413 9A              715             SUBB    A,R2
+0414 4006            716             JC      SD_CNT
+0416 FE              717             MOV     R6,A
+0417 AFF0            718             MOV     R7,B
+A51 MACRO ASSEMBLER  T                                                                    11/07/2026 13:34:11 PAGE    12
+
+0419 0C              719             INC     R4
+041A 80F1            720             SJMP    SD_SUB
+041C EC              721     SD_CNT: MOV     A,R4
+041D 7007            722     SD_PUT: JNZ     SD_NZ
+041F 200406          723             JB      NZFLAG,SD_SEG
+0422 76FF            724             MOV     @R0,#SG_SP      ; leading zero: blank
+0424 08              725             INC     R0
+0425 22              726             RET
+0426 D204            727     SD_NZ:  SETB    NZFLAG
+0428 900502          728     SD_SEG: MOV     DPTR,#DIGSEG
+042B 93              729             MOVC    A,@A+DPTR
+042C F6              730             MOV     @R0,A
+042D 08              731             INC     R0
+042E 22              732             RET
+                     733     
+                     734     ; RAND: next number of an 8-bit shift register generator (255 states)
+042F E540            735     RAND:   MOV     A,RND
+0431 C3              736             CLR     C
+0432 13              737             RRC     A
+0433 5002            738             JNC     RD_X
+0435 64B8            739             XRL     A,#0B8H
+0437 F540            740     RD_X:   MOV     RND,A
+0439 22              741             RET
+                     742     
+                     743     ;===================== Timer 1 interrupt: every 1 ms ===================
+043A 758DFC          744     T1_ISR: MOV     TH1,#HIGH(T1RL) ; reload first
+043D 758B6D          745             MOV     TL1,#LOW(T1RL)
+0440 C0D0            746             PUSH    PSW
+0442 C0E0            747             PUSH    ACC
+0444 75D008          748             MOV     PSW,#08H        ; register bank 1 (R0, R6, R7 of the ISR)
+0447 0537            749             INC     TICKL           ; milliseconds since power on
+0449 E537            750             MOV     A,TICKL
+044B 7002            751             JNZ     T1_DLY
+044D 0538            752             INC     TICKH
+044F 300310          753     T1_DLY: JNB     DLYRUN,T1_MUS   ; wait timer
+0452 E539            754             MOV     A,DLYL
+0454 7002            755             JNZ     T1_DL
+0456 153A            756             DEC     DLYH
+0458 1539            757     T1_DL:  DEC     DLYL
+045A E539            758             MOV     A,DLYL
+045C 453A            759             ORL     A,DLYH
+045E 7002            760             JNZ     T1_MUS
+0460 C203            761             CLR     DLYRUN
+0462 30014B          762     T1_MUS: JNB     PLAYING,T1_DSP  ; tune player, every 10 ms
+0465 D53D48          763             DJNZ    PRE,T1_DSP
+0468 753D0A          764             MOV     PRE,#10
+046B D53E35          765             DJNZ    NOTECNT,T1_GAP
+046E C082            766             PUSH    DPL             ; next note
+0470 C083            767             PUSH    DPH
+0472 853B82          768             MOV     DPL,SONGL
+0475 853C83          769             MOV     DPH,SONGH
+0478 E4              770             CLR     A
+0479 93              771             MOVC    A,@A+DPTR       ; note
+047A FE              772             MOV     R6,A
+047B A3              773             INC     DPTR
+047C E4              774             CLR     A
+047D 93              775             MOVC    A,@A+DPTR       ; length in 10 ms steps
+047E A3              776             INC     DPTR
+047F 85823B          777             MOV     SONGL,DPL
+0482 85833C          778             MOV     SONGH,DPH
+0485 600F            779             JZ      T1_END
+0487 F53E            780             MOV     NOTECNT,A
+0489 EE              781             MOV     A,R6
+048A A2E7            782             MOV     C,ACC.7
+048C 9202            783             MOV     LEGATO,C
+048E 547F            784             ANL     A,#7FH
+A51 MACRO ASSEMBLER  T                                                                    11/07/2026 13:34:11 PAGE    13
+
+0490 F53F            785             MOV     CURNOTE,A
+0492 7166            786             ACALL   TONE
+0494 8007            787             SJMP    T1_POP
+0496 C201            788     T1_END: CLR     PLAYING         ; end of the tune
+0498 753F00          789             MOV     CURNOTE,#0
+049B 7183            790             ACALL   TONE_OFF
+049D D083            791     T1_POP: POP     DPH
+049F D082            792             POP     DPL
+04A1 800D            793             SJMP    T1_DSP
+04A3 E53E            794     T1_GAP: MOV     A,NOTECNT       ; 20 ms before the next note: a short gap,
+04A5 B40208          795             CJNE    A,#2,T1_DSP     ; so that repeated notes sound separate
+04A8 200205          796             JB      LEGATO,T1_DSP
+04AB 753F00          797             MOV     CURNOTE,#0
+04AE 7183            798             ACALL   TONE_OFF
+04B0 7590FF          799     T1_DSP: MOV     P1,#0FFH        ; display: all digits off first (no ghosts)
+04B3 200016          800             JB      LEDMODE,T1_LED
+04B6 0F              801             INC     R7              ; next digit 0..3
+04B7 EF              802             MOV     A,R7
+04B8 5403            803             ANL     A,#03H
+04BA FF              804             MOV     R7,A
+04BB 2430            805             ADD     A,#DISP
+04BD F8              806             MOV     R0,A
+04BE 8680            807             MOV     P0,@R0          ; its segments
+04C0 EF              808             MOV     A,R7
+04C1 2404            809             ADD     A,#T1_TAB-T1_PC
+04C3 83              810             MOVC    A,@A+PC         ; its enable bit
+04C4 F590            811     T1_PC:  MOV     P1,A
+04C6 8007            812             SJMP    T1_X
+04C8 F7EFDFBF        813     T1_TAB: DB      0F7H,0EFH,0DFH,0BFH     ; P1.3, P1.4, P1.5, P1.6 low
+04CC 853480          814     T1_LED: MOV     P0,LEDPAT       ; LED mode: digits stay off
+04CF D0E0            815     T1_X:   POP     ACC
+04D1 D0D0            816             POP     PSW
+04D3 32              817             RETI
+                     818     
+                     819     ;=========================== tables ====================================
+04D4 FC96            820     NOTES:  DW      0FC96H          ;  1 C5   523 Hz  (65536 - 460800/f + 7)
+04D6 FCF6            821             DW      0FCF6H          ;  2 D5   587
+04D8 FD4C            822             DW      0FD4CH          ;  3 E5   659
+04DA FD73            823             DW      0FD73H          ;  4 F5   698
+04DC FDBB            824             DW      0FDBBH          ;  5 G5   784
+04DE FDFB            825             DW      0FDFBH          ;  6 A5   880
+04E0 FE34            826             DW      0FE34H          ;  7 B5   988
+04E2 FE4F            827             DW      0FE4FH          ;  8 C6  1047
+04E4 FE7F            828             DW      0FE7FH          ;  9 D6  1175
+04E6 FEAA            829             DW      0FEAAH          ; 10 E6  1319
+04E8 FEBD            830             DW      0FEBDH          ; 11 F6  1397
+04EA FEE1            831             DW      0FEE1H          ; 12 G6  1568
+04EC FF01            832             DW      0FF01H          ; 13 A6  1760
+04EE FF1E            833             DW      0FF1EH          ; 14 B6  1976
+04F0 FF2B            834             DW      0FF2BH          ; 15 C7  2093
+04F2 FF43            835             DW      0FF43H          ; 16 D7  2349
+04F4 FF58            836             DW      0FF58H          ; 17 E7  2637
+04F6 FF62            837             DW      0FF62H          ; 18 F7  2794
+04F8 FF74            838             DW      0FF74H          ; 19 G7  3136
+04FA FF84            839             DW      0FF84H          ; 20 A7  3520
+04FC FF92            840             DW      0FF92H          ; 21 B7  3951
+04FE FF99            841             DW      0FF99H          ; 22 C8  4186
+0500 F407            842             DW      0F407H          ; 23 low buzz 150 Hz
+                     843     
+0502 C0F9A4B0        844     DIGSEG: DB      SG_0,SG_1,SG_2,SG_3,SG_4,SG_5,SG_6,SG_7,SG_8,SG_9
+0506 999282F8                
+050A 8090                    
+050C FEFDFBF7        845     ONEHOT: DB      0FEH,0FDH,0FBH,0F7H,0EFH,0DFH,0BFH,07FH ; one LED, D1..D8
+0510 EFDFBF7F                
+0514 FFFEFCF8        846     BARS:   DB      0FFH,0FEH,0FCH,0F8H,0F0H,0E0H,0C0H,080H,000H ; 0..8 LEDs
+0518 F0E0C080                
+A51 MACRO ASSEMBLER  T                                                                    11/07/2026 13:34:11 PAGE    14
+
+051C 00                      
+051D C686C246        847     PADSEG: DB      SG_UC,SG_E,SG_G,SG_UC AND 7FH   ; C E G C. above S5 S4 S3 S2
+0521 080A0C0F        848     PADNOTE:DB      N_C6,N_E6,N_G6,N_C7
+                     849     
+                     850     ; messages: segment codes, 00H ends a scrolling message
+0525 FFFFFF89        851     M_HELLO:DB      SG_SP,SG_SP,SG_SP,SG_H,SG_E,SG_L,SG_L,SG_O,SG_SP,SG_SP,SG_SP,SG_SP,0
+0529 86C7C7C0                
+052D FFFFFFFF                
+0531 00                      
+0532                 852     M_LEGEND:
+0532 FFFFFF8C        853             DB      SG_SP,SG_SP,SG_SP,SG_P,SG_I,SG_A,SG_LN,SG_LO,SG_SP,SG_DASH,SG_SP
+0536 F988ABA3                
+053A FFBFFF                  
+053D 86C689C0        854             DB      SG_E,SG_UC,SG_H,SG_O,SG_SP,SG_DASH,SG_SP
+0541 FFBFFF                  
+0544 92C0ABC2        855             DB      SG_S,SG_O,SG_LN,SG_G,SG_SP,SG_DASH,SG_SP
+0548 FFBFFF                  
+054B AF8688A7        856             DB      SG_LR,SG_E,SG_A,SG_LC,SG_LT,SG_SP,SG_SP,SG_SP,0
+054F 87FFFFFF                
+0553 00                      
+0554 FFFFFF8C        857     M_PIANO:DB      SG_SP,SG_SP,SG_SP,SG_P,SG_I,SG_A,SG_LN,SG_LO,SG_SP,SG_SP,SG_SP,SG_SP,0
+0558 F988ABA3                
+055C FFFFFFFF                
+0560 00                      
+0561 FFFFFF86        858     M_ECHO: DB      SG_SP,SG_SP,SG_SP,SG_E,SG_UC,SG_H,SG_O,SG_SP,SG_SP,SG_SP,SG_SP,0
+0565 C689C0FF                
+0569 FFFFFF00                
+056D FFFFFFC0        859     M_ODE:  DB      SG_SP,SG_SP,SG_SP,SG_O,SG_LD,SG_E,SG_SP,SG_LT,SG_LO,SG_SP
+0571 A186FF87                
+0575 A3FF                    
+0577 E1C091FF        860             DB      SG_J,SG_O,SG_LY,SG_SP,SG_SP,SG_SP,SG_SP,0
+057B FFFFFF00                
+057F FFFFFFAF        861     M_REACT:DB      SG_SP,SG_SP,SG_SP,SG_LR,SG_E,SG_A,SG_LC,SG_LT,SG_SP,SG_SP,SG_SP,SG_SP,0
+0583 8688A787                
+0587 FFFFFFFF                
+058B 00                      
+058C FFFFFF92        862     M_SUPER:DB      SG_SP,SG_SP,SG_SP,SG_S,SG_U,SG_P,SG_E,SG_LR,SG_SP,SG_SP,SG_SP,SG_SP,0
+0590 C18C86AF                
+0594 FFFFFFFF                
+0598 00                      
+                     863     ; 4-digit pictures
+0599 8C8692AF        864     M_MENU: DB      SG_P,SG_E,SG_5,SG_LR
+059D C7A39287        865     M_LOST: DB      SG_L,SG_LO,SG_S,SG_LT
+05A1 BFBFBFBF        866     M_DASH: DB      SG_DASH,SG_DASH,SG_DASH,SG_DASH
+05A5 FFFFC2A3        867     M_GO:   DB      SG_SP,SG_SP,SG_G,SG_LO
+05A9 C7888786        868     M_LATE: DB      SG_L,SG_A,SG_LT,SG_E
+05AD FF86AFAF        869     M_ERR:  DB      SG_SP,SG_E,SG_LR,SG_LR
+                     870     
+                     871     ; tunes: note, length in 10 ms steps ... 0,0
+05B1 88068906        872     T_SWEEP:DB      N_C6+LEG,6,N_D6+LEG,6,N_E6+LEG,6,N_F6+LEG,6,N_G6+LEG,6
+05B5 8A068B06                
+05B9 8C06                    
+05BB 8D068E06        873             DB      N_A6+LEG,6,N_B6+LEG,6,N_C7+LEG,6,N_D7+LEG,6,N_E7+LEG,6
+05BF 8F069006                
+05C3 9106                    
+05C5 92069306        874             DB      N_F7+LEG,6,N_G7+LEG,6,N_A7+LEG,6,N_B7+LEG,6,N_C8+LEG,6
+05C9 94069506                
+05CD 9606                    
+05CF 95069406        875             DB      N_B7+LEG,6,N_A7+LEG,6,N_G7+LEG,6,N_F7+LEG,6,N_E7+LEG,6
+05D3 93069206                
+05D7 9106                    
+05D9 90068F06        876             DB      N_D7+LEG,6,N_C7+LEG,6,N_B6+LEG,6,N_A6+LEG,6,N_G6+LEG,6
+05DD 8E068D06                
+05E1 8C06                    
+05E3 8B068A06        877             DB      N_F6+LEG,6,N_E6+LEG,6,N_D6+LEG,6,N_C6,12,0,0
+05E7 8906080C                
+A51 MACRO ASSEMBLER  T                                                                    11/07/2026 13:34:11 PAGE    15
+
+05EB 0000                    
+05ED 0C0E0F0E        878     T_HELLO:DB      N_G6,14,N_C7,14,N_E7,14,N_G7,28,N_E7,14,N_G7,50,0,0
+05F1 110E131C                
+05F5 110E1332                
+05F9 0000                    
+05FB 13050000        879     T_CLICK:DB      N_G7,5,0,0
+05FF 8F079107        880     T_OK:   DB      N_C7+LEG,7,N_E7+LEG,7,N_G7,14,0,0
+0603 130E0000                
+0607 0F0C110C        881     T_WIN:  DB      N_C7,12,N_E7,12,N_G7,12,N_C8,30,N_G7,12,N_C8,60,0,0
+060B 130C161E                
+060F 130C163C                
+0613 0000                    
+0615 0C160A16        882     T_LOSE: DB      N_G6,22,N_E6,22,N_C6,22,N_LOW,60,0,0
+0619 0816173C                
+061D 0000                    
+061F 160C0000        883     T_GO:   DB      N_C8,12,0,0
+0623 172D0000        884     T_BUZZ: DB      N_LOW,45,0,0
+0627 0A280A28        885     T_ODE:  DB      N_E6,40,N_E6,40,N_F6,40,N_G6,40, N_G6,40,N_F6,40,N_E6,40,N_D6,40
+062B 0B280C28                
+062F 0C280B28                
+0633 0A280928                
+0637 08280828        886             DB      N_C6,40,N_C6,40,N_D6,40,N_E6,40, N_E6,60,N_D6,20,N_D6,80
+063B 09280A28                
+063F 0A3C0914                
+0643 0950                    
+0645 0A280A28        887             DB      N_E6,40,N_E6,40,N_F6,40,N_G6,40, N_G6,40,N_F6,40,N_E6,40,N_D6,40
+0649 0B280C28                
+064D 0C280B28                
+0651 0A280928                
+0655 08280828        888             DB      N_C6,40,N_C6,40,N_D6,40,N_E6,40, N_D6,60,N_C6,20,N_C6,80
+0659 09280A28                
+065D 093C0814                
+0661 0850                    
+0663 09280928        889             DB      N_D6,40,N_D6,40,N_E6,40,N_C6,40, N_D6,40,N_E6,20,N_F6,20,N_E6,40,N_C6,40
+0667 0A280828                
+066B 09280A14                
+066F 0B140A28                
+0673 0828                    
+0675 09280A14        890             DB      N_D6,40,N_E6,20,N_F6,20,N_E6,40,N_D6,40, N_C6,40,N_D6,40,N_G5,80
+0679 0B140A28                
+067D 09280828                
+0681 09280550                
+0685 0A280A28        891             DB      N_E6,40,N_E6,40,N_F6,40,N_G6,40, N_G6,40,N_F6,40,N_E6,40,N_D6,40
+0689 0B280C28                
+068D 0C280B28                
+0691 0A280928                
+0695 08280828        892             DB      N_C6,40,N_C6,40,N_D6,40,N_E6,40, N_D6,60,N_C6,20,N_C6,80
+0699 09280A28                
+069D 093C0814                
+06A1 0850                    
+06A3 0000            893             DB      0,0
+                     894     
+                     895             END
+A51 MACRO ASSEMBLER  T                                                                    11/07/2026 13:34:11 PAGE    16
+
+SYMBOL TABLE LISTING
+------ ----- -------
+
+
+N A M E             T Y P E  V A L U E   ATTRIBUTES
+
+ACC. . . . . . . .  D ADDR   00E0H   A   
+B. . . . . . . . .  D ADDR   00F0H   A   
+BARS . . . . . . .  C ADDR   0514H   A   
+BLANK. . . . . . .  C ADDR   0205H   A   
+BUZ. . . . . . . .  B ADDR   00B0H.6 A   
+CLRRAM . . . . . .  C ADDR   003DH   A   
+CNT. . . . . . . .  N NUMB   0042H   A   
+CURNOTE. . . . . .  N NUMB   003FH   A   
+DIGSEG . . . . . .  C ADDR   0502H   A   
+DISP . . . . . . .  N NUMB   0030H   A   
+DLYH . . . . . . .  N NUMB   003AH   A   
+DLYL . . . . . . .  N NUMB   0039H   A   
+DLYRUN . . . . . .  B ADDR   0020H.3 A   
+DPH. . . . . . . .  D ADDR   0083H   A   
+DPL. . . . . . . .  D ADDR   0082H   A   
+ECHO . . . . . . .  C ADDR   0110H   A   
+EC_FAIL. . . . . .  C ADDR   01C0H   A   
+EC_H . . . . . . .  C ADDR   0185H   A   
+EC_I . . . . . . .  C ADDR   0177H   A   
+EC_MIN . . . . . .  C ADDR   0164H   A   
+EC_MORE. . . . . .  C ADDR   01BEH   A   
+EC_P . . . . . . .  C ADDR   0150H   A   
+EC_RND . . . . . .  C ADDR   0125H   A   
+EC_S . . . . . . .  C ADDR   0120H   A   
+EC_SC. . . . . . .  C ADDR   01D5H   A   
+EC_T . . . . . . .  C ADDR   0166H   A   
+EC_X . . . . . . .  C ADDR   01E9H   A   
+ELAPSED. . . . . .  C ADDR   02F2H   A   
+ET1. . . . . . . .  B ADDR   00A8H.3 A   
+IE . . . . . . . .  D ADDR   00A8H   A   
+IN_L . . . . . . .  C ADDR   0063H   A   
+IN_W . . . . . . .  C ADDR   0072H   A   
+IP . . . . . . . .  D ADDR   00B8H   A   
+KEYS . . . . . . .  C ADDR   0302H   A   
+LEDMODE. . . . . .  B ADDR   0020H.0 A   
+LEDPAT . . . . . .  N NUMB   0034H   A   
+LEG. . . . . . . .  N NUMB   0080H   A   
+LEGATO . . . . . .  B ADDR   0020H.2 A   
+LEN. . . . . . . .  N NUMB   0041H   A   
+LEVEL. . . . . . .  N NUMB   0045H   A   
+MAXLEN . . . . . .  N NUMB   0014H   A   
+MENU . . . . . . .  C ADDR   0091H   A   
+MN_IDLE. . . . . .  C ADDR   00BAH   A   
+MN_JMP . . . . . .  C ADDR   00B2H   A   
+M_DASH . . . . . .  C ADDR   05A1H   A   
+M_ECHO . . . . . .  C ADDR   0561H   A   
+M_ERR. . . . . . .  C ADDR   05ADH   A   
+M_GO . . . . . . .  C ADDR   05A5H   A   
+M_HELLO. . . . . .  C ADDR   0525H   A   
+M_LATE . . . . . .  C ADDR   05A9H   A   
+M_LEGEND . . . . .  C ADDR   0532H   A   
+M_LOST . . . . . .  C ADDR   059DH   A   
+M_MENU . . . . . .  C ADDR   0599H   A   
+M_ODE. . . . . . .  C ADDR   056DH   A   
+M_PIANO. . . . . .  C ADDR   0554H   A   
+M_REACT. . . . . .  C ADDR   057FH   A   
+M_SUPER. . . . . .  C ADDR   058CH   A   
+NOTECNT. . . . . .  N NUMB   003EH   A   
+NOTEH. . . . . . .  N NUMB   0035H   A   
+NOTEL. . . . . . .  N NUMB   0036H   A   
+A51 MACRO ASSEMBLER  T                                                                    11/07/2026 13:34:11 PAGE    17
+
+NOTES. . . . . . .  C ADDR   04D4H   A   
+NZFLAG . . . . . .  B ADDR   0020H.4 A   
+N_A5 . . . . . . .  N NUMB   0006H   A   
+N_A6 . . . . . . .  N NUMB   000DH   A   
+N_A7 . . . . . . .  N NUMB   0014H   A   
+N_B5 . . . . . . .  N NUMB   0007H   A   
+N_B6 . . . . . . .  N NUMB   000EH   A   
+N_B7 . . . . . . .  N NUMB   0015H   A   
+N_C5 . . . . . . .  N NUMB   0001H   A   
+N_C6 . . . . . . .  N NUMB   0008H   A   
+N_C7 . . . . . . .  N NUMB   000FH   A   
+N_C8 . . . . . . .  N NUMB   0016H   A   
+N_D5 . . . . . . .  N NUMB   0002H   A   
+N_D6 . . . . . . .  N NUMB   0009H   A   
+N_D7 . . . . . . .  N NUMB   0010H   A   
+N_E5 . . . . . . .  N NUMB   0003H   A   
+N_E6 . . . . . . .  N NUMB   000AH   A   
+N_E7 . . . . . . .  N NUMB   0011H   A   
+N_F5 . . . . . . .  N NUMB   0004H   A   
+N_F6 . . . . . . .  N NUMB   000BH   A   
+N_F7 . . . . . . .  N NUMB   0012H   A   
+N_G5 . . . . . . .  N NUMB   0005H   A   
+N_G6 . . . . . . .  N NUMB   000CH   A   
+N_G7 . . . . . . .  N NUMB   0013H   A   
+N_LOW. . . . . . .  N NUMB   0017H   A   
+ONEHOT . . . . . .  C ADDR   050CH   A   
+P0 . . . . . . . .  D ADDR   0080H   A   
+P1 . . . . . . . .  D ADDR   0090H   A   
+P3 . . . . . . . .  D ADDR   00B0H   A   
+PADNOTE. . . . . .  C ADDR   0521H   A   
+PADSEG . . . . . .  C ADDR   051DH   A   
+PADV . . . . . . .  N NUMB   0043H   A   
+PAD_OFF. . . . . .  C ADDR   0203H   A   
+PAD_ON . . . . . .  C ADDR   01EBH   A   
+PIANO. . . . . . .  C ADDR   00BCH   A   
+PI_D . . . . . . .  C ADDR   00DEH   A   
+PI_H . . . . . . .  C ADDR   00D1H   A   
+PI_N . . . . . . .  C ADDR   00DAH   A   
+PI_R . . . . . . .  C ADDR   00E4H   A   
+PI_W . . . . . . .  C ADDR   00CBH   A   
+PI_X . . . . . . .  C ADDR   00F0H   A   
+PLAY . . . . . . .  C ADDR   038AH   A   
+PLAYING. . . . . .  B ADDR   0020H.1 A   
+PN . . . . . . . .  N NUMB   0044H   A   
+PRE. . . . . . . .  N NUMB   003DH   A   
+PSW. . . . . . . .  D ADDR   00D0H   A   
+PS_L . . . . . . .  C ADDR   00F8H   A   
+PS_OFF . . . . . .  C ADDR   010EH   A   
+PS_Z . . . . . . .  C ADDR   0101H   A   
+P_SHOW . . . . . .  C ADDR   00F2H   A   
+RAND . . . . . . .  C ADDR   042FH   A   
+RD_X . . . . . . .  C ADDR   0437H   A   
+REACT. . . . . . .  C ADDR   025FH   A   
+RE_C . . . . . . .  C ADDR   02AFH   A   
+RE_FALSE . . . . .  C ADDR   02D8H   A   
+RE_GO. . . . . . .  C ADDR   0271H   A   
+RE_HIT . . . . . .  C ADDR   02BDH   A   
+RE_K . . . . . . .  C ADDR   02A1H   A   
+RE_NEXT. . . . . .  C ADDR   02E2H   A   
+RE_PLY . . . . . .  C ADDR   02D4H   A   
+RE_S . . . . . . .  C ADDR   026FH   A   
+RE_W . . . . . . .  C ADDR   0286H   A   
+RE_X . . . . . . .  C ADDR   02F0H   A   
+RND. . . . . . . .  N NUMB   0040H   A   
+S4_L . . . . . . .  C ADDR   03D7H   A   
+SCROLL . . . . . .  C ADDR   03ACH   A   
+A51 MACRO ASSEMBLER  T                                                                    11/07/2026 13:34:11 PAGE    18
+
+SC_C . . . . . . .  C ADDR   03B1H   A   
+SC_END . . . . . .  C ADDR   03CFH   A   
+SC_F . . . . . . .  C ADDR   03ADH   A   
+SC_KEY . . . . . .  C ADDR   03D1H   A   
+SC_W . . . . . . .  C ADDR   03C5H   A   
+SD_CNT . . . . . .  C ADDR   041CH   A   
+SD_DIG . . . . . .  C ADDR   040BH   A   
+SD_NZ. . . . . . .  C ADDR   0426H   A   
+SD_PUT . . . . . .  C ADDR   041DH   A   
+SD_SEG . . . . . .  C ADDR   0428H   A   
+SD_SUB . . . . . .  C ADDR   040DH   A   
+SEQ. . . . . . . .  N NUMB   0048H   A   
+SG_0 . . . . . . .  N NUMB   00C0H   A   
+SG_1 . . . . . . .  N NUMB   00F9H   A   
+SG_2 . . . . . . .  N NUMB   00A4H   A   
+SG_3 . . . . . . .  N NUMB   00B0H   A   
+SG_4 . . . . . . .  N NUMB   0099H   A   
+SG_5 . . . . . . .  N NUMB   0092H   A   
+SG_6 . . . . . . .  N NUMB   0082H   A   
+SG_7 . . . . . . .  N NUMB   00F8H   A   
+SG_8 . . . . . . .  N NUMB   0080H   A   
+SG_9 . . . . . . .  N NUMB   0090H   A   
+SG_A . . . . . . .  N NUMB   0088H   A   
+SG_DASH. . . . . .  N NUMB   00BFH   A   
+SG_E . . . . . . .  N NUMB   0086H   A   
+SG_G . . . . . . .  N NUMB   00C2H   A   
+SG_H . . . . . . .  N NUMB   0089H   A   
+SG_I . . . . . . .  N NUMB   00F9H   A   
+SG_J . . . . . . .  N NUMB   00E1H   A   
+SG_L . . . . . . .  N NUMB   00C7H   A   
+SG_LC. . . . . . .  N NUMB   00A7H   A   
+SG_LD. . . . . . .  N NUMB   00A1H   A   
+SG_LN. . . . . . .  N NUMB   00ABH   A   
+SG_LO. . . . . . .  N NUMB   00A3H   A   
+SG_LR. . . . . . .  N NUMB   00AFH   A   
+SG_LT. . . . . . .  N NUMB   0087H   A   
+SG_LY. . . . . . .  N NUMB   0091H   A   
+SG_O . . . . . . .  N NUMB   00C0H   A   
+SG_P . . . . . . .  N NUMB   008CH   A   
+SG_S . . . . . . .  N NUMB   0092H   A   
+SG_SP. . . . . . .  N NUMB   00FFH   A   
+SG_U . . . . . . .  N NUMB   00C1H   A   
+SG_UC. . . . . . .  N NUMB   00C6H   A   
+SHOW2. . . . . . .  C ADDR   03E0H   A   
+SHOW4. . . . . . .  C ADDR   03D3H   A   
+SHOWDEC. . . . . .  C ADDR   03F0H   A   
+SM_X . . . . . . .  C ADDR   0365H   A   
+SONG . . . . . . .  C ADDR   0212H   A   
+SONGH. . . . . . .  N NUMB   003CH   A   
+SONGL. . . . . . .  N NUMB   003BH   A   
+SO_END . . . . . .  C ADDR   0258H   A   
+SO_HI. . . . . . .  C ADDR   0230H   A   
+SO_L . . . . . . .  C ADDR   0225H   A   
+SO_SET . . . . . .  C ADDR   023FH   A   
+SO_STOP. . . . . .  C ADDR   0254H   A   
+SO_T . . . . . . .  C ADDR   0237H   A   
+SP . . . . . . . .  D ADDR   0081H   A   
+START. . . . . . .  C ADDR   0030H   A   
+STARTMS. . . . . .  C ADDR   0357H   A   
+STOPSONG . . . . .  C ADDR   03A1H   A   
+T1RL . . . . . . .  N NUMB   FC6DH   A   
+T1_DL. . . . . . .  C ADDR   0458H   A   
+T1_DLY . . . . . .  C ADDR   044FH   A   
+T1_DSP . . . . . .  C ADDR   04B0H   A   
+T1_END . . . . . .  C ADDR   0496H   A   
+T1_GAP . . . . . .  C ADDR   04A3H   A   
+A51 MACRO ASSEMBLER  T                                                                    11/07/2026 13:34:11 PAGE    19
+
+T1_ISR . . . . . .  C ADDR   043AH   A   
+T1_LED . . . . . .  C ADDR   04CCH   A   
+T1_MUS . . . . . .  C ADDR   0462H   A   
+T1_PC. . . . . . .  C ADDR   04C4H   A   
+T1_POP . . . . . .  C ADDR   049DH   A   
+T1_TAB . . . . . .  C ADDR   04C8H   A   
+T1_X . . . . . . .  C ADDR   04CFH   A   
+TF0. . . . . . . .  B ADDR   0088H.5 A   
+TH0. . . . . . . .  D ADDR   008CH   A   
+TH1. . . . . . . .  D ADDR   008DH   A   
+TICKH. . . . . . .  N NUMB   0038H   A   
+TICKL. . . . . . .  N NUMB   0037H   A   
+TL0. . . . . . . .  D ADDR   008AH   A   
+TL1. . . . . . . .  D ADDR   008BH   A   
+TMOD . . . . . . .  D ADDR   0089H   A   
+TONE . . . . . . .  C ADDR   0366H   A   
+TONE_OFF . . . . .  C ADDR   0383H   A   
+TR0. . . . . . . .  B ADDR   0088H.4 A   
+TR1. . . . . . . .  B ADDR   0088H.6 A   
+TSTH . . . . . . .  N NUMB   0047H   A   
+TSTL . . . . . . .  N NUMB   0046H   A   
+T_BUZZ . . . . . .  C ADDR   0623H   A   
+T_CLICK. . . . . .  C ADDR   05FBH   A   
+T_GO . . . . . . .  C ADDR   061FH   A   
+T_HELLO. . . . . .  C ADDR   05EDH   A   
+T_LOSE . . . . . .  C ADDR   0615H   A   
+T_ODE. . . . . . .  C ADDR   0627H   A   
+T_OK . . . . . . .  C ADDR   05FFH   A   
+T_SWEEP. . . . . .  C ADDR   05B1H   A   
+T_WIN. . . . . . .  C ADDR   0607H   A   
+WAITA. . . . . . .  C ADDR   034AH   A   
+WAITKEY. . . . . .  C ADDR   030AH   A   
+WAITMS . . . . . .  C ADDR   0351H   A   
+WAITREL. . . . . .  C ADDR   033DH   A   
+WAITSONG . . . . .  C ADDR   039DH   A   
+WK_0 . . . . . . .  C ADDR   0332H   A   
+WK_1 . . . . . . .  C ADDR   0335H   A   
+WK_2 . . . . . . .  C ADDR   0339H   A   
+WK_HIT . . . . . .  C ADDR   031DH   A   
+WK_P . . . . . . .  C ADDR   030CH   A   
+WK_U . . . . . . .  C ADDR   030AH   A   
+WM_L . . . . . . .  C ADDR   0353H   A   
+
+
+REGISTER BANK(S) USED: 0 
+
+
+ASSEMBLY COMPLETE.  0 WARNING(S), 0 ERROR(S)

@@ -1,0 +1,91 @@
+A51 MACRO ASSEMBLER  T                                                                    11/07/2026 13:36:45 PAGE     1
+
+
+MACRO ASSEMBLER A51 V8.2.7.0
+OBJECT MODULE PLACED IN t.OBJ
+ASSEMBLER INVOKED BY: C:\Keil_v5\C51\BIN\A51.EXE t.a51
+
+LOC  OBJ            LINE     SOURCE
+
+0000                   1      ORG 0
+0000 8095              2      SJMP FAR1
+*** _______________________________^
+*** ERROR #A51 IN 2 (t.a51, LINE 2): TARGET OUT OF RANGE
+0002 8010              3      SJMP NEAR1
+0004 800E              4      JMP NEAR1
+0006 0197              5      JMP FAR1
+0008 020900            6      JMP FAR2
+000B 1114              7      CALL NEAR1
+000D 120900            8      CALL FAR2
+0010 2100              9      AJMP FAR2
+*** _______________________________^
+*** ERROR #A51 IN 9 (t.a51, LINE 9): TARGET OUT OF RANGE
+0012 3100             10      ACALL FAR2
+*** ________________________________^
+*** ERROR #A51 IN 10 (t.a51, LINE 10): TARGET OUT OF RANGE
+0014 00               11     NEAR1: NOP
+0015                  12      DS 130
+0097 00               13     FAR1: NOP
+0098 0114             14      JMP NEAR1
+009A 1114             15      CALL NEAR1
+0900                  16      ORG 900H
+0900 00               17     FAR2: NOP
+0901 020014           18      JMP NEAR1
+0904 80FA             19      JMP FAR2
+0906 80FE             20      SJMP $
+0908 80FE             21      JMP $
+090A 3100             22      CALL FAR2
+07FE                  23      ORG 7FEH
+07FE 0100             24      AJMP 800H
+07FB                  25      ORG 7FBH
+07FB 1100             26      ACALL 0
+0FFE                  27      ORG 0FFEH
+0FFE 1100             28      ACALL 0
+*** ________________________________^
+*** ERROR #A51 IN 28 (t.a51, LINE 28): TARGET OUT OF RANGE
+0A00                  29      ORG 0A00H
+0A00 807F             30      SJMP $+129
+0A02 8080             31      SJMP $-126
+0A04 807F             32      SJMP $+2+127
+0A06 8080             33      SJMP $+2-128
+0A08 8080             34      SJMP $+2+128
+*** _______________________________^
+*** ERROR #A51 IN 34 (t.a51, LINE 34): TARGET OUT OF RANGE
+0A0A 807F             35      SJMP $+2-129
+*** _______________________________^
+*** ERROR #A51 IN 35 (t.a51, LINE 35): TARGET OUT OF RANGE
+0A0C D880             36      DJNZ R0,$+3+127
+*** __________________________________^
+*** ERROR #A51 IN 36 (t.a51, LINE 36): TARGET OUT OF RANGE
+0A0E D881             37      DJNZ R0,$+3+128
+*** __________________________________^
+*** ERROR #A51 IN 37 (t.a51, LINE 37): TARGET OUT OF RANGE
+0A10 30B280           38      JNB P3.2,$+3-128
+0A13 30B27F           39      JNB P3.2,$+3-129
+*** ___________________________________^
+*** ERROR #A51 IN 39 (t.a51, LINE 39): TARGET OUT OF RANGE
+0A16 020000           40      LJMP 10000H
+A51 MACRO ASSEMBLER  T                                                                    11/07/2026 13:36:45 PAGE     2
+
+0A19 0100             41      AJMP 10000H
+*** _______________________________^
+*** ERROR #A51 IN 41 (t.a51, LINE 41): TARGET OUT OF RANGE
+                      42      END
+A51 MACRO ASSEMBLER  T                                                                    11/07/2026 13:36:45 PAGE     3
+
+SYMBOL TABLE LISTING
+------ ----- -------
+
+
+N A M E             T Y P E  V A L U E   ATTRIBUTES
+
+FAR1 . . . . . . .  C ADDR   0097H   A   
+FAR2 . . . . . . .  C ADDR   0900H   A   
+NEAR1. . . . . . .  C ADDR   0014H   A   
+P3 . . . . . . . .  D ADDR   00B0H   A   
+
+
+REGISTER BANK(S) USED: 0 
+
+
+ASSEMBLY COMPLETE.  0 WARNING(S), 10 ERROR(S)

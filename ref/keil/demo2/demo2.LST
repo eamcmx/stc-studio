@@ -1,0 +1,1438 @@
+A51 MACRO ASSEMBLER  T                                                                    11/07/2026 13:34:12 PAGE     1
+
+
+MACRO ASSEMBLER A51 V8.2.7.0
+OBJECT MODULE PLACED IN t.OBJ
+ASSEMBLER INVOKED BY: C:\Keil_v5\C51\BIN\A51.EXE t.a51
+
+LOC  OBJ            LINE     SOURCE
+
+                       1     ;=======================================================================
+                       2     ; STC89C52RC board demo 2: light and games, without a sound
+                       3     ;
+                       4     ; Power on: a light with a fading tail runs up and down the LEDs, all
+                       5     ; eight LEDs breathe once, a snake runs round the edge of the display,
+                       6     ; HELLO AGAIN scrolls past, then the names of the four modes, and the
+                       7     ; menu stays on the display with one letter above each button:
+                       8     ;
+                       9     ;       C   r   L   P
+                      10     ;      S5  S4  S3  S2
+                      11     ;
+                      12     ;   S5  C  Chrono   stopwatch in hundredths of a second. S5 starts and
+                      13     ;                   stops it, S4 freezes the display while it runs
+                      14     ;                   (a split time) or sets it to zero when stopped,
+                      15     ;                   S2 goes back to the menu
+                      16     ;   S4  r  Race     three lanes: the top, middle and bottom segments.
+                      17     ;                   Your car blinks on the left digit, the other cars
+                      18     ;                   come from the right. S5 steers up, S4 down. Every
+                      19     ;                   car you pass makes the road a little faster
+                      20     ;   S3  L  Lights   five LED effects with 16 brightness levels: comet,
+                      21     ;                   breathing, stars, wave, bouncing ball. S3 shows the
+                      22     ;                   next effect, any other button goes to the menu
+                      23     ;   S2  P  Pong     for two players. The ball runs along the LEDs; S5
+                      24     ;                   hits it back when it is on D1, S2 when it is on D8.
+                      25     ;                   First to 5 points
+                      26     ;
+                      27     ; Leave the menu alone for 12 s and the light show runs once by itself,
+                      28     ; then the menu comes back: the board can run unattended on a desk.
+                      29     ;
+                      30     ; Board wiring (TSI STC89C52RC board):
+                      31     ;   P0.0-P0.7  segments a-g, dp (lit by 0) and LEDs D1-D8 (lit by 0)
+                      32     ;   P1.3-P1.6  digit enables, left to right (digit on at 0)
+                      33     ;   P3.5-P3.2  buttons S5, S4, S3, S2 (a pressed button reads 0)
+                      34     ;   P3.6       buzzer: this program never touches it
+                      35     ; Clock 11.0592 MHz, 12 clocks per machine cycle: 921 600 cycles a second
+                      36     ;
+                      37     ; How it works:
+                      38     ;   Timer 2, the third timer of the 8052, reloads itself in hardware
+                      39     ;   every 1152 cycles, which is exactly 1.25 ms. Its interrupt lights
+                      40     ;   the next digit, and every eighth one (10 ms) marks a new frame for
+                      41     ;   the main program and counts the stopwatch.
+                      42     ;   Timer 0 makes the LED brightness. In LED mode it switches P0
+                      43     ;   between five bit patterns that last 1, 2, 4, 8 and 16 time units
+                      44     ;   (binary code modulation), so each LED can be lit for 0 to 31 of
+                      45     ;   the 31 units, about 620 times a second.
+                      46     ;   The LEDs and the segments share P0, so the board shows either the
+                      47     ;   digits or the LEDs, never both at once.
+                      48     ;=======================================================================
+                      49     
+                      50     ; the 8052's Timer 2 registers (A51 knows only the 8051 ones)
+  00C8                51     T2CON   DATA    0C8H
+  00CA                52     RCAP2L  DATA    0CAH
+  00CB                53     RCAP2H  DATA    0CBH
+  00CC                54     TL2     DATA    0CCH
+  00CD                55     TH2     DATA    0CDH
+  00CF                56     TF2     BIT     0CFH            ; T2CON.7: Timer 2 overflowed
+  00CA                57     TR2     BIT     0CAH            ; T2CON.2: Timer 2 runs
+  00AD                58     ET2     BIT     0ADH            ; IE.5: Timer 2 interrupt enable
+A51 MACRO ASSEMBLER  T                                                                    11/07/2026 13:34:12 PAGE     2
+
+                      59     
+                      60     ;--------------------------- RAM ---------------------------------------
+                      61     ; 08H-0FH  register bank 1, used by the Timer 2 interrupt
+                      62     ;          (R0 pointer, R6 ticks left in the frame, R7 digit 0-3)
+                      63     ; 10H-17H  register bank 2, used by the Timer 0 interrupt
+                      64     ;          (R0 the next PWM slot, R7 slots left in the PWM frame)
+                      65     ; bit flags in 20H
+  0000                66     LEDMODE BIT     00H             ; 1: digits off, Timer 0 drives the LEDs
+  0001                67     FRAME   BIT     01H             ; set by Timer 2 every 10 ms
+  0002                68     SWRUN   BIT     02H             ; 1: the stopwatch is counting
+  0003                69     SPLIT   BIT     03H             ; 1: the stopwatch display is frozen
+  0004                70     NZFLAG  BIT     04H             ; used by SHOWDEC to blank leading zeros
+  0005                71     ATTRACT BIT     05H             ; 1: nobody chose the light show, play one round
+                      72     
+  0021                73     FRL     EQU     21H             ; 10 ms frames since power on (16 bits)
+  0022                74     FRH     EQU     22H
+  0023                75     SWC     EQU     23H             ; stopwatch: hundredths, packed BCD 00-99
+  0024                76     SWS     EQU     24H             ;            seconds, packed BCD 00-59
+  0025                77     SWM     EQU     25H             ;            minutes 0-9
+  0026                78     LPC     EQU     26H             ; the time on the display (a copy)
+  0027                79     LPS     EQU     27H
+  0028                80     LPM     EQU     28H
+  0029                81     KRAW    EQU     29H             ; the buttons at the last look
+  002A                82     KDEB    EQU     2AH             ; the buttons after debouncing
+  002B                83     KTMP    EQU     2BH
+  002C                84     RND     EQU     2CH             ; random number generator state
+  002D                85     EFF     EQU     2DH             ; the light effect now running, 0-4
+  002E                86     FXT     EQU     2EH             ; 20 ms frames since the effect started
+  002F                87     BEST    EQU     2FH             ; Race: best score since power on
+  0030                88     DISP    EQU     30H             ; 30H-33H segment codes of digits 1-4
+  0034                89     BRI     EQU     34H             ; 34H-3BH brightness of D1-D8, 0-15
+  003C                90     PB      EQU     3CH             ; 3CH-40H the five bit patterns being built
+  0041                91     SL      EQU     41H             ; 41H-52H nine PWM slots: P0 pattern, next TH0
+  0053                92     POS     EQU     53H             ; Lights, Pong: an LED, 0 (D1) to 7 (D8)
+  0054                93     DIRN    EQU     54H             ;   its direction: 0 towards D8, 1 towards D1
+  0055                94     BY      EQU     55H             ; Lights: ball height in 1/32 of an LED
+  0056                95     BV      EQU     56H             ;   ball speed in 1/32 LED per frame (signed)
+  0057                96     STEPT   EQU     57H             ; Race, Pong: 10 ms frames per step
+  0058                97     STEPC   EQU     58H             ;   frames left in this step
+  0059                98     LANE    EQU     59H             ; Race: your lane, 0 top, 1 middle, 2 bottom
+  005A                99     SCORE   EQU     5AH             ;   cars passed
+  005B               100     GAP     EQU     5BH             ;   empty digits before the next car
+  005A               101     SCL     EQU     5AH             ; Pong: points of the D1 player (SCORE)
+  005B               102     SCR     EQU     5BH             ;   points of the D8 player (GAP)
+  005C               103     ROAD    EQU     5CH             ; Race: 5CH-5FH lanes taken in digits 1-4
+                     104     ; stack 60H-7FH (SP starts at 5FH)
+                     105     
+                     106     ;--------------------------- constants ---------------------------------
+  FB80               107     T2RL    EQU     0FB80H          ; 65536 - 1152: Timer 2 overflows every 1.25 ms
+                     108     
+                     109     ; 7-segment codes (a = bit 0 ... g = bit 6, dp = bit 7, a 0 lights it)
+  00C0               110     SG_0    EQU     0C0H
+  00F9               111     SG_1    EQU     0F9H
+  00A4               112     SG_2    EQU     0A4H
+  00B0               113     SG_3    EQU     0B0H
+  0099               114     SG_4    EQU     099H
+  0092               115     SG_5    EQU     092H
+  0082               116     SG_6    EQU     082H
+  00F8               117     SG_7    EQU     0F8H
+  0080               118     SG_8    EQU     080H
+  0090               119     SG_9    EQU     090H
+  0088               120     SG_A    EQU     088H
+  0083               121     SG_LB   EQU     083H            ; b
+  00C6               122     SG_UC   EQU     0C6H            ; C
+  0086               123     SG_E    EQU     086H
+  00C2               124     SG_G    EQU     0C2H
+A51 MACRO ASSEMBLER  T                                                                    11/07/2026 13:34:12 PAGE     3
+
+  0089               125     SG_H    EQU     089H
+  00CF               126     SG_I    EQU     0CFH            ; I on the left (1 is on the right)
+  00C7               127     SG_L    EQU     0C7H
+  00AB               128     SG_LN   EQU     0ABH            ; n
+  00A3               129     SG_LO   EQU     0A3H            ; o
+  00C0               130     SG_O    EQU     0C0H
+  008C               131     SG_P    EQU     08CH
+  00AF               132     SG_LR   EQU     0AFH            ; r
+  0092               133     SG_S    EQU     092H
+  0087               134     SG_LT   EQU     087H            ; t
+  00BF               135     SG_DASH EQU     0BFH
+  00FF               136     SG_SP   EQU     0FFH            ; blank
+                     137     
+                     138     ;--------------------------- vectors -----------------------------------
+0000                 139             ORG     0000H
+0000 020030          140             LJMP    START
+                     141     
+                     142     ; Timer 0: the next PWM slot begins. Timer 0 runs in mode 2, where it
+                     143     ; reloads TL0 from TH0 by itself, so a slot lasts exactly 256 - TH0
+                     144     ; cycles however late this interrupt starts. (The code runs on over
+                     145     ; 0013H and 001BH: INT1 and Timer 1 are not used.)
+000B                 146             ORG     000BH
+000B C0D0            147             PUSH    PSW
+000D 75D010          148             MOV     PSW,#10H        ; register bank 2
+0010 8680            149             MOV     P0,@R0          ; this slot's LED pattern
+0012 08              150             INC     R0
+0013 868C            151             MOV     TH0,@R0         ; the length of the slot after this one
+0015 08              152             INC     R0
+0016 DF04            153             DJNZ    R7,T0_X
+0018 7841            154             MOV     R0,#SL          ; all nine slots done: the frame starts again
+001A 7F09            155             MOV     R7,#9
+001C D0D0            156     T0_X:   POP     PSW
+001E 32              157             RETI
+                     158     
+002B                 159             ORG     002BH           ; Timer 2: every 1.25 ms
+002B 0205CD          160             LJMP    T2_ISR
+                     161     
+                     162     ;--------------------------- start -------------------------------------
+0030                 163             ORG     0030H
+0030 75815F          164     START:  MOV     SP,#5FH
+0033 7580FF          165             MOV     P0,#0FFH        ; segments and LEDs off
+0036 7590FF          166             MOV     P1,#0FFH        ; digits off
+0039 7808            167             MOV     R0,#08H         ; clear the register banks, flags and
+003B 7600            168     CLRRAM: MOV     @R0,#0          ; variables, 08H-5FH
+003D 08              169             INC     R0
+003E B860FA          170             CJNE    R0,#60H,CLRRAM
+0041 B12F            171             ACALL   BLANK
+0043 752C5A          172             MOV     RND,#5AH
+0046 7841            173             MOV     R0,#SL          ; PWM slots: every LED off, and each
+0048 900650          174             MOV     DPTR,#SLTH      ; slot's reload for the slot after it
+004B 7A00            175             MOV     R2,#0
+004D 76FF            176     ST_SL:  MOV     @R0,#0FFH
+004F 08              177             INC     R0
+0050 EA              178             MOV     A,R2
+0051 93              179             MOVC    A,@A+DPTR
+0052 F6              180             MOV     @R0,A
+0053 08              181             INC     R0
+0054 0A              182             INC     R2
+0055 BA09F5          183             CJNE    R2,#9,ST_SL
+0058 751041          184             MOV     10H,#SL         ; bank 2 R0: the first slot
+005B 751709          185             MOV     17H,#9          ; bank 2 R7: nine slots in a frame
+005E 750E08          186             MOV     0EH,#8          ; bank 1 R6: eight ticks make 10 ms
+0061 758902          187             MOV     TMOD,#02H       ; Timer 0: 8-bit auto-reload (mode 2)
+0064 758CD0          188             MOV     TH0,#0D0H
+0067 758AD0          189             MOV     TL0,#0D0H
+006A 75C800          190             MOV     T2CON,#00H      ; Timer 2: 16-bit auto-reload from RCAP2
+A51 MACRO ASSEMBLER  T                                                                    11/07/2026 13:34:12 PAGE     4
+
+006D 75CBFB          191             MOV     RCAP2H,#HIGH(T2RL)
+0070 75CA80          192             MOV     RCAP2L,#LOW(T2RL)
+0073 75CDFB          193             MOV     TH2,#HIGH(T2RL)
+0076 75CC80          194             MOV     TL2,#LOW(T2RL)
+0079 D2CA            195             SETB    TR2
+007B 75B802          196             MOV     IP,#02H         ; PT0: a PWM slot may interrupt Timer 2
+007E 75A8A2          197             MOV     IE,#0A2H        ; EA + ET2 + ET0
+                     198     
+                     199     ; intro 1: a light with a tail runs up and down the LEDs, then they breathe
+0081 9166            200             ACALL   LEDON
+0083 E4              201             CLR     A               ; effect 0, the comet, for 2.2 s
+0084 7D6E            202             MOV     R5,#110
+0086 51A9            203             ACALL   RUNFX
+0088 401E            204             JC      MENU            ; a button skips the intro
+008A 7401            205             MOV     A,#1            ; effect 1, one breath (1.28 s)
+008C 7D40            206             MOV     R5,#64
+008E 51A9            207             ACALL   RUNFX
+0090 4016            208             JC      MENU
+0092 916E            209             ACALL   LEDOFF
+                     210     ; intro 2: a snake runs three times round the display, then the greeting
+0094 7D24            211             MOV     R5,#36
+0096 91CA            212             ACALL   CHASE
+0098 90067C          213             MOV     DPTR,#M_HELLO
+009B 7414            214             MOV     A,#20           ; 200 ms per step
+009D 91FE            215             ACALL   SCROLL
+009F 4007            216             JC      MENU
+00A1 90068F          217             MOV     DPTR,#M_LEGEND
+00A4 7412            218             MOV     A,#18           ; 180 ms per step
+00A6 91FE            219             ACALL   SCROLL
+                     220     
+                     221     ;--------------------------- menu --------------------------------------
+00A8 916E            222     MENU:   ACALL   LEDOFF
+00AA C202            223             CLR     SWRUN
+00AC 9006E7          224             MOV     DPTR,#M_MENU
+00AF B122            225             ACALL   SHOW4           ; C r L P
+00B1 B19E            226             ACALL   KEYCLR
+00B3 7D78            227             MOV     R5,#120         ; 12 s
+00B5 B1A5            228             ACALL   WAITNEW
+00B7 500F            229             JNC     MN_IDL          ; nobody there
+00B9 20E308          230             JB      ACC.3,MN_C      ; the leftmost button pressed wins
+00BC 20E207          231             JB      ACC.2,MN_R
+00BF 20E10A          232             JB      ACC.1,MN_L
+00C2 6181            233             AJMP    PONG
+00C4 01D0            234     MN_C:   AJMP    CHRONO
+00C6 215F            235     MN_R:   AJMP    RACE
+00C8 D205            236     MN_IDL: SETB    ATTRACT         ; one round of the light show, then the menu
+00CA 8002            237             SJMP    MN_GO
+00CC C205            238     MN_L:   CLR     ATTRACT         ; chosen: the effects go round until a button
+00CE 4181            239     MN_GO:  AJMP    LIGHTS
+                     240     
+                     241     ;========================= mode 1: Chrono ==============================
+                     242     ; A stopwatch. Timer 2 counts the time in packed BCD (the instruction
+                     243     ; DA A turns a binary sum back into two decimal digits), so showing it
+                     244     ; needs no division. Under a minute the display reads ss.hh, from one
+                     245     ; minute m.ss.h, up to 9.59.9.
+00D0 9006B3          246     CHRONO: MOV     DPTR,#M_CHRONO
+00D3 7410            247             MOV     A,#16
+00D5 91FE            248             ACALL   SCROLL
+00D7 C202            249     CR_Z:   CLR     SWRUN           ; stopped at zero
+00D9 C203            250             CLR     SPLIT
+00DB E4              251             CLR     A
+00DC F523            252             MOV     SWC,A
+00DE F524            253             MOV     SWS,A
+00E0 F525            254             MOV     SWM,A
+00E2 7401            255     CR_L:   MOV     A,#1
+00E4 B1B7            256             ACALL   WAITF           ; every 10 ms:
+A51 MACRO ASSEMBLER  T                                                                    11/07/2026 13:34:12 PAGE     5
+
+00E6 20030F          257             JB      SPLIT,CR_K
+00E9 C2AD            258             CLR     ET2             ; take the time in one piece (Timer 2 may
+00EB 852326          259             MOV     LPC,SWC         ; not count between these three moves)
+00EE 852427          260             MOV     LPS,SWS
+00F1 852528          261             MOV     LPM,SWM
+00F4 D2AD            262             SETB    ET2
+00F6 3114            263             ACALL   SWSHOW
+00F8 B180            264     CR_K:   ACALL   NEWKEYS
+00FA 60E6            265             JZ      CR_L
+00FC 20E013          266             JB      ACC.0,CR_X      ; S2: back to the menu
+00FF 30E306          267             JNB     ACC.3,CR_4
+0102 B202            268             CPL     SWRUN           ; S5: start or stop
+0104 C203            269             CLR     SPLIT
+0106 80DA            270             SJMP    CR_L
+0108 30E2D7          271     CR_4:   JNB     ACC.2,CR_L
+010B 3002C9          272             JNB     SWRUN,CR_Z      ; S4 when stopped: back to zero
+010E B203            273             CPL     SPLIT           ; S4 when running: freeze or free the display
+0110 80D0            274             SJMP    CR_L
+0112 01A8            275     CR_X:   AJMP    MENU
+                     276     
+                     277     ; SWSHOW: the time in LPM, LPS, LPC on the display
+0114 900626          278     SWSHOW: MOV     DPTR,#DIGSEG
+0117 E528            279             MOV     A,LPM
+0119 7024            280             JNZ     SW_M
+011B E527            281             MOV     A,LPS           ; under a minute: ss.hh
+011D C4              282             SWAP    A
+011E 540F            283             ANL     A,#0FH
+0120 7005            284             JNZ     SW_T
+0122 7530FF          285             MOV     DISP+0,#SG_SP   ; no leading zero
+0125 8003            286             SJMP    SW_U
+0127 93              287     SW_T:   MOVC    A,@A+DPTR
+0128 F530            288             MOV     DISP+0,A
+012A E527            289     SW_U:   MOV     A,LPS
+012C 315B            290             ACALL   SEGLO
+012E 547F            291             ANL     A,#7FH          ; the decimal point after the seconds
+0130 F531            292             MOV     DISP+1,A
+0132 E526            293             MOV     A,LPC
+0134 315A            294             ACALL   SEGHI
+0136 F532            295             MOV     DISP+2,A
+0138 E526            296             MOV     A,LPC
+013A 315B            297             ACALL   SEGLO
+013C F533            298             MOV     DISP+3,A
+013E 22              299             RET
+013F 315B            300     SW_M:   ACALL   SEGLO           ; from one minute: m.ss.h
+0141 547F            301             ANL     A,#7FH
+0143 F530            302             MOV     DISP+0,A
+0145 E527            303             MOV     A,LPS
+0147 315A            304             ACALL   SEGHI
+0149 F531            305             MOV     DISP+1,A
+014B E527            306             MOV     A,LPS
+014D 315B            307             ACALL   SEGLO
+014F 547F            308             ANL     A,#7FH
+0151 F532            309             MOV     DISP+2,A
+0153 E526            310             MOV     A,LPC
+0155 315A            311             ACALL   SEGHI
+0157 F533            312             MOV     DISP+3,A
+0159 22              313             RET
+                     314     ; SEGHI, SEGLO: the segment code of the high or low BCD digit of A
+                     315     ; (DPTR = DIGSEG)
+015A C4              316     SEGHI:  SWAP    A
+015B 540F            317     SEGLO:  ANL     A,#0FH
+015D 93              318             MOVC    A,@A+DPTR
+015E 22              319             RET
+                     320     
+                     321     ;========================== mode 2: Race ===============================
+                     322     ; The road has three lanes, the top, middle and bottom segments of each
+A51 MACRO ASSEMBLER  T                                                                    11/07/2026 13:34:12 PAGE     6
+
+                     323     ; digit. Your car blinks in the left digit; the cars ahead come in from
+                     324     ; the right one digit per step. S5 steers up, S4 down. Each car you pass
+                     325     ; scores a point and takes 10 ms off the step, from 300 ms down to 120.
+015F 9006C1          326     RACE:   MOV     DPTR,#M_RACE
+0162 7410            327             MOV     A,#16
+0164 91FE            328             ACALL   SCROLL
+0166 E521            329     RA_GO:  MOV     A,FRL           ; seed the random numbers from the time
+0168 652C            330             XRL     A,RND
+016A 7001            331             JNZ     RA_S
+016C 04              332             INC     A
+016D F52C            333     RA_S:   MOV     RND,A
+016F 7D03            334             MOV     R5,#3           ; 3, 2, 1 in your car's digit
+0171 B12F            335     RA_CD:  ACALL   BLANK
+0173 ED              336             MOV     A,R5
+0174 900626          337             MOV     DPTR,#DIGSEG
+0177 93              338             MOVC    A,@A+DPTR
+0178 F530            339             MOV     DISP+0,A
+017A 7432            340             MOV     A,#50
+017C B1B7            341             ACALL   WAITF
+017E DDF1            342             DJNZ    R5,RA_CD
+0180 E4              343             CLR     A               ; an empty road
+0181 F55C            344             MOV     ROAD+0,A
+0183 F55D            345             MOV     ROAD+1,A
+0185 F55E            346             MOV     ROAD+2,A
+0187 F55F            347             MOV     ROAD+3,A
+0189 F55A            348             MOV     SCORE,A
+018B 755901          349             MOV     LANE,#1         ; start in the middle lane
+018E 755B02          350             MOV     GAP,#2
+0191 75571E          351             MOV     STEPT,#30       ; 300 ms per step
+0194 75581E          352             MOV     STEPC,#30
+0197 B19E            353             ACALL   KEYCLR
+0199 5125            354     RA_F:   ACALL   RA_DRAW         ; every 10 ms:
+019B 7401            355             MOV     A,#1
+019D B1B7            356             ACALL   WAITF
+019F B180            357             ACALL   NEWKEYS
+01A1 FC              358             MOV     R4,A
+01A2 30E306          359             JNB     ACC.3,RA_D      ; S5: one lane up
+01A5 E559            360             MOV     A,LANE
+01A7 6002            361             JZ      RA_D
+01A9 1559            362             DEC     LANE
+01AB EC              363     RA_D:   MOV     A,R4
+01AC 30E209          364             JNB     ACC.2,RA_H      ; S4: one lane down
+01AF E559            365             MOV     A,LANE
+01B1 B40202          366             CJNE    A,#2,RA_DN
+01B4 8002            367             SJMP    RA_H
+01B6 0559            368     RA_DN:  INC     LANE
+01B8 5149            369     RA_H:   ACALL   RA_HIT          ; steered into a car?
+01BA 4026            370             JC      RA_X
+01BC D558DA          371             DJNZ    STEPC,RA_F
+01BF 855758          372             MOV     STEPC,STEPT     ; time to move the road one digit left
+01C2 E55C            373             MOV     A,ROAD+0
+01C4 600B            374             JZ      RA_SH
+01C6 055A            375             INC     SCORE           ; the cars beside you are now behind you
+01C8 E557            376             MOV     A,STEPT
+01CA B40C02          377             CJNE    A,#12,RA_FS
+01CD 8002            378             SJMP    RA_SH
+01CF 1557            379     RA_FS:  DEC     STEPT           ; and the road gets faster
+01D1 855D5C          380     RA_SH:  MOV     ROAD+0,ROAD+1
+01D4 855E5D          381             MOV     ROAD+1,ROAD+2
+01D7 855F5E          382             MOV     ROAD+2,ROAD+3
+01DA 5154            383             ACALL   RA_NEW
+01DC F55F            384             MOV     ROAD+3,A
+01DE 5149            385             ACALL   RA_HIT          ; did a car run into you?
+01E0 50B7            386             JNC     RA_F
+                     387     ; crash: the whole display flashes, and with it every LED
+01E2 7D04            388     RA_X:   MOV     R5,#4
+A51 MACRO ASSEMBLER  T                                                                    11/07/2026 13:34:12 PAGE     7
+
+01E4 E4              389     RX_L:   CLR     A               ; all segments and points on
+01E5 B131            390             ACALL   FILL
+01E7 740C            391             MOV     A,#12
+01E9 B1B7            392             ACALL   WAITF
+01EB 5125            393             ACALL   RA_DRAW
+01ED 740C            394             MOV     A,#12
+01EF B1B7            395             ACALL   WAITF
+01F1 DDF1            396             DJNZ    R5,RX_L
+01F3 E52F            397             MOV     A,BEST
+01F5 C3              398             CLR     C
+01F6 955A            399             SUBB    A,SCORE         ; C = 1 when SCORE > BEST
+01F8 5016            400             JNC     RX_W
+01FA 855A2F          401             MOV     BEST,SCORE
+01FD 7D03            402             MOV     R5,#3
+01FF 9006EB          403     RX_B:   MOV     DPTR,#M_BEST    ; a new best: bESt flashes three times
+0202 B122            404             ACALL   SHOW4
+0204 7428            405             MOV     A,#40
+0206 B1B7            406             ACALL   WAITF
+0208 B12F            407             ACALL   BLANK
+020A 740F            408             MOV     A,#15
+020C B1B7            409             ACALL   WAITF
+020E DDEF            410             DJNZ    R5,RX_B
+0210 7E00            411     RX_W:   MOV     R6,#0           ; the score stays for 5 s:
+0212 AF5A            412             MOV     R7,SCORE        ; S4 races again, any other button or
+0214 B139            413             ACALL   SHOWDEC         ; no button goes to the menu
+0216 B19E            414             ACALL   KEYCLR
+0218 7D32            415             MOV     R5,#50
+021A B1A5            416             ACALL   WAITNEW
+021C 5005            417             JNC     RX_M
+021E 30E202          418             JNB     ACC.2,RX_M
+0221 2166            419             AJMP    RA_GO
+0223 01A8            420     RX_M:   AJMP    MENU
+                     421     
+                     422     ; RA_DRAW: the road on the display, and your car while it blinks on
+0225 7830            423     RA_DRAW:MOV     R0,#DISP
+0227 795C            424             MOV     R1,#ROAD
+0229 900659          425             MOV     DPTR,#LANESEG
+022C E7              426     RD_L:   MOV     A,@R1
+022D 93              427             MOVC    A,@A+DPTR
+022E F6              428             MOV     @R0,A
+022F 08              429             INC     R0
+0230 09              430             INC     R1
+0231 B834F8          431             CJNE    R0,#DISP+4,RD_L
+0234 E521            432             MOV     A,FRL           ; the car is dark for 80 ms of every 320
+0236 5418            433             ANL     A,#18H
+0238 B41801          434             CJNE    A,#18H,RD_CAR
+023B 22              435             RET
+023C E559            436     RD_CAR: MOV     A,LANE
+023E 900661          437             MOV     DPTR,#LANEBIT
+0241 93              438             MOVC    A,@A+DPTR
+0242 900659          439             MOV     DPTR,#LANESEG
+0245 93              440             MOVC    A,@A+DPTR
+0246 5230            441             ANL     DISP+0,A
+0248 22              442             RET
+                     443     
+                     444     ; RA_HIT: C = 1 when a car is in your lane in your digit
+0249 E559            445     RA_HIT: MOV     A,LANE
+024B 900661          446             MOV     DPTR,#LANEBIT
+024E 93              447             MOVC    A,@A+DPTR
+024F 555C            448             ANL     A,ROAD+0
+0251 24FF            449             ADD     A,#0FFH         ; carry unless A was 0
+0253 22              450             RET
+                     451     
+                     452     ; RA_NEW: A = the lanes taken in the new right-hand digit
+0254 E55B            453     RA_NEW: MOV     A,GAP
+0256 6004            454             JZ      RN_CAR
+A51 MACRO ASSEMBLER  T                                                                    11/07/2026 13:34:12 PAGE     8
+
+0258 155B            455             DEC     GAP             ; an empty stretch of road
+025A E4              456             CLR     A
+025B 22              457             RET
+025C B1C2            458     RN_CAR: ACALL   RAND
+025E 75F003          459             MOV     B,#3
+0261 84              460             DIV     AB              ; B = a lane, 0-2
+0262 E5F0            461             MOV     A,B
+0264 900661          462             MOV     DPTR,#LANEBIT
+0267 93              463             MOVC    A,@A+DPTR
+0268 FA              464             MOV     R2,A            ; one car in that lane
+0269 755B01          465             MOV     GAP,#1
+026C E55A            466             MOV     A,SCORE
+026E B40A00          467             CJNE    A,#10,$+3       ; C = 1 while SCORE < 10
+0271 400C            468             JC      RN_X
+0273 E52C            469             MOV     A,RND
+0275 30E007          470             JNB     ACC.0,RN_X      ; from 10 points on, half the time:
+0278 EA              471             MOV     A,R2
+0279 6407            472             XRL     A,#07H          ; two cars, only that lane is free,
+027B FA              473             MOV     R2,A
+027C 755B02          474             MOV     GAP,#2          ; and more room after them
+027F EA              475     RN_X:   MOV     A,R2
+0280 22              476             RET
+                     477     
+                     478     ;========================= mode 3: Lights ==============================
+                     479     ; Five effects, 5 s each, round and round. S3 shows the next one at
+                     480     ; once, any other button goes back to the menu. When the menu started
+                     481     ; the show by itself, one round of the five is enough.
+0281 9006CD          482     LIGHTS: MOV     DPTR,#M_LIGHTS
+0284 7410            483             MOV     A,#16
+0286 91FE            484             ACALL   SCROLL
+0288 9166            485             ACALL   LEDON
+028A 752D00          486             MOV     EFF,#0
+028D E52D            487     LS_N:   MOV     A,EFF
+028F 7DFA            488             MOV     R5,#250         ; 250 frames of 20 ms
+0291 51A9            489             ACALL   RUNFX
+0293 5003            490             JNC     LS_NX           ; time is up: the next effect
+0295 30E10F          491             JNB     ACC.1,LS_X      ; S3: the next effect, others: menu
+0298 052D            492     LS_NX:  INC     EFF
+029A E52D            493             MOV     A,EFF
+029C B405EE          494             CJNE    A,#5,LS_N
+029F 752D00          495             MOV     EFF,#0
+02A2 200502          496             JB      ATTRACT,LS_X
+02A5 80E6            497             SJMP    LS_N
+02A7 01A8            498     LS_X:   AJMP    MENU
+                     499     
+                     500     ; RUNFX: light effect A for R5 frames of 20 ms. Out: C = 0 when the
+                     501     ; time is up; C = 1 and A = the new presses when a button cut it short.
+02A9 F52D            502     RUNFX:  MOV     EFF,A
+02AB 7172            503             ACALL   FXINIT
+02AD 7402            504     RF_L:   MOV     A,#2
+02AF B1B7            505             ACALL   WAITF
+02B1 B180            506             ACALL   NEWKEYS
+02B3 700A            507             JNZ     RF_K
+02B5 51C1            508             ACALL   FX_DO           ; the new brightness of every LED
+02B7 9192            509             ACALL   SHOWLED         ; handed to Timer 0
+02B9 052E            510             INC     FXT
+02BB DDF0            511             DJNZ    R5,RF_L
+02BD C3              512             CLR     C
+02BE 22              513             RET
+02BF D3              514     RF_K:   SETB    C
+02C0 22              515             RET
+                     516     
+                     517     ; FX_DO: one 20 ms frame of effect EFF (each effect leaves R5 alone)
+02C1 E52D            518     FX_DO:  MOV     A,EFF
+02C3 23              519             RL      A               ; each AJMP takes 2 bytes
+02C4 9002C8          520             MOV     DPTR,#FX_TAB
+A51 MACRO ASSEMBLER  T                                                                    11/07/2026 13:34:12 PAGE     9
+
+02C7 73              521             JMP     @A+DPTR
+02C8 41D2            522     FX_TAB: AJMP    FX_COMET
+02CA 41F8            523             AJMP    FX_BREATH
+02CC 610C            524             AJMP    FX_STARS
+02CE 6124            525             AJMP    FX_WAVE
+02D0 613A            526             AJMP    FX_BALL
+                     527     
+                     528     ; comet: the head moves one LED every 40 ms and bounces at the ends;
+                     529     ; the LEDs behind it fade two levels a frame
+02D2                 530     FX_COMET:
+02D2 7A02            531             MOV     R2,#2
+02D4 9184            532             ACALL   FADE
+02D6 E52E            533             MOV     A,FXT
+02D8 30E019          534             JNB     ACC.0,CO_D      ; move on every second frame (frame 0 shows D1)
+02DB E554            535             MOV     A,DIRN
+02DD 700C            536             JNZ     CO_UP
+02DF 0553            537             INC     POS             ; towards D8
+02E1 E553            538             MOV     A,POS
+02E3 B4070E          539             CJNE    A,#7,CO_D
+02E6 755401          540             MOV     DIRN,#1
+02E9 8009            541             SJMP    CO_D
+02EB 1553            542     CO_UP:  DEC     POS             ; towards D1
+02ED E553            543             MOV     A,POS
+02EF 7003            544             JNZ     CO_D
+02F1 755400          545             MOV     DIRN,#0
+02F4 E553            546     CO_D:   MOV     A,POS
+02F6 817E            547             AJMP    LIGHT
+                     548     
+                     549     ; breathing: all LEDs up from 0 to 15 and down again in 64 frames
+02F8                 550     FX_BREATH:
+02F8 E52E            551             MOV     A,FXT
+02FA 543F            552             ANL     A,#3FH
+02FC 30E503          553             JNB     ACC.5,BR_S      ; frames 0-31 go up
+02FF F4              554             CPL     A               ; frames 32-63 go down: 63 - frame
+0300 541F            555             ANL     A,#1FH
+0302 C3              556     BR_S:   CLR     C
+0303 13              557             RRC     A               ; 0-31 -> 0-15
+0304 7834            558             MOV     R0,#BRI
+0306 F6              559     BR_L:   MOV     @R0,A
+0307 08              560             INC     R0
+0308 B83CFB          561             CJNE    R0,#BRI+8,BR_L
+030B 22              562             RET
+                     563     
+                     564     ; stars: in one frame of four (on average) a random LED flashes up;
+                     565     ; every LED fades one level each 40 ms
+030C                 566     FX_STARS:
+030C E52E            567             MOV     A,FXT
+030E 20E004          568             JB      ACC.0,ST_N
+0311 7A01            569             MOV     R2,#1
+0313 9184            570             ACALL   FADE
+0315 B1C2            571     ST_N:   ACALL   RAND
+0317 F5F0            572             MOV     B,A
+0319 5418            573             ANL     A,#18H
+031B 7006            574             JNZ     ST_X
+031D E5F0            575             MOV     A,B
+031F 5407            576             ANL     A,#07H
+0321 817E            577             AJMP    LIGHT
+0323 22              578     ST_X:   RET
+                     579     
+                     580     ; wave: a sine wave runs down the LEDs, one LED every 80 ms; LED n is
+                     581     ; two table steps behind LED n-1, so the eight LEDs hold one wavelength
+0324 E52E            582     FX_WAVE:MOV     A,FXT
+0326 C3              583             CLR     C
+0327 13              584             RRC     A
+0328 FA              585             MOV     R2,A            ; the phase of D1
+0329 7834            586             MOV     R0,#BRI
+A51 MACRO ASSEMBLER  T                                                                    11/07/2026 13:34:12 PAGE    10
+
+032B 900640          587             MOV     DPTR,#SINE
+032E EA              588     WA_L:   MOV     A,R2
+032F 540F            589             ANL     A,#0FH
+0331 93              590             MOVC    A,@A+DPTR
+0332 F6              591             MOV     @R0,A
+0333 1A              592             DEC     R2
+0334 1A              593             DEC     R2
+0335 08              594             INC     R0
+0336 B83CF5          595             CJNE    R0,#BRI+8,WA_L
+0339 22              596             RET
+                     597     
+                     598     ; bouncing ball: gravity takes 1/32 LED per frame off the speed, the
+                     599     ; height changes by the speed; at the floor (D8) the ball keeps 3/4 of
+                     600     ; its speed. When it bounces too low a new ball drops from D1.
+033A 7A03            601     FX_BALL:MOV     R2,#3
+033C 9184            602             ACALL   FADE            ; a short trail
+033E 1556            603             DEC     BV              ; gravity
+0340 E556            604             MOV     A,BV
+0342 30E721          605             JNB     ACC.7,BA_UP     ; speed >= 0: on the way up
+0345 2555            606             ADD     A,BY            ; falling: height + speed; no carry means
+0347 401F            607             JC      BA_Y            ; the ball went through the floor
+0349 E556            608             MOV     A,BV            ; bounce:
+034B F4              609             CPL     A
+034C 04              610             INC     A               ; the impact speed, positive
+034D FA              611             MOV     R2,A
+034E C3              612             CLR     C
+034F 13              613             RRC     A
+0350 C3              614             CLR     C
+0351 13              615             RRC     A               ; a quarter of it
+0352 CA              616             XCH     A,R2
+0353 C3              617             CLR     C
+0354 9A              618             SUBB    A,R2            ; three quarters of the speed, upwards
+0355 B40400          619             CJNE    A,#4,$+3        ; C = 1 when it is below 4
+0358 4005            620             JC      BA_NEW
+035A F556            621             MOV     BV,A
+035C E4              622             CLR     A               ; height 0: on the floor
+035D 8009            623             SJMP    BA_Y
+035F 755600          624     BA_NEW: MOV     BV,#0           ; a new ball at the top
+0362 74E0            625             MOV     A,#224
+0364 8002            626             SJMP    BA_Y
+0366 2555            627     BA_UP:  ADD     A,BY
+0368 F555            628     BA_Y:   MOV     BY,A
+036A C4              629             SWAP    A               ; height / 32 = 0-7 LEDs above the floor
+036B 03              630             RR      A
+036C 5407            631             ANL     A,#07H
+036E 6407            632             XRL     A,#07H          ; D8 is the floor: LED = 7 - height
+0370 817E            633             AJMP    LIGHT
+                     634     
+                     635     ; FXINIT: all LEDs dark and every effect at its start
+0372 9175            636     FXINIT: ACALL   CLRBRI
+0374 E4              637             CLR     A
+0375 F52E            638             MOV     FXT,A
+0377 F553            639             MOV     POS,A
+0379 F554            640             MOV     DIRN,A
+037B F556            641             MOV     BV,A
+037D 7555E0          642             MOV     BY,#224         ; the ball starts at the top (D1)
+0380 22              643             RET
+                     644     
+                     645     ;========================== mode 4: Pong ===============================
+                     646     ; Two players. The ball runs along the LEDs with a fading tail. S5 hits
+                     647     ; it back when it is on D1, S2 when it is on D8; pressing while the ball
+                     648     ; is still on its way to you is a miss. Each return takes 20 ms off the
+                     649     ; step, from 280 ms down to 80. First to 5 points wins.
+0381 9006DB          650     PONG:   MOV     DPTR,#M_PONG
+0384 7410            651             MOV     A,#16
+0386 91FE            652             ACALL   SCROLL
+A51 MACRO ASSEMBLER  T                                                                    11/07/2026 13:34:12 PAGE    11
+
+0388 755A00          653             MOV     SCL,#0
+038B 755B00          654             MOV     SCR,#0
+038E 755300          655             MOV     POS,#0          ; the first serve starts at D1
+0391 755400          656             MOV     DIRN,#0
+0394 914D            657     PG_SV:  ACALL   PG_SHOW         ; the score for 1.5 s
+0396 75571C          658             MOV     STEPT,#28       ; 280 ms per LED
+0399 75581C          659             MOV     STEPC,#28
+039C 9175            660             ACALL   CLRBRI
+039E B19E            661             ACALL   KEYCLR
+03A0 9166            662             ACALL   LEDON
+03A2 7A01            663     PG_F:   MOV     R2,#1           ; every 10 ms: the tail fades a level,
+03A4 9184            664             ACALL   FADE
+03A6 E553            665             MOV     A,POS           ; the ball is at full brightness
+03A8 917E            666             ACALL   LIGHT
+03AA 9192            667             ACALL   SHOWLED
+03AC 7401            668             MOV     A,#1
+03AE B1B7            669             ACALL   WAITF
+03B0 B180            670             ACALL   NEWKEYS
+03B2 FC              671             MOV     R4,A
+03B3 30E30D          672             JNB     ACC.3,PG_B      ; S5: the D1 player hits
+03B6 E554            673             MOV     A,DIRN
+03B8 6009            674             JZ      PG_B            ; the ball is going away: no effect
+03BA E553            675             MOV     A,POS
+03BC 7034            676             JNZ     PG_TOP          ; too early: a miss
+03BE 755400          677             MOV     DIRN,#0         ; a return, towards D8
+03C1 913C            678             ACALL   PG_HIT
+03C3 EC              679     PG_B:   MOV     A,R4
+03C4 30E00E          680             JNB     ACC.0,PG_MV     ; S2: the D8 player hits
+03C7 E554            681             MOV     A,DIRN
+03C9 700A            682             JNZ     PG_MV
+03CB E553            683             MOV     A,POS
+03CD B4072C          684             CJNE    A,#7,PG_BOT     ; too early: a miss
+03D0 755401          685             MOV     DIRN,#1         ; a return, towards D1
+03D3 913C            686             ACALL   PG_HIT
+03D5 D558CA          687     PG_MV:  DJNZ    STEPC,PG_F
+03D8 855758          688             MOV     STEPC,STEPT     ; time for the ball to move one LED
+03DB E554            689             MOV     A,DIRN
+03DD 700B            690             JNZ     PG_UP
+03DF E553            691             MOV     A,POS
+03E1 B40702          692             CJNE    A,#7,PG_DN
+03E4 8016            693             SJMP    PG_BOT          ; it left D8: the D8 player missed
+03E6 0553            694     PG_DN:  INC     POS
+03E8 80B8            695             SJMP    PG_F
+03EA E553            696     PG_UP:  MOV     A,POS
+03EC 6004            697             JZ      PG_TOP          ; it left D1: the D1 player missed
+03EE 1553            698             DEC     POS
+03F0 80B0            699             SJMP    PG_F
+03F2 055B            700     PG_TOP: INC     SCR             ; a point for D8, and D1 serves
+03F4 755300          701             MOV     POS,#0
+03F7 755400          702             MOV     DIRN,#0
+03FA 8008            703             SJMP    PG_PT
+03FC 055A            704     PG_BOT: INC     SCL             ; a point for D1, and D8 serves
+03FE 755307          705             MOV     POS,#7
+0401 755401          706             MOV     DIRN,#1
+0404 E55A            707     PG_PT:  MOV     A,SCL
+0406 B40502          708             CJNE    A,#5,PG_P2
+0409 8005            709             SJMP    PG_WIN
+040B E55B            710     PG_P2:  MOV     A,SCR
+040D B40584          711             CJNE    A,#5,PG_SV
+0410 914D            712     PG_WIN: ACALL   PG_SHOW         ; the final score, then the winner's
+0412 9166            713             ACALL   LEDON           ; half of the LEDs flashes five times
+0414 7D05            714             MOV     R5,#5
+0416 9175            715     PW_L:   ACALL   CLRBRI
+0418 7834            716             MOV     R0,#BRI         ; D1-D4 for the D1 player
+041A E55A            717             MOV     A,SCL
+041C B40502          718             CJNE    A,#5,PW_8
+A51 MACRO ASSEMBLER  T                                                                    11/07/2026 13:34:12 PAGE    12
+
+041F 8002            719             SJMP    PW_S
+0421 7838            720     PW_8:   MOV     R0,#BRI+4       ; D5-D8 for the D8 player
+0423 7A04            721     PW_S:   MOV     R2,#4
+0425 760F            722     PW_F:   MOV     @R0,#15
+0427 08              723             INC     R0
+0428 DAFB            724             DJNZ    R2,PW_F
+042A 9192            725             ACALL   SHOWLED
+042C 7419            726             MOV     A,#25
+042E B1B7            727             ACALL   WAITF
+0430 9175            728             ACALL   CLRBRI
+0432 9192            729             ACALL   SHOWLED
+0434 7419            730             MOV     A,#25
+0436 B1B7            731             ACALL   WAITF
+0438 DDDC            732             DJNZ    R5,PW_L
+043A 01A8            733             AJMP    MENU
+                     734     
+                     735     ; PG_HIT: a return makes the ball faster
+043C E557            736     PG_HIT: MOV     A,STEPT
+043E C3              737             CLR     C
+043F 9402            738             SUBB    A,#2
+0441 B40800          739             CJNE    A,#8,$+3        ; C = 1 below 8
+0444 5002            740             JNC     PH_S
+0446 7408            741             MOV     A,#8
+0448 F557            742     PH_S:   MOV     STEPT,A
+044A F558            743             MOV     STEPC,A
+044C 22              744             RET
+                     745     
+                     746     ; PG_SHOW: the score as 3--1 on the display for 1.5 s
+044D 916E            747     PG_SHOW:ACALL   LEDOFF
+044F 900626          748             MOV     DPTR,#DIGSEG
+0452 E55A            749             MOV     A,SCL
+0454 93              750             MOVC    A,@A+DPTR
+0455 F530            751             MOV     DISP+0,A
+0457 7531BF          752             MOV     DISP+1,#SG_DASH
+045A 7532BF          753             MOV     DISP+2,#SG_DASH
+045D E55B            754             MOV     A,SCR
+045F 93              755             MOVC    A,@A+DPTR
+0460 F533            756             MOV     DISP+3,A
+0462 7496            757             MOV     A,#150
+0464 A1B7            758             AJMP    WAITF
+                     759     
+                     760     ;========================= LED brightness ==============================
+                     761     ; LEDON: digits off, Timer 0 drives the LEDs. LEDOFF: back to the digits.
+0466 D200            762     LEDON:  SETB    LEDMODE
+0468 7590FF          763             MOV     P1,#0FFH
+046B D28C            764             SETB    TR0
+046D 22              765             RET
+046E C28C            766     LEDOFF: CLR     TR0
+0470 C28D            767             CLR     TF0             ; no slot may start after this
+0472 C200            768             CLR     LEDMODE
+0474 22              769             RET
+                     770     
+                     771     ; CLRBRI: every LED at brightness 0
+0475 7834            772     CLRBRI: MOV     R0,#BRI
+0477 7600            773     CB_L:   MOV     @R0,#0
+0479 08              774             INC     R0
+047A B83CFA          775             CJNE    R0,#BRI+8,CB_L
+047D 22              776             RET
+                     777     
+                     778     ; LIGHT: LED A (0 = D1 ... 7 = D8) at full brightness
+047E 2434            779     LIGHT:  ADD     A,#BRI
+0480 F8              780             MOV     R0,A
+0481 760F            781             MOV     @R0,#15
+0483 22              782             RET
+                     783     
+                     784     ; FADE: every LED R2 levels darker, but not below 0
+A51 MACRO ASSEMBLER  T                                                                    11/07/2026 13:34:12 PAGE    13
+
+0484 7834            785     FADE:   MOV     R0,#BRI
+0486 E6              786     FD_L:   MOV     A,@R0
+0487 C3              787             CLR     C
+0488 9A              788             SUBB    A,R2
+0489 5001            789             JNC     FD_S
+048B E4              790             CLR     A
+048C F6              791     FD_S:   MOV     @R0,A
+048D 08              792             INC     R0
+048E B83CF5          793             CJNE    R0,#BRI+8,FD_L
+0491 22              794             RET
+                     795     
+                     796     ; SHOWLED: turn the brightness of D1-D8 (BRI, 0-15) into the five bit
+                     797     ; patterns Timer 0 shows. Level n is lit for GAMMA(n) of 31 units; the
+                     798     ; eye sees brightness roughly as the square root of the time lit, so
+                     799     ; GAMMA grows about as n squared. Pattern k holds bit k of each LED's
+                     800     ; GAMMA value, inverted because an LED lights at 0. The patterns are
+                     801     ; built in PB first, so Timer 0 never shows a half-built frame.
+0492 783B            802     SHOWLED:MOV     R0,#BRI+7       ; D8 first: after eight shifts it is bit 7
+0494 900630          803             MOV     DPTR,#GAMMA
+0497 E6              804     SH_L:   MOV     A,@R0
+0498 540F            805             ANL     A,#0FH
+049A 93              806             MOVC    A,@A+DPTR       ; 0-31 units lit
+049B F4              807             CPL     A               ; 0 = lit
+049C FA              808             MOV     R2,A
+049D 793C            809             MOV     R1,#PB
+049F 7B05            810             MOV     R3,#5
+04A1 EA              811     SH_B:   MOV     A,R2
+04A2 13              812             RRC     A               ; the next bit into C
+04A3 FA              813             MOV     R2,A
+04A4 E7              814             MOV     A,@R1
+04A5 33              815             RLC     A               ; and into pattern k
+04A6 F7              816             MOV     @R1,A
+04A7 09              817             INC     R1
+04A8 DBF7            818             DJNZ    R3,SH_B
+04AA 18              819             DEC     R0
+04AB B833E9          820             CJNE    R0,#BRI-1,SH_L
+04AE 853C41          821             MOV     SL+0,PB+0       ; slot 0: 1 unit  (48 cycles)
+04B1 853D43          822             MOV     SL+2,PB+1       ; slot 1: 2 units
+04B4 853E45          823             MOV     SL+4,PB+2       ; slot 2: 4 units
+04B7 853F47          824             MOV     SL+6,PB+3       ; slots 3-4: 8 units
+04BA 853F49          825             MOV     SL+8,PB+3
+04BD 85404B          826             MOV     SL+10,PB+4      ; slots 5-8: 16 units
+04C0 85404D          827             MOV     SL+12,PB+4
+04C3 85404F          828             MOV     SL+14,PB+4
+04C6 854051          829             MOV     SL+16,PB+4
+04C9 22              830             RET
+                     831     
+                     832     ;========================= display helpers =============================
+                     833     ; CHASE: a snake of four segments runs clockwise round the edge of the
+                     834     ; display, R5 steps of 30 ms
+04CA 755303          835     CHASE:  MOV     POS,#3          ; the head
+04CD B12F            836     CH_L:   ACALL   BLANK
+04CF E553            837             MOV     A,POS
+04D1 FA              838             MOV     R2,A
+04D2 7B04            839             MOV     R3,#4           ; the head and three behind it
+04D4 EA              840     CH_S:   MOV     A,R2
+04D5 23              841             RL      A               ; 2 bytes per place on the ring
+04D6 900664          842             MOV     DPTR,#RING
+04D9 C0E0            843             PUSH    ACC
+04DB 93              844             MOVC    A,@A+DPTR       ; the digit, 0-3
+04DC 2430            845             ADD     A,#DISP
+04DE F8              846             MOV     R0,A
+04DF D0E0            847             POP     ACC
+04E1 04              848             INC     A
+04E2 93              849             MOVC    A,@A+DPTR       ; the segment (0 = lit)
+04E3 56              850             ANL     A,@R0
+A51 MACRO ASSEMBLER  T                                                                    11/07/2026 13:34:12 PAGE    14
+
+04E4 F6              851             MOV     @R0,A
+04E5 1A              852             DEC     R2              ; one place back
+04E6 BAFF02          853             CJNE    R2,#0FFH,CH_B
+04E9 7A0B            854             MOV     R2,#11
+04EB DBE7            855     CH_B:   DJNZ    R3,CH_S
+04ED 7403            856             MOV     A,#3
+04EF B1B7            857             ACALL   WAITF
+04F1 0553            858             INC     POS
+04F3 E553            859             MOV     A,POS
+04F5 B40C03          860             CJNE    A,#12,CH_N
+04F8 755300          861             MOV     POS,#0
+04FB DDD0            862     CH_N:   DJNZ    R5,CH_L
+04FD 22              863             RET
+                     864     
+                     865     ; SCROLL: move a message (segment codes ending with 00H, DPTR) from
+                     866     ; right to left, A x 10 ms per step. Out: C = 1 if a button cut it short.
+04FE FB              867     SCROLL: MOV     R3,A
+04FF B19E            868             ACALL   KEYCLR          ; a button still held does not count
+0501 7830            869     SC_F:   MOV     R0,#DISP
+0503 7A00            870             MOV     R2,#0
+0505 EA              871     SC_C:   MOV     A,R2
+0506 93              872             MOVC    A,@A+DPTR
+0507 6015            873             JZ      SC_END          ; the end came into the window
+0509 F6              874             MOV     @R0,A
+050A 08              875             INC     R0
+050B 0A              876             INC     R2
+050C BA04F6          877             CJNE    R2,#4,SC_C
+050F EB              878             MOV     A,R3
+0510 FC              879             MOV     R4,A
+0511 7401            880     SC_W:   MOV     A,#1
+0513 B1B7            881             ACALL   WAITF
+0515 B180            882             ACALL   NEWKEYS
+0517 7007            883             JNZ     SC_KEY
+0519 DCF6            884             DJNZ    R4,SC_W
+051B A3              885             INC     DPTR
+051C 80E3            886             SJMP    SC_F
+051E C3              887     SC_END: CLR     C
+051F 22              888             RET
+0520 D3              889     SC_KEY: SETB    C
+0521 22              890             RET
+                     891     
+                     892     ; SHOW4: copy 4 segment codes from DPTR to the display
+0522 7830            893     SHOW4:  MOV     R0,#DISP
+0524 7A00            894             MOV     R2,#0
+0526 EA              895     S4_L:   MOV     A,R2
+0527 93              896             MOVC    A,@A+DPTR
+0528 F6              897             MOV     @R0,A
+0529 08              898             INC     R0
+052A 0A              899             INC     R2
+052B BA04F8          900             CJNE    R2,#4,S4_L
+052E 22              901             RET
+                     902     
+                     903     ; BLANK: all four digits dark. FILL: segment code A on all four digits.
+052F 74FF            904     BLANK:  MOV     A,#SG_SP
+0531 7830            905     FILL:   MOV     R0,#DISP
+0533 F6              906     FI_L:   MOV     @R0,A
+0534 08              907             INC     R0
+0535 B834FB          908             CJNE    R0,#DISP+4,FI_L
+0538 22              909             RET
+                     910     
+                     911     ; SHOWDEC: R6:R7 (0..9999) in decimal on all four digits, no leading zeros
+0539 C204            912     SHOWDEC:CLR     NZFLAG
+053B 7830            913             MOV     R0,#DISP
+053D 7A03            914             MOV     R2,#HIGH(1000)
+053F 7BE8            915             MOV     R3,#LOW(1000)
+0541 B154            916             ACALL   SD_DIG
+A51 MACRO ASSEMBLER  T                                                                    11/07/2026 13:34:12 PAGE    15
+
+0543 7A00            917             MOV     R2,#0
+0545 7B64            918             MOV     R3,#100
+0547 B154            919             ACALL   SD_DIG
+0549 7A00            920             MOV     R2,#0
+054B 7B0A            921             MOV     R3,#10
+054D B154            922             ACALL   SD_DIG
+054F D204            923             SETB    NZFLAG          ; the units digit is always shown
+0551 EF              924             MOV     A,R7
+0552 8012            925             SJMP    SD_PUT
+0554 7C00            926     SD_DIG: MOV     R4,#0           ; A = how many times R2:R3 fits into R6:R7
+0556 C3              927     SD_SUB: CLR     C
+0557 EF              928             MOV     A,R7
+0558 9B              929             SUBB    A,R3
+0559 F5F0            930             MOV     B,A
+055B EE              931             MOV     A,R6
+055C 9A              932             SUBB    A,R2
+055D 4006            933             JC      SD_CNT
+055F FE              934             MOV     R6,A
+0560 AFF0            935             MOV     R7,B
+0562 0C              936             INC     R4
+0563 80F1            937             SJMP    SD_SUB
+0565 EC              938     SD_CNT: MOV     A,R4
+0566 7007            939     SD_PUT: JNZ     SD_NZ
+0568 200406          940             JB      NZFLAG,SD_SEG
+056B 76FF            941             MOV     @R0,#SG_SP      ; leading zero: blank
+056D 08              942             INC     R0
+056E 22              943             RET
+056F D204            944     SD_NZ:  SETB    NZFLAG
+0571 900626          945     SD_SEG: MOV     DPTR,#DIGSEG
+0574 93              946             MOVC    A,@A+DPTR
+0575 F6              947             MOV     @R0,A
+0576 08              948             INC     R0
+0577 22              949             RET
+                     950     
+                     951     ;========================= buttons and time ============================
+                     952     ; KEYS: A = buttons down now, 1 = pressed: bit 3 = S5 ... bit 0 = S2
+0578 E5B0            953     KEYS:   MOV     A,P3
+057A F4              954             CPL     A
+057B 03              955             RR      A
+057C 03              956             RR      A
+057D 540F            957             ANL     A,#0FH
+057F 22              958             RET
+                     959     
+                     960     ; NEWKEYS: call once a frame. A = the buttons pressed since the last
+                     961     ; call. A button only changes state when two looks in a row agree,
+                     962     ; so contact bounce shorter than a frame is ignored. Uses A, B.
+0580 B178            963     NEWKEYS:ACALL   KEYS
+0582 F5F0            964             MOV     B,A             ; B = the buttons now
+0584 6529            965             XRL     A,KRAW          ; 1 = changed since the last look
+0586 85F029          966             MOV     KRAW,B
+0589 F52B            967             MOV     KTMP,A
+058B F4              968             CPL     A               ; 1 = the same twice running
+058C 55F0            969             ANL     A,B             ; ... and down
+058E C52B            970             XCH     A,KTMP
+0590 552A            971             ANL     A,KDEB          ; a changing button keeps its old state
+0592 452B            972             ORL     A,KTMP          ; A = the new debounced state
+0594 F5F0            973             MOV     B,A
+0596 652A            974             XRL     A,KDEB          ; the buttons whose state changed
+0598 55F0            975             ANL     A,B             ; ... to pressed
+059A 85F02A          976             MOV     KDEB,B
+059D 22              977             RET
+                     978     
+                     979     ; KEYCLR: take the buttons as they are now, so one still held from the
+                     980     ; last screen does not count as a new press
+059E B178            981     KEYCLR: ACALL   KEYS
+05A0 F529            982             MOV     KRAW,A
+A51 MACRO ASSEMBLER  T                                                                    11/07/2026 13:34:12 PAGE    16
+
+05A2 F52A            983             MOV     KDEB,A
+05A4 22              984             RET
+                     985     
+                     986     ; WAITNEW: wait for a press, at most R5 x 100 ms.
+                     987     ; Out: C = 1 and A = the new presses, or C = 0 when the time is up.
+05A5 7C0A            988     WAITNEW:MOV     R4,#10
+05A7 7401            989     WN_L:   MOV     A,#1
+05A9 B1B7            990             ACALL   WAITF
+05AB B180            991             ACALL   NEWKEYS
+05AD 7006            992             JNZ     WN_K
+05AF DCF6            993             DJNZ    R4,WN_L
+05B1 DDF2            994             DJNZ    R5,WAITNEW
+05B3 C3              995             CLR     C
+05B4 22              996             RET
+05B5 D3              997     WN_K:   SETB    C
+05B6 22              998             RET
+                     999     
+                    1000     ; WAITF: wait for the A-th start of a 10 ms frame (A = 1..255). Uses A.
+05B7 C201           1001     WAITF:  CLR     FRAME
+05B9 3001FD         1002     WF_L:   JNB     FRAME,WF_L
+05BC C201           1003             CLR     FRAME
+05BE D5E0F8         1004             DJNZ    ACC,WF_L
+05C1 22             1005             RET
+                    1006     
+                    1007     ; RAND: next number of an 8-bit shift register generator (255 states)
+05C2 E52C           1008     RAND:   MOV     A,RND
+05C4 C3             1009             CLR     C
+05C5 13             1010             RRC     A
+05C6 5002           1011             JNC     RD_X
+05C8 64B8           1012             XRL     A,#0B8H
+05CA F52C           1013     RD_X:   MOV     RND,A
+05CC 22             1014             RET
+                    1015     
+                    1016     ;==================== Timer 2 interrupt: every 1.25 ms =================
+                    1017     ; Timer 2 reloaded itself from RCAP2H:RCAP2L when it overflowed, so the
+                    1018     ; ticks stay exactly 1152 cycles apart however late this code runs.
+05CD C0D0           1019     T2_ISR: PUSH    PSW
+05CF C0E0           1020             PUSH    ACC
+05D1 C2CF           1021             CLR     TF2             ; Timer 2 does not clear its own flag
+05D3 75D008         1022             MOV     PSW,#08H        ; register bank 1
+05D6 7590FF         1023             MOV     P1,#0FFH        ; all digits off first (no ghosts)
+05D9 200016         1024             JB      LEDMODE,T2_TK   ; LED mode: they stay off
+05DC 0F             1025             INC     R7              ; the next digit, 0-3
+05DD EF             1026             MOV     A,R7
+05DE 5403           1027             ANL     A,#03H
+05E0 FF             1028             MOV     R7,A
+05E1 2430           1029             ADD     A,#DISP
+05E3 F8             1030             MOV     R0,A
+05E4 8680           1031             MOV     P0,@R0          ; its segments
+05E6 EF             1032             MOV     A,R7
+05E7 2404           1033             ADD     A,#T2_TAB-T2_PC
+05E9 83             1034             MOVC    A,@A+PC         ; its enable bit
+05EA F590           1035     T2_PC:  MOV     P1,A
+05EC 8004           1036             SJMP    T2_TK
+05EE F7EFDFBF       1037     T2_TAB: DB      0F7H,0EFH,0DFH,0BFH     ; P1.3, P1.4, P1.5, P1.6 low
+05F2 DE2D           1038     T2_TK:  DJNZ    R6,T2_X         ; every 8th tick (10 ms):
+05F4 7E08           1039             MOV     R6,#8
+05F6 D201           1040             SETB    FRAME           ; a new frame for the main program
+05F8 0521           1041             INC     FRL
+05FA E521           1042             MOV     A,FRL
+05FC 7002           1043             JNZ     T2_SW
+05FE 0522           1044             INC     FRH
+0600 30021E         1045     T2_SW:  JNB     SWRUN,T2_X      ; and the stopwatch, in packed BCD
+0603 E523           1046             MOV     A,SWC
+0605 2401           1047             ADD     A,#1
+0607 D4             1048             DA      A               ; 09H + 1 = 0AH becomes 10H
+A51 MACRO ASSEMBLER  T                                                                    11/07/2026 13:34:12 PAGE    17
+
+0608 F523           1049             MOV     SWC,A
+060A 7015           1050             JNZ     T2_X            ; 99 + 1 gives 00: a new second
+060C E524           1051             MOV     A,SWS
+060E 2401           1052             ADD     A,#1
+0610 D4             1053             DA      A
+0611 B4600B         1054             CJNE    A,#60H,T2_S
+0614 E4             1055             CLR     A               ; 60 s: a new minute
+0615 0525           1056             INC     SWM
+0617 A825           1057             MOV     R0,SWM
+0619 B80A03         1058             CJNE    R0,#10,T2_S
+061C 752500         1059             MOV     SWM,#0          ; after 9.59.99 it starts from 0 again
+061F F524           1060     T2_S:   MOV     SWS,A
+0621 D0E0           1061     T2_X:   POP     ACC
+0623 D0D0           1062             POP     PSW
+0625 32             1063             RETI
+                    1064     
+                    1065     ;=========================== tables ====================================
+0626 C0F9A4B0       1066     DIGSEG: DB      SG_0,SG_1,SG_2,SG_3,SG_4,SG_5,SG_6,SG_7,SG_8,SG_9
+062A 999282F8                
+062E 8090                    
+                    1067     ; brightness level 0-15 -> units lit out of 31 (about 31 x (n/15)^2)
+0630 00010203       1068     GAMMA:  DB      0,1,2,3,4,5,6,7,9,11,14,17,20,23,27,31
+0634 04050607                
+0638 090B0E11                
+063C 14171B1F                
+                    1069     ; one period of a sine wave, levels 0-15
+0640 080A0D0E       1070     SINE:   DB      8,10,13,14,15,14,13,10,8,5,2,1,0,1,2,5
+0644 0F0E0D0A                
+0648 08050201                
+064C 00010205                
+                    1071     ; PWM slots: TH0 for the slot after each one (256 - its length in cycles)
+0650 A0404040       1072     SLTH:   DB      256-96,256-192,256-192,256-192,256-192,256-192,256-192,256-192,256-48
+0654 40404040                
+0658 D0                      
+                    1073     ; Race: lanes taken (bit 0 top, 1 middle, 2 bottom) -> segments a, g, d
+0659 FFFEBFBE       1074     LANESEG:DB      0FFH,0FEH,0BFH,0BEH,0F7H,0F6H,0B7H,0B6H
+065D F7F6B7B6                
+0661 010204         1075     LANEBIT:DB      01H,02H,04H
+                    1076     ; the edge of the display, clockwise: digit, segment (0 = lit)
+0664 00FE01FE       1077     RING:   DB      0,0FEH, 1,0FEH, 2,0FEH, 3,0FEH, 3,0FDH, 3,0FBH
+0668 02FE03FE                
+066C 03FD03FB                
+0670 03F702F7       1078             DB      3,0F7H, 2,0F7H, 1,0F7H, 0,0F7H, 0,0EFH, 0,0DFH
+0674 01F700F7                
+0678 00EF00DF                
+                    1079     
+                    1080     ; messages: segment codes, 00H ends a scrolling message
+067C FFFFFF89       1081     M_HELLO:DB      SG_SP,SG_SP,SG_SP,SG_H,SG_E,SG_L,SG_L,SG_O,SG_SP
+0680 86C7C7C0                
+0684 FF                      
+0685 88C288CF       1082             DB      SG_A,SG_G,SG_A,SG_I,SG_LN,SG_SP,SG_SP,SG_SP,SG_SP,0
+0689 ABFFFFFF                
+068D FF00                    
+068F                1083     M_LEGEND:
+068F FFFFFFC6       1084             DB      SG_SP,SG_SP,SG_SP,SG_UC,SG_H,SG_LR,SG_LO,SG_LN,SG_LO,SG_SP,SG_DASH,SG_SP
+0693 89AFA3AB                
+0697 A3FFBFFF                
+069B AF88C686       1085             DB      SG_LR,SG_A,SG_UC,SG_E,SG_SP,SG_DASH,SG_SP
+069F FFBFFF                  
+06A2 C7CFC289       1086             DB      SG_L,SG_I,SG_G,SG_H,SG_LT,SG_S,SG_SP,SG_DASH,SG_SP
+06A6 8792FFBF                
+06AA FF                      
+06AB 8CA3ABC2       1087             DB      SG_P,SG_LO,SG_LN,SG_G,SG_SP,SG_SP,SG_SP,0
+06AF FFFFFF00                
+06B3                1088     M_CHRONO:
+06B3 FFFFFFC6       1089             DB      SG_SP,SG_SP,SG_SP,SG_UC,SG_H,SG_LR,SG_LO,SG_LN,SG_LO,SG_SP,SG_SP,SG_SP,SG_S
+A51 MACRO ASSEMBLER  T                                                                    11/07/2026 13:34:12 PAGE    18
+
+                             P,0
+06B7 89AFA3AB                
+06BB A3FFFFFF                
+06BF FF00                    
+06C1 FFFFFFAF       1090     M_RACE: DB      SG_SP,SG_SP,SG_SP,SG_LR,SG_A,SG_UC,SG_E,SG_SP,SG_SP,SG_SP,SG_SP,0
+06C5 88C686FF                
+06C9 FFFFFF00                
+06CD                1091     M_LIGHTS:
+06CD FFFFFFC7       1092             DB      SG_SP,SG_SP,SG_SP,SG_L,SG_I,SG_G,SG_H,SG_LT,SG_S,SG_SP,SG_SP,SG_SP,SG_SP,0
+06D1 CFC28987                
+06D5 92FFFFFF                
+06D9 FF00                    
+06DB FFFFFF8C       1093     M_PONG: DB      SG_SP,SG_SP,SG_SP,SG_P,SG_LO,SG_LN,SG_G,SG_SP,SG_SP,SG_SP,SG_SP,0
+06DF A3ABC2FF                
+06E3 FFFFFF00                
+                    1094     ; 4-digit pictures
+06E7 C6AFC78C       1095     M_MENU: DB      SG_UC,SG_LR,SG_L,SG_P
+06EB 83869287       1096     M_BEST: DB      SG_LB,SG_E,SG_S,SG_LT
+                    1097     
+                    1098             END
+A51 MACRO ASSEMBLER  T                                                                    11/07/2026 13:34:12 PAGE    19
+
+SYMBOL TABLE LISTING
+------ ----- -------
+
+
+N A M E             T Y P E  V A L U E   ATTRIBUTES
+
+ACC. . . . . . . .  D ADDR   00E0H   A   
+ATTRACT. . . . . .  B ADDR   0020H.5 A   
+B. . . . . . . . .  D ADDR   00F0H   A   
+BA_NEW . . . . . .  C ADDR   035FH   A   
+BA_UP. . . . . . .  C ADDR   0366H   A   
+BA_Y . . . . . . .  C ADDR   0368H   A   
+BEST . . . . . . .  N NUMB   002FH   A   
+BLANK. . . . . . .  C ADDR   052FH   A   
+BRI. . . . . . . .  N NUMB   0034H   A   
+BR_L . . . . . . .  C ADDR   0306H   A   
+BR_S . . . . . . .  C ADDR   0302H   A   
+BV . . . . . . . .  N NUMB   0056H   A   
+BY . . . . . . . .  N NUMB   0055H   A   
+CB_L . . . . . . .  C ADDR   0477H   A   
+CHASE. . . . . . .  C ADDR   04CAH   A   
+CHRONO . . . . . .  C ADDR   00D0H   A   
+CH_B . . . . . . .  C ADDR   04EBH   A   
+CH_L . . . . . . .  C ADDR   04CDH   A   
+CH_N . . . . . . .  C ADDR   04FBH   A   
+CH_S . . . . . . .  C ADDR   04D4H   A   
+CLRBRI . . . . . .  C ADDR   0475H   A   
+CLRRAM . . . . . .  C ADDR   003BH   A   
+CO_D . . . . . . .  C ADDR   02F4H   A   
+CO_UP. . . . . . .  C ADDR   02EBH   A   
+CR_4 . . . . . . .  C ADDR   0108H   A   
+CR_K . . . . . . .  C ADDR   00F8H   A   
+CR_L . . . . . . .  C ADDR   00E2H   A   
+CR_X . . . . . . .  C ADDR   0112H   A   
+CR_Z . . . . . . .  C ADDR   00D7H   A   
+DIGSEG . . . . . .  C ADDR   0626H   A   
+DIRN . . . . . . .  N NUMB   0054H   A   
+DISP . . . . . . .  N NUMB   0030H   A   
+EFF. . . . . . . .  N NUMB   002DH   A   
+ET2. . . . . . . .  B ADDR   00A8H.5 A   
+FADE . . . . . . .  C ADDR   0484H   A   
+FD_L . . . . . . .  C ADDR   0486H   A   
+FD_S . . . . . . .  C ADDR   048CH   A   
+FILL . . . . . . .  C ADDR   0531H   A   
+FI_L . . . . . . .  C ADDR   0533H   A   
+FRAME. . . . . . .  B ADDR   0020H.1 A   
+FRH. . . . . . . .  N NUMB   0022H   A   
+FRL. . . . . . . .  N NUMB   0021H   A   
+FXINIT . . . . . .  C ADDR   0372H   A   
+FXT. . . . . . . .  N NUMB   002EH   A   
+FX_BALL. . . . . .  C ADDR   033AH   A   
+FX_BREATH. . . . .  C ADDR   02F8H   A   
+FX_COMET . . . . .  C ADDR   02D2H   A   
+FX_DO. . . . . . .  C ADDR   02C1H   A   
+FX_STARS . . . . .  C ADDR   030CH   A   
+FX_TAB . . . . . .  C ADDR   02C8H   A   
+FX_WAVE. . . . . .  C ADDR   0324H   A   
+GAMMA. . . . . . .  C ADDR   0630H   A   
+GAP. . . . . . . .  N NUMB   005BH   A   
+IE . . . . . . . .  D ADDR   00A8H   A   
+IP . . . . . . . .  D ADDR   00B8H   A   
+KDEB . . . . . . .  N NUMB   002AH   A   
+KEYCLR . . . . . .  C ADDR   059EH   A   
+KEYS . . . . . . .  C ADDR   0578H   A   
+KRAW . . . . . . .  N NUMB   0029H   A   
+KTMP . . . . . . .  N NUMB   002BH   A   
+A51 MACRO ASSEMBLER  T                                                                    11/07/2026 13:34:12 PAGE    20
+
+LANE . . . . . . .  N NUMB   0059H   A   
+LANEBIT. . . . . .  C ADDR   0661H   A   
+LANESEG. . . . . .  C ADDR   0659H   A   
+LEDMODE. . . . . .  B ADDR   0020H.0 A   
+LEDOFF . . . . . .  C ADDR   046EH   A   
+LEDON. . . . . . .  C ADDR   0466H   A   
+LIGHT. . . . . . .  C ADDR   047EH   A   
+LIGHTS . . . . . .  C ADDR   0281H   A   
+LPC. . . . . . . .  N NUMB   0026H   A   
+LPM. . . . . . . .  N NUMB   0028H   A   
+LPS. . . . . . . .  N NUMB   0027H   A   
+LS_N . . . . . . .  C ADDR   028DH   A   
+LS_NX. . . . . . .  C ADDR   0298H   A   
+LS_X . . . . . . .  C ADDR   02A7H   A   
+MENU . . . . . . .  C ADDR   00A8H   A   
+MN_C . . . . . . .  C ADDR   00C4H   A   
+MN_GO. . . . . . .  C ADDR   00CEH   A   
+MN_IDL . . . . . .  C ADDR   00C8H   A   
+MN_L . . . . . . .  C ADDR   00CCH   A   
+MN_R . . . . . . .  C ADDR   00C6H   A   
+M_BEST . . . . . .  C ADDR   06EBH   A   
+M_CHRONO . . . . .  C ADDR   06B3H   A   
+M_HELLO. . . . . .  C ADDR   067CH   A   
+M_LEGEND . . . . .  C ADDR   068FH   A   
+M_LIGHTS . . . . .  C ADDR   06CDH   A   
+M_MENU . . . . . .  C ADDR   06E7H   A   
+M_PONG . . . . . .  C ADDR   06DBH   A   
+M_RACE . . . . . .  C ADDR   06C1H   A   
+NEWKEYS. . . . . .  C ADDR   0580H   A   
+NZFLAG . . . . . .  B ADDR   0020H.4 A   
+P0 . . . . . . . .  D ADDR   0080H   A   
+P1 . . . . . . . .  D ADDR   0090H   A   
+P3 . . . . . . . .  D ADDR   00B0H   A   
+PB . . . . . . . .  N NUMB   003CH   A   
+PG_B . . . . . . .  C ADDR   03C3H   A   
+PG_BOT . . . . . .  C ADDR   03FCH   A   
+PG_DN. . . . . . .  C ADDR   03E6H   A   
+PG_F . . . . . . .  C ADDR   03A2H   A   
+PG_HIT . . . . . .  C ADDR   043CH   A   
+PG_MV. . . . . . .  C ADDR   03D5H   A   
+PG_P2. . . . . . .  C ADDR   040BH   A   
+PG_PT. . . . . . .  C ADDR   0404H   A   
+PG_SHOW. . . . . .  C ADDR   044DH   A   
+PG_SV. . . . . . .  C ADDR   0394H   A   
+PG_TOP . . . . . .  C ADDR   03F2H   A   
+PG_UP. . . . . . .  C ADDR   03EAH   A   
+PG_WIN . . . . . .  C ADDR   0410H   A   
+PH_S . . . . . . .  C ADDR   0448H   A   
+PONG . . . . . . .  C ADDR   0381H   A   
+POS. . . . . . . .  N NUMB   0053H   A   
+PSW. . . . . . . .  D ADDR   00D0H   A   
+PW_8 . . . . . . .  C ADDR   0421H   A   
+PW_F . . . . . . .  C ADDR   0425H   A   
+PW_L . . . . . . .  C ADDR   0416H   A   
+PW_S . . . . . . .  C ADDR   0423H   A   
+RACE . . . . . . .  C ADDR   015FH   A   
+RAND . . . . . . .  C ADDR   05C2H   A   
+RA_CD. . . . . . .  C ADDR   0171H   A   
+RA_D . . . . . . .  C ADDR   01ABH   A   
+RA_DN. . . . . . .  C ADDR   01B6H   A   
+RA_DRAW. . . . . .  C ADDR   0225H   A   
+RA_F . . . . . . .  C ADDR   0199H   A   
+RA_FS. . . . . . .  C ADDR   01CFH   A   
+RA_GO. . . . . . .  C ADDR   0166H   A   
+RA_H . . . . . . .  C ADDR   01B8H   A   
+RA_HIT . . . . . .  C ADDR   0249H   A   
+A51 MACRO ASSEMBLER  T                                                                    11/07/2026 13:34:12 PAGE    21
+
+RA_NEW . . . . . .  C ADDR   0254H   A   
+RA_S . . . . . . .  C ADDR   016DH   A   
+RA_SH. . . . . . .  C ADDR   01D1H   A   
+RA_X . . . . . . .  C ADDR   01E2H   A   
+RCAP2H . . . . . .  D ADDR   00CBH   A   
+RCAP2L . . . . . .  D ADDR   00CAH   A   
+RD_CAR . . . . . .  C ADDR   023CH   A   
+RD_L . . . . . . .  C ADDR   022CH   A   
+RD_X . . . . . . .  C ADDR   05CAH   A   
+RF_K . . . . . . .  C ADDR   02BFH   A   
+RF_L . . . . . . .  C ADDR   02ADH   A   
+RING . . . . . . .  C ADDR   0664H   A   
+RND. . . . . . . .  N NUMB   002CH   A   
+RN_CAR . . . . . .  C ADDR   025CH   A   
+RN_X . . . . . . .  C ADDR   027FH   A   
+ROAD . . . . . . .  N NUMB   005CH   A   
+RUNFX. . . . . . .  C ADDR   02A9H   A   
+RX_B . . . . . . .  C ADDR   01FFH   A   
+RX_L . . . . . . .  C ADDR   01E4H   A   
+RX_M . . . . . . .  C ADDR   0223H   A   
+RX_W . . . . . . .  C ADDR   0210H   A   
+S4_L . . . . . . .  C ADDR   0526H   A   
+SCL. . . . . . . .  N NUMB   005AH   A   
+SCORE. . . . . . .  N NUMB   005AH   A   
+SCR. . . . . . . .  N NUMB   005BH   A   
+SCROLL . . . . . .  C ADDR   04FEH   A   
+SC_C . . . . . . .  C ADDR   0505H   A   
+SC_END . . . . . .  C ADDR   051EH   A   
+SC_F . . . . . . .  C ADDR   0501H   A   
+SC_KEY . . . . . .  C ADDR   0520H   A   
+SC_W . . . . . . .  C ADDR   0511H   A   
+SD_CNT . . . . . .  C ADDR   0565H   A   
+SD_DIG . . . . . .  C ADDR   0554H   A   
+SD_NZ. . . . . . .  C ADDR   056FH   A   
+SD_PUT . . . . . .  C ADDR   0566H   A   
+SD_SEG . . . . . .  C ADDR   0571H   A   
+SD_SUB . . . . . .  C ADDR   0556H   A   
+SEGHI. . . . . . .  C ADDR   015AH   A   
+SEGLO. . . . . . .  C ADDR   015BH   A   
+SG_0 . . . . . . .  N NUMB   00C0H   A   
+SG_1 . . . . . . .  N NUMB   00F9H   A   
+SG_2 . . . . . . .  N NUMB   00A4H   A   
+SG_3 . . . . . . .  N NUMB   00B0H   A   
+SG_4 . . . . . . .  N NUMB   0099H   A   
+SG_5 . . . . . . .  N NUMB   0092H   A   
+SG_6 . . . . . . .  N NUMB   0082H   A   
+SG_7 . . . . . . .  N NUMB   00F8H   A   
+SG_8 . . . . . . .  N NUMB   0080H   A   
+SG_9 . . . . . . .  N NUMB   0090H   A   
+SG_A . . . . . . .  N NUMB   0088H   A   
+SG_DASH. . . . . .  N NUMB   00BFH   A   
+SG_E . . . . . . .  N NUMB   0086H   A   
+SG_G . . . . . . .  N NUMB   00C2H   A   
+SG_H . . . . . . .  N NUMB   0089H   A   
+SG_I . . . . . . .  N NUMB   00CFH   A   
+SG_L . . . . . . .  N NUMB   00C7H   A   
+SG_LB. . . . . . .  N NUMB   0083H   A   
+SG_LN. . . . . . .  N NUMB   00ABH   A   
+SG_LO. . . . . . .  N NUMB   00A3H   A   
+SG_LR. . . . . . .  N NUMB   00AFH   A   
+SG_LT. . . . . . .  N NUMB   0087H   A   
+SG_O . . . . . . .  N NUMB   00C0H   A   
+SG_P . . . . . . .  N NUMB   008CH   A   
+SG_S . . . . . . .  N NUMB   0092H   A   
+SG_SP. . . . . . .  N NUMB   00FFH   A   
+SG_UC. . . . . . .  N NUMB   00C6H   A   
+A51 MACRO ASSEMBLER  T                                                                    11/07/2026 13:34:12 PAGE    22
+
+SHOW4. . . . . . .  C ADDR   0522H   A   
+SHOWDEC. . . . . .  C ADDR   0539H   A   
+SHOWLED. . . . . .  C ADDR   0492H   A   
+SH_B . . . . . . .  C ADDR   04A1H   A   
+SH_L . . . . . . .  C ADDR   0497H   A   
+SINE . . . . . . .  C ADDR   0640H   A   
+SL . . . . . . . .  N NUMB   0041H   A   
+SLTH . . . . . . .  C ADDR   0650H   A   
+SP . . . . . . . .  D ADDR   0081H   A   
+SPLIT. . . . . . .  B ADDR   0020H.3 A   
+START. . . . . . .  C ADDR   0030H   A   
+STEPC. . . . . . .  N NUMB   0058H   A   
+STEPT. . . . . . .  N NUMB   0057H   A   
+ST_N . . . . . . .  C ADDR   0315H   A   
+ST_SL. . . . . . .  C ADDR   004DH   A   
+ST_X . . . . . . .  C ADDR   0323H   A   
+SWC. . . . . . . .  N NUMB   0023H   A   
+SWM. . . . . . . .  N NUMB   0025H   A   
+SWRUN. . . . . . .  B ADDR   0020H.2 A   
+SWS. . . . . . . .  N NUMB   0024H   A   
+SWSHOW . . . . . .  C ADDR   0114H   A   
+SW_M . . . . . . .  C ADDR   013FH   A   
+SW_T . . . . . . .  C ADDR   0127H   A   
+SW_U . . . . . . .  C ADDR   012AH   A   
+T0_X . . . . . . .  C ADDR   001CH   A   
+T2CON. . . . . . .  D ADDR   00C8H   A   
+T2RL . . . . . . .  N NUMB   FB80H   A   
+T2_ISR . . . . . .  C ADDR   05CDH   A   
+T2_PC. . . . . . .  C ADDR   05EAH   A   
+T2_S . . . . . . .  C ADDR   061FH   A   
+T2_SW. . . . . . .  C ADDR   0600H   A   
+T2_TAB . . . . . .  C ADDR   05EEH   A   
+T2_TK. . . . . . .  C ADDR   05F2H   A   
+T2_X . . . . . . .  C ADDR   0621H   A   
+TF0. . . . . . . .  B ADDR   0088H.5 A   
+TF2. . . . . . . .  B ADDR   00C8H.7 A   
+TH0. . . . . . . .  D ADDR   008CH   A   
+TH2. . . . . . . .  D ADDR   00CDH   A   
+TL0. . . . . . . .  D ADDR   008AH   A   
+TL2. . . . . . . .  D ADDR   00CCH   A   
+TMOD . . . . . . .  D ADDR   0089H   A   
+TR0. . . . . . . .  B ADDR   0088H.4 A   
+TR2. . . . . . . .  B ADDR   00C8H.2 A   
+WAITF. . . . . . .  C ADDR   05B7H   A   
+WAITNEW. . . . . .  C ADDR   05A5H   A   
+WA_L . . . . . . .  C ADDR   032EH   A   
+WF_L . . . . . . .  C ADDR   05B9H   A   
+WN_K . . . . . . .  C ADDR   05B5H   A   
+WN_L . . . . . . .  C ADDR   05A7H   A   
+
+
+REGISTER BANK(S) USED: 0 
+
+
+ASSEMBLY COMPLETE.  0 WARNING(S), 0 ERROR(S)

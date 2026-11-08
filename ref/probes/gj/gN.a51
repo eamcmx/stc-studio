@@ -1,0 +1,6 @@
+ ORG 780H
+ JMP T
+L1: NOP
+ DS 7EH
+T: NOP
+ END

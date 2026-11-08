@@ -1,0 +1,22 @@
+T0ISR:  PUSH PSW             2  ; save PSW, A, DPTR
+        PUSH ACC             2
+        PUSH DPL             2
+        PUSH DPH             2
+        MOV  PSW,#08H        2
+        MOV  P1,#0FFH        2
+        MOV  A,DIGI          1
+        INC  A               1
+        ANL  A,#03H          1
+        MOV  DIGI,A          1
+        ADD  A,#DBUF         1
+        MOV  R0,A            1
+        MOV  P0,@R0          2
+        MOV  A,DIGI          1
+        MOV  DPTR,#DSEL      2
+        MOVC A,@A+DPTR       2
+        MOV  P1,A            1
+        POP  DPH             2
+        POP  DPL             2
+        POP  ACC             2
+        POP  PSW             2
+        RETI                 2

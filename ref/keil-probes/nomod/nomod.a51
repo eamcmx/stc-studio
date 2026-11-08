@@ -1,0 +1,4 @@
+$NOMOD51
+ ORG 0
+ MOV P0,#1
+ END

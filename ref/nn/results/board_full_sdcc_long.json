@@ -1,0 +1,32 @@
+{
+ "made": "2026-11-08T05:14:31.853Z",
+ "by": "test/board_run.js",
+ "port": "COM13",
+ "baud": 19200,
+ "builds": [
+  {
+   "name": "SDCC, 32-bit multiply",
+   "file": "ref/nn/c/sdcc_long/digit_nn.hex",
+   "inputs": 346,
+   "equal": 346,
+   "differ": 0,
+   "no_answer": 0,
+   "read_correctly": null,
+   "median_round_trip_ms": 156.3,
+   "flash_s": 5,
+   "first_differences": []
+  },
+  {
+   "name": "asm 5x7 (put back)",
+   "file": "ref/nn/digit_nn.a51",
+   "inputs": 4,
+   "equal": 4,
+   "differ": 0,
+   "no_answer": 0,
+   "read_correctly": null,
+   "median_round_trip_ms": 94.6,
+   "flash_s": 4.3,
+   "first_differences": []
+  }
+ ]
+}

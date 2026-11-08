@@ -1,0 +1,108 @@
+A51 MACRO ASSEMBLER  T                                                                    11/07/2026 13:36:48 PAGE     1
+
+
+MACRO ASSEMBLER A51 V8.2.7.0
+NO OBJECT MODULE REQUESTED
+ASSEMBLER INVOKED BY: C:\Keil_v5\C51\BIN\A51.EXE t.a51
+
+LOC  OBJ            LINE     SOURCE
+
+0000                   1      ORG 0
+  0080                 2     P0 DATA 80H
+*** _________________________^
+*** ERROR #A10 IN 2 (t.a51, LINE 2): ATTEMPT TO DEFINE AN ALREADY DEFINED SYMBOL
+  00C8                 3     T2CON DATA 0C8H
+0000 00                4     L: NOP
+0001 00                5     L: NOP
+*** _________________________^
+*** ERROR #A8 IN 5 (t.a51, LINE 5): ATTEMPT TO DEFINE AN ALREADY DEFINED LABEL
+  0005                 6     E1 EQU 5
+  0006                 7     E1 EQU 6
+*** _________________________^
+*** ERROR #A10 IN 7 (t.a51, LINE 7): ATTEMPT TO DEFINE AN ALREADY DEFINED SYMBOL
+  0005                 8     S1 SET 5
+  0006                 9     S1 SET 6
+0002 06               10      DB S1
+  0007                11     S1 EQU 7
+  0004                12     F1 EQU F2+1
+  0003                13     F2 EQU 3
+0003 04               14      DB F1
+0004                  15      MOV A,#UNDEF
+*** _________________________________^
+*** ERROR #A45 IN 15 (t.a51, LINE 15): UNDEFINED SYMBOL (PASS-2)
+                      16     R0 EQU 5
+*** _________________________^
+*** ERROR #A9 IN 16 (t.a51, LINE 16): SYNTAX ERROR
+                      17     A EQU 5
+*** _________________________^
+*** ERROR #A9 IN 17 (t.a51, LINE 17): SYNTAX ERROR
+  0005                18     ACC EQU 5
+*** _________________________^
+*** ERROR #A10 IN 18 (t.a51, LINE 18): ATTEMPT TO DEFINE AN ALREADY DEFINED SYMBOL
+  0000                19     TR0 BIT 20H.0
+*** _________________________^
+*** ERROR #A10 IN 19 (t.a51, LINE 19): ATTEMPT TO DEFINE AN ALREADY DEFINED SYMBOL
+  0001                20     lower EQU 1
+0006 01               21      DB LOWER
+0007 00               22     SP: NOP
+*** _________________________^
+*** ERROR #A8 IN 22 (t.a51, LINE 22): ATTEMPT TO DEFINE AN ALREADY DEFINED LABEL
+0008                  23     NOP: NOP
+*** _________________________^
+*** ______________________________^
+*** ERROR #A5 IN 23 (t.a51, LINE 23): ILLEGAL USE OF A RESERVED WORD
+*** ERROR #A9 IN 23 (t.a51, LINE 23): SYNTAX ERROR
+0008 00               24     DB: NOP
+*** _________________________^
+*** _____________________________^
+*** ERROR #A5 IN 24 (t.a51, LINE 24): ILLEGAL USE OF A RESERVED WORD
+*** ERROR #A9 IN 24 (t.a51, LINE 24): SYNTAX ERROR
+0009 00               25     A_very_long_symbol_name_that_goes_past_31: NOP
+000A 00               26     A_very_long_symbol_name_that_goes_past_32: NOP
+000B 00               27     ?Q1: NOP
+000C 00               28     _U: NOP
+                      29     1L: NOP
+*** _________________________^
+*** __________________________^
+*** ERROR #A9 IN 29 (t.a51, LINE 29): SYNTAX ERROR
+A51 MACRO ASSEMBLER  T                                                                    11/07/2026 13:36:48 PAGE     2
+
+*** ERROR #A7 IN 29 (t.a51, LINE 29): LABEL NOT PERMITTED
+000D 09               30      DB F3
+  0009                31     F3 EQU 9
+  000E                32     M1 EQU MX
+000E 00               33     MX: NOP
+                      34      END
+A51 MACRO ASSEMBLER  T                                                                    11/07/2026 13:36:48 PAGE     3
+
+SYMBOL TABLE LISTING
+------ ----- -------
+
+
+N A M E                                    T Y P E  V A L U E   ATTRIBUTES
+
+?Q1 . . . . . . . . . . . . . . . . . .    C ADDR   000BH   A   
+ACC . . . . . . . . . . . . . . . . . .    N NUMB   0005H   A   
+A_VERY_LONG_SYMBOL_NAME_THAT_GOES_PAST_31  C ADDR   0009H   A   
+A_VERY_LONG_SYMBOL_NAME_THAT_GOES_PAST_32  C ADDR   000AH   A   
+E1. . . . . . . . . . . . . . . . . . .    N NUMB   0006H   A   
+F1. . . . . . . . . . . . . . . . . . .    N NUMB   0004H   A   
+F2. . . . . . . . . . . . . . . . . . .    N NUMB   0003H   A   
+F3. . . . . . . . . . . . . . . . . . .    N NUMB   0009H   A   
+L . . . . . . . . . . . . . . . . . . .    C ADDR   0000H   A   
+LOWER . . . . . . . . . . . . . . . . .    N NUMB   0001H   A   
+M1. . . . . . . . . . . . . . . . . . .    C ADDR   000EH   A   
+MX. . . . . . . . . . . . . . . . . . .    C ADDR   000EH   A   
+P0. . . . . . . . . . . . . . . . . . .    D ADDR   0080H   A   
+S1. . . . . . . . . . . . . . . . . . .    N NUMB   0007H   A   
+SP. . . . . . . . . . . . . . . . . . .    D ADDR   0081H   A   
+T2CON . . . . . . . . . . . . . . . . .    D ADDR   00C8H   A   
+TR0 . . . . . . . . . . . . . . . . . .    B ADDR   0020H.0 A   
+UNDEF . . . . . . . . . . . . . . . . .      ----   -----       
+_U. . . . . . . . . . . . . . . . . . .    C ADDR   000CH   A   
+
+
+REGISTER BANK(S) USED: 0 
+
+
+ASSEMBLY COMPLETE.  0 WARNING(S), 15 ERROR(S)

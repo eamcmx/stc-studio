@@ -1,0 +1,6 @@
+ ORG 100H
+ JMP TA
+LA: NOP
+ DS 200
+TA: NOP
+ END

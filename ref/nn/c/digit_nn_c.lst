@@ -1,0 +1,649 @@
+C51 COMPILER V9.60.7.0   T                                                                 11/07/2026 17:48:26 PAGE 1   
+
+
+C51 COMPILER V9.60.7.0, COMPILATION OF MODULE T
+OBJECT MODULE PLACED IN t.OBJ
+COMPILER INVOKED BY: C:\Keil_v5\C51\BIN\C51.exe t.c CODE
+
+line level    source
+
+   1          /* digit_nn.c: the digit reader in C for Keil C51, to compare with the hand-written ref/nn/digit_nn.a51.
+   2           *
+   3           * The same network (35 -> NH hidden with ReLU -> 10), the same 8-bit weights (weights.h, made by
+   4           * nn/train_digits.py), the same serial protocol (D + 35 characters in, "=7" + 10 scores in hex out, 19200
+             - baud)
+   5           * and the same display ("nn 7", refreshed by Timer 0). Written the way a careful 8051 C programmer would:
+   6           * byte-sized loop counters, arrays in idata, layer 1 as additions only, and a 16-bit product in layer 2
+   7           * (255 * 127 fits in an int). Two other builds for the comparison in docs/m6-c-vs-asm.md:
+   8           *   DEFINE(LONGMUL)  multiply in 32 bits, as plain C would
+   9           *   DEFINE(TUNED)    C written for the 8051: pointers through the tables, 8 x 8 unsigned products (MUL AB
+             -)
+  10           */
+  11          #include <reg52.h>
+  12          #include "weights.h"
+  13          
+  14          unsigned char idata pix[35];      /* the drawing, 0 or 1 */
+  15          int idata acc[NH];                /* layer 1 sums */
+  16          unsigned char idata hid[NH];      /* hidden values, 0 to 255 */
+  17          long idata score[10];             /* layer 2 sums, one per digit */
+  18          unsigned char data dbuf[4];       /* segment patterns for digits 1 to 4 */
+  19          unsigned char data digi;          /* the digit the display shows now */
+  20          
+  21          unsigned char code dsel[4] = { 0xF7, 0xEF, 0xDF, 0xBF };   /* P1.3 to P1.6 low */
+  22          unsigned char code segs[10] = { 0xC0, 0xF9, 0xA4, 0xB0, 0x99, 0x92, 0x82, 0xF8, 0x80, 0x90 };
+  23          char code hexd[] = "0123456789ABCDEF";
+  24          
+  25          /* Timer 0, every 256 machine cycles: the next digit of the display (register bank 1, like the assembly) *
+             -/
+  26          void t0_isr(void) interrupt 1 using 1
+  27          {
+  28   1          P1 = 0xFF;
+  29   1          digi = (digi + 1) & 3;
+  30   1          P0 = dbuf[digi];
+  31   1          P1 = dsel[digi];
+  32   1      }
+  33          
+  34          static unsigned char getc_(void) { while (!RI) ; RI = 0; return SBUF; }
+  35          static void putc_(unsigned char c) { SBUF = c; while (!TI) ; TI = 0; }
+  36          static void puthex(unsigned char v) { putc_(hexd[v >> 4]); putc_(hexd[v & 15]); }
+  37          static void puts_(char code *s) { while (*s) putc_(*s++); }
+  38          
+  39          void main(void)
+  40          {
+  41   1          unsigned char i, j, k, best;
+  42   1          int a;
+  43   1          long s;
+  44   1          unsigned long u;
+  45   1      #ifdef TUNED
+                  signed char code *w;
+                  int idata *p;
+                  signed char wv;
+                  unsigned char hv, m;
+              #endif
+  51   1      
+  52   1          dbuf[0] = dbuf[1] = 0xAB;      /* "nn--" until the first digit arrives */
+C51 COMPILER V9.60.7.0   T                                                                 11/07/2026 17:48:26 PAGE 2   
+
+  53   1          dbuf[2] = dbuf[3] = 0xBF;
+  54   1          digi = 0;
+  55   1          TMOD = 0x22;                   /* Timer 1: baud rate, Timer 0: display, both 8-bit auto-reload */
+  56   1          TH1 = TL1 = 0xFD;
+  57   1          PCON |= 0x80;                  /* SMOD = 1: 19200 baud */
+  58   1          SCON = 0x50;
+  59   1          TH0 = TL0 = 0;
+  60   1          TR1 = 1; TR0 = 1; ET0 = 1; EA = 1;
+  61   1          puts_("NN READY\r\n");
+  62   1      
+  63   1          for (;;) {
+  64   2              while (getc_() != 'D') ;
+  65   2              for (i = 0; i < 35; i++) pix[i] = (getc_() == '1');
+  66   2      
+  67   2              /* layer 1: bias, plus the weights of every lit square */
+  68   2              for (j = 0; j < NH; j++) acc[j] = B1[j];
+  69   2      #ifdef TUNED
+                      /* walk the table with a pointer instead of indexing W1[i][j] (which multiplies i by NH every time
+             -) */
+                      w = &W1[0][0];
+                      for (i = 0; i < 35; i++, w += NH)
+                          if (pix[i]) {
+                              p = acc;
+                              for (j = 0; j < NH; j++) *p++ += w[j];
+                          }
+              #else
+  78   2              for (i = 0; i < 35; i++)
+  79   2                  if (pix[i])
+  80   2                      for (j = 0; j < NH; j++) acc[j] += W1[i][j];
+  81   2      #endif
+  82   2              /* ReLU, then >> SH1, at most 255 */
+  83   2              for (j = 0; j < NH; j++) {
+  84   3                  a = acc[j];
+  85   3                  if (a < 0) hid[j] = 0;
+  86   3                  else { a >>= SH1; hid[j] = a > 255 ? 255 : (unsigned char)a; }
+  87   3              }
+  88   2      
+  89   2              /* layer 2: bias plus hidden * weight */
+  90   2              for (k = 0; k < 10; k++) {
+  91   3                  s = B2[k];
+  92   3      #ifdef TUNED
+                          /* unsigned char * unsigned char lets C51 use MUL AB; the sign of the weight is handled by han
+             -d */
+                          w = W2[k];
+                          for (j = 0; j < NH; j++) {
+                              wv = w[j];
+                              hv = hid[j];
+                              if (wv < 0) { m = -wv; s -= (unsigned int)(hv * m); }
+                              else { m = wv; s += (unsigned int)(hv * m); }
+                          }
+              #else
+ 102   3                  for (j = 0; j < NH; j++)
+ 103   3      #ifdef LONGMUL
+                              s += (long)hid[j] * W2[k][j];
+              #else
+ 106   3                      s += (int)hid[j] * W2[k][j];
+ 107   3      #endif
+ 108   3      #endif
+ 109   3                  score[k] = s;
+ 110   3              }
+ 111   2      
+ 112   2              /* the largest score is the answer */
+C51 COMPILER V9.60.7.0   T                                                                 11/07/2026 17:48:26 PAGE 3   
+
+ 113   2              best = 0;
+ 114   2              for (k = 1; k < 10; k++) if (score[k] > score[best]) best = k;
+ 115   2      
+ 116   2              dbuf[2] = 0xFF;
+ 117   2              dbuf[3] = segs[best];
+ 118   2              putc_('=');
+ 119   2              putc_('0' + best);
+ 120   2              for (k = 0; k < 10; k++) {
+ 121   3                  u = (unsigned long)score[k];
+ 122   3                  putc_(' ');
+ 123   3                  puthex((unsigned char)(u >> 16));
+ 124   3                  puthex((unsigned char)(u >> 8));
+ 125   3                  puthex((unsigned char)u);
+ 126   3              }
+ 127   2              putc_('\r');
+ 128   2              putc_('\n');
+ 129   2          }
+ 130   1      }
+C51 COMPILER V9.60.7.0   T                                                                 11/07/2026 17:48:26 PAGE 4   
+
+ASSEMBLY LISTING OF GENERATED OBJECT CODE
+
+
+             ; FUNCTION t0_isr (BEGIN)
+0000 C0E0              PUSH    ACC
+0002 C083              PUSH    DPH
+0004 C082              PUSH    DPL
+0006 C0D0              PUSH    PSW
+0008 75D008            MOV     PSW,#08H
+                                           ; SOURCE LINE # 26
+                                           ; SOURCE LINE # 28
+000B 7590FF            MOV     P1,#0FFH
+                                           ; SOURCE LINE # 29
+000E E500        R     MOV     A,digi
+0010 04                INC     A
+0011 5403              ANL     A,#03H
+0013 F500        R     MOV     digi,A
+                                           ; SOURCE LINE # 30
+0015 2400        R     ADD     A,#LOW dbuf
+0017 F8                MOV     R0,A
+0018 E6                MOV     A,@R0
+0019 F580              MOV     P0,A
+                                           ; SOURCE LINE # 31
+001B E500        R     MOV     A,digi
+001D 900000      R     MOV     DPTR,#dsel
+0020 93                MOVC    A,@A+DPTR
+0021 F590              MOV     P1,A
+                                           ; SOURCE LINE # 32
+0023 D0D0              POP     PSW
+0025 D082              POP     DPL
+0027 D083              POP     DPH
+0029 D0E0              POP     ACC
+002B 32                RETI    
+             ; FUNCTION t0_isr (END)
+
+             ; FUNCTION getc_ (BEGIN)
+                                           ; SOURCE LINE # 34
+0000         ?C0002:
+0000 3098FD            JNB     RI,?C0002
+0003 C298              CLR     RI
+0005 AF99              MOV     R7,SBUF
+0007 22                RET     
+             ; FUNCTION getc_ (END)
+
+             ; FUNCTION _putc_ (BEGIN)
+                                           ; SOURCE LINE # 35
+;---- Variable 'c' assigned to Register 'R7' ----
+0000 8F99              MOV     SBUF,R7
+0002         ?C0005:
+0002 3099FD            JNB     TI,?C0005
+0005 C299              CLR     TI
+0007 22                RET     
+             ; FUNCTION _putc_ (END)
+
+             ; FUNCTION L?0053 (BEGIN)
+0000 AF00        R     MOV     R7,u+03H
+0002 AE00        R     MOV     R6,u+02H
+0004 AD00        R     MOV     R5,u+01H
+0006 AC00        R     MOV     R4,u
+0008 120000      E     LCALL   ?C?ULSHR
+             ; FUNCTION _puthex (BEGIN)
+                                           ; SOURCE LINE # 36
+C51 COMPILER V9.60.7.0   T                                                                 11/07/2026 17:48:26 PAGE 5   
+
+;---- Variable 'v' assigned to Register 'R6' ----
+000B AE07              MOV     R6,AR7
+000D EE                MOV     A,R6
+000E C4                SWAP    A
+000F 540F              ANL     A,#0FH
+0011 900000      R     MOV     DPTR,#hexd
+0014 93                MOVC    A,@A+DPTR
+0015 FF                MOV     R7,A
+0016 120000      R     LCALL   _putc_
+0019 EE                MOV     A,R6
+001A 540F              ANL     A,#0FH
+001C 93                MOVC    A,@A+DPTR
+001D FF                MOV     R7,A
+001E 020000      R     LJMP    _putc_
+             ; FUNCTION _puthex (END)
+
+             ; FUNCTION _puts_ (BEGIN)
+                                           ; SOURCE LINE # 37
+;---- Variable 's' assigned to Register 'R4/R5' ----
+0000 AD07              MOV     R5,AR7
+0002 AC06              MOV     R4,AR6
+0004         ?C0009:
+0004 8D82              MOV     DPL,R5
+0006 8C83              MOV     DPH,R4
+0008 E4                CLR     A
+0009 93                MOVC    A,@A+DPTR
+000A 6010              JZ      ?C0011
+000C 0D                INC     R5
+000D ED                MOV     A,R5
+000E 7001              JNZ     ?C0052
+0010 0C                INC     R4
+0011         ?C0052:
+0011 14                DEC     A
+0012 F582              MOV     DPL,A
+0014 E4                CLR     A
+0015 93                MOVC    A,@A+DPTR
+0016 FF                MOV     R7,A
+0017 120000      R     LCALL   _putc_
+001A 80E8              SJMP    ?C0009
+001C         ?C0011:
+001C 22                RET     
+             ; FUNCTION _puts_ (END)
+
+             ; FUNCTION main (BEGIN)
+                                           ; SOURCE LINE # 39
+                                           ; SOURCE LINE # 40
+                                           ; SOURCE LINE # 52
+0000 7500AB      R     MOV     dbuf+01H,#0ABH
+0003 7500AB      R     MOV     dbuf,#0ABH
+                                           ; SOURCE LINE # 53
+0006 7500BF      R     MOV     dbuf+03H,#0BFH
+0009 7500BF      R     MOV     dbuf+02H,#0BFH
+                                           ; SOURCE LINE # 54
+000C E4                CLR     A
+000D F500        R     MOV     digi,A
+                                           ; SOURCE LINE # 55
+000F 758922            MOV     TMOD,#022H
+                                           ; SOURCE LINE # 56
+0012 758BFD            MOV     TL1,#0FDH
+0015 758DFD            MOV     TH1,#0FDH
+                                           ; SOURCE LINE # 57
+0018 438780            ORL     PCON,#080H
+C51 COMPILER V9.60.7.0   T                                                                 11/07/2026 17:48:26 PAGE 6   
+
+                                           ; SOURCE LINE # 58
+001B 759850            MOV     SCON,#050H
+                                           ; SOURCE LINE # 59
+001E F58A              MOV     TL0,A
+0020 F58C              MOV     TH0,A
+                                           ; SOURCE LINE # 60
+0022 D28E              SETB    TR1
+0024 D28C              SETB    TR0
+0026 D2A9              SETB    ET0
+0028 D2AF              SETB    EA
+                                           ; SOURCE LINE # 61
+002A 7E00        R     MOV     R6,#HIGH ?SC_0
+002C 7F00        R     MOV     R7,#LOW ?SC_0
+002E 120000      R     LCALL   _puts_
+                                           ; SOURCE LINE # 63
+0031         ?C0014:
+                                           ; SOURCE LINE # 64
+0031 120000      R     LCALL   getc_
+0034 BF44FA            CJNE    R7,#044H,?C0014
+                                           ; SOURCE LINE # 65
+;---- Variable 'i' assigned to Register 'R6' ----
+0037 E4                CLR     A
+0038 FE                MOV     R6,A
+0039         ?C0016:
+0039 120000      R     LCALL   getc_
+003C BF3104            CJNE    R7,#031H,?C0019
+003F 7F01              MOV     R7,#01H
+0041 8002              SJMP    ?C0020
+0043         ?C0019:
+0043 7F00              MOV     R7,#00H
+0045         ?C0020:
+0045 7400        R     MOV     A,#LOW pix
+0047 2E                ADD     A,R6
+0048 F8                MOV     R0,A
+0049 A607              MOV     @R0,AR7
+004B 0E                INC     R6
+004C BE23EA            CJNE    R6,#023H,?C0016
+004F         ?C0017:
+                                           ; SOURCE LINE # 68
+;---- Variable 'j' assigned to Register 'R3' ----
+004F E4                CLR     A
+0050 FB                MOV     R3,A
+0051         ?C0021:
+0051 EB                MOV     A,R3
+0052 25E0              ADD     A,ACC
+0054 2400        R     ADD     A,#LOW B1
+0056 F582              MOV     DPL,A
+0058 E4                CLR     A
+0059 3400        R     ADDC    A,#HIGH B1
+005B F583              MOV     DPH,A
+005D E4                CLR     A
+005E 93                MOVC    A,@A+DPTR
+005F FC                MOV     R4,A
+0060 7401              MOV     A,#01H
+0062 93                MOVC    A,@A+DPTR
+0063 FD                MOV     R5,A
+0064 EB                MOV     A,R3
+0065 25E0              ADD     A,ACC
+0067 2400        R     ADD     A,#LOW acc
+0069 F8                MOV     R0,A
+006A A604              MOV     @R0,AR4
+006C 08                INC     R0
+C51 COMPILER V9.60.7.0   T                                                                 11/07/2026 17:48:26 PAGE 7   
+
+006D A605              MOV     @R0,AR5
+006F 0B                INC     R3
+0070 BB18DE            CJNE    R3,#018H,?C0021
+0073         ?C0022:
+                                           ; SOURCE LINE # 78
+0073 E4                CLR     A
+0074 FE                MOV     R6,A
+0075         ?C0024:
+                                           ; SOURCE LINE # 79
+0075 7400        R     MOV     A,#LOW pix
+0077 2E                ADD     A,R6
+0078 F8                MOV     R0,A
+0079 E6                MOV     A,@R0
+007A 6033              JZ      ?C0026
+                                           ; SOURCE LINE # 80
+007C E4                CLR     A
+007D FB                MOV     R3,A
+007E         ?C0028:
+007E 75F018            MOV     B,#018H
+0081 EE                MOV     A,R6
+0082 A4                MUL     AB
+0083 2400        R     ADD     A,#LOW W1
+0085 F582              MOV     DPL,A
+0087 E5F0              MOV     A,B
+0089 3400        R     ADDC    A,#HIGH W1
+008B F583              MOV     DPH,A
+008D E582              MOV     A,DPL
+008F 2B                ADD     A,R3
+0090 F582              MOV     DPL,A
+0092 E4                CLR     A
+0093 3583              ADDC    A,DPH
+0095 F583              MOV     DPH,A
+0097 E4                CLR     A
+0098 93                MOVC    A,@A+DPTR
+0099 FD                MOV     R5,A
+009A 33                RLC     A
+009B 95E0              SUBB    A,ACC
+009D FC                MOV     R4,A
+009E EB                MOV     A,R3
+009F 25E0              ADD     A,ACC
+00A1 2400        R     ADD     A,#LOW acc+01H
+00A3 F8                MOV     R0,A
+00A4 ED                MOV     A,R5
+00A5 26                ADD     A,@R0
+00A6 F6                MOV     @R0,A
+00A7 18                DEC     R0
+00A8 EC                MOV     A,R4
+00A9 36                ADDC    A,@R0
+00AA F6                MOV     @R0,A
+00AB 0B                INC     R3
+00AC BB18CF            CJNE    R3,#018H,?C0028
+00AF         ?C0026:
+00AF 0E                INC     R6
+00B0 BE23C2            CJNE    R6,#023H,?C0024
+00B3         ?C0025:
+                                           ; SOURCE LINE # 83
+00B3 E4                CLR     A
+00B4 FB                MOV     R3,A
+00B5         ?C0031:
+                                           ; SOURCE LINE # 84
+00B5 EB                MOV     A,R3
+00B6 25E0              ADD     A,ACC
+C51 COMPILER V9.60.7.0   T                                                                 11/07/2026 17:48:26 PAGE 8   
+
+00B8 2400        R     ADD     A,#LOW acc
+00BA F8                MOV     R0,A
+00BB E6                MOV     A,@R0
+00BC FE                MOV     R6,A
+00BD 08                INC     R0
+00BE E6                MOV     A,@R0
+00BF FF                MOV     R7,A
+;---- Variable 'a' assigned to Register 'R6/R7' ----
+                                           ; SOURCE LINE # 85
+00C0 C3                CLR     C
+00C1 EE                MOV     A,R6
+00C2 6480              XRL     A,#080H
+00C4 9480              SUBB    A,#080H
+00C6 5008              JNC     ?C0034
+00C8 7400        R     MOV     A,#LOW hid
+00CA 2B                ADD     A,R3
+00CB F8                MOV     R0,A
+00CC E4                CLR     A
+00CD F6                MOV     @R0,A
+00CE 801E              SJMP    ?C0033
+00D0         ?C0034:
+                                           ; SOURCE LINE # 86
+00D0 EE                MOV     A,R6
+00D1 A2E7              MOV     C,ACC.7
+00D3 13                RRC     A
+00D4 FE                MOV     R6,A
+00D5 EF                MOV     A,R7
+00D6 13                RRC     A
+00D7 FF                MOV     R7,A
+00D8 D3                SETB    C
+00D9 94FF              SUBB    A,#0FFH
+00DB EE                MOV     A,R6
+00DC 6480              XRL     A,#080H
+00DE 9480              SUBB    A,#080H
+00E0 7E00              MOV     R6,#00H
+00E2 4004              JC      ?C0036
+00E4 7FFF              MOV     R7,#0FFH
+00E6 8000              SJMP    ?C0037
+00E8         ?C0036:
+00E8         ?C0037:
+00E8 7400        R     MOV     A,#LOW hid
+00EA 2B                ADD     A,R3
+00EB F8                MOV     R0,A
+00EC A607              MOV     @R0,AR7
+                                           ; SOURCE LINE # 87
+00EE         ?C0033:
+00EE 0B                INC     R3
+00EF BB18C3            CJNE    R3,#018H,?C0031
+00F2         ?C0032:
+                                           ; SOURCE LINE # 90
+00F2 E4                CLR     A
+00F3 F500        R     MOV     k,A
+00F5         ?C0038:
+                                           ; SOURCE LINE # 91
+00F5 E500        R     MOV     A,k
+00F7 25E0              ADD     A,ACC
+00F9 25E0              ADD     A,ACC
+00FB 2400        R     ADD     A,#LOW B2
+00FD F582              MOV     DPL,A
+00FF E4                CLR     A
+0100 3400        R     ADDC    A,#HIGH B2
+0102 F583              MOV     DPH,A
+C51 COMPILER V9.60.7.0   T                                                                 11/07/2026 17:48:26 PAGE 9   
+
+0104 120000      E     LCALL   ?C?LLDCODE
+0107 8F00        R     MOV     s+03H,R7
+0109 8E00        R     MOV     s+02H,R6
+010B 8D00        R     MOV     s+01H,R5
+010D 8C00        R     MOV     s,R4
+                                           ; SOURCE LINE # 102
+010F E4                CLR     A
+0110 FB                MOV     R3,A
+0111         ?C0041:
+                                           ; SOURCE LINE # 106
+0111 7400        R     MOV     A,#LOW hid
+0113 2B                ADD     A,R3
+0114 F8                MOV     R0,A
+0115 E6                MOV     A,@R0
+0116 FF                MOV     R7,A
+0117 7E00              MOV     R6,#00H
+0119 E500        R     MOV     A,k
+011B 75F018            MOV     B,#018H
+011E A4                MUL     AB
+011F 2400        R     ADD     A,#LOW W2
+0121 F582              MOV     DPL,A
+0123 E4                CLR     A
+0124 3400        R     ADDC    A,#HIGH W2
+0126 F583              MOV     DPH,A
+0128 E582              MOV     A,DPL
+012A 2B                ADD     A,R3
+012B F582              MOV     DPL,A
+012D E4                CLR     A
+012E 3583              ADDC    A,DPH
+0130 F583              MOV     DPH,A
+0132 E4                CLR     A
+0133 93                MOVC    A,@A+DPTR
+0134 FD                MOV     R5,A
+0135 33                RLC     A
+0136 95E0              SUBB    A,ACC
+0138 FC                MOV     R4,A
+0139 120000      E     LCALL   ?C?IMUL
+013C EE                MOV     A,R6
+013D 33                RLC     A
+013E 95E0              SUBB    A,ACC
+0140 FD                MOV     R5,A
+0141 FC                MOV     R4,A
+0142 E500        R     MOV     A,s+03H
+0144 2F                ADD     A,R7
+0145 F500        R     MOV     s+03H,A
+0147 E500        R     MOV     A,s+02H
+0149 3E                ADDC    A,R6
+014A F500        R     MOV     s+02H,A
+014C E500        R     MOV     A,s+01H
+014E 3D                ADDC    A,R5
+014F F500        R     MOV     s+01H,A
+0151 E500        R     MOV     A,s
+0153 3C                ADDC    A,R4
+0154 F500        R     MOV     s,A
+0156 0B                INC     R3
+0157 BB18B7            CJNE    R3,#018H,?C0041
+015A         ?C0042:
+                                           ; SOURCE LINE # 109
+015A AF00        R     MOV     R7,s+03H
+015C AE00        R     MOV     R6,s+02H
+015E AD00        R     MOV     R5,s+01H
+0160 AC00        R     MOV     R4,s
+C51 COMPILER V9.60.7.0   T                                                                 11/07/2026 17:48:26 PAGE 10  
+
+0162 E500        R     MOV     A,k
+0164 25E0              ADD     A,ACC
+0166 25E0              ADD     A,ACC
+0168 2400        R     ADD     A,#LOW score
+016A F8                MOV     R0,A
+016B 120000      E     LCALL   ?C?LSTIDATA
+                                           ; SOURCE LINE # 110
+016E 0500        R     INC     k
+0170 E500        R     MOV     A,k
+0172 640A              XRL     A,#0AH
+0174 6003              JZ      $ + 5H
+0176 020000      R     LJMP    ?C0038
+0179         ?C0039:
+                                           ; SOURCE LINE # 113
+0179 E4                CLR     A
+017A F500        R     MOV     best,A
+                                           ; SOURCE LINE # 114
+017C 750001      R     MOV     k,#01H
+017F         ?C0044:
+017F E500        R     MOV     A,best
+0181 25E0              ADD     A,ACC
+0183 25E0              ADD     A,ACC
+0185 2400        R     ADD     A,#LOW score
+0187 F8                MOV     R0,A
+0188 120000      E     LCALL   ?C?LLDIDATA
+018B E500        R     MOV     A,k
+018D 25E0              ADD     A,ACC
+018F 25E0              ADD     A,ACC
+0191 2400        R     ADD     A,#LOW score
+0193 F8                MOV     R0,A
+0194 120000      E     LCALL   ?C?LLDIDATA0
+0197 D3                SETB    C
+0198 120000      E     LCALL   ?C?SLCMP
+019B 4003              JC      ?C0046
+019D 850000      R     MOV     best,k
+01A0         ?C0046:
+01A0 0500        R     INC     k
+01A2 E500        R     MOV     A,k
+01A4 B40AD8            CJNE    A,#0AH,?C0044
+01A7         ?C0045:
+                                           ; SOURCE LINE # 116
+01A7 7500FF      R     MOV     dbuf+02H,#0FFH
+                                           ; SOURCE LINE # 117
+01AA E500        R     MOV     A,best
+01AC 900000      R     MOV     DPTR,#segs
+01AF 93                MOVC    A,@A+DPTR
+01B0 F500        R     MOV     dbuf+03H,A
+                                           ; SOURCE LINE # 118
+01B2 7F3D              MOV     R7,#03DH
+01B4 120000      R     LCALL   _putc_
+                                           ; SOURCE LINE # 119
+01B7 E500        R     MOV     A,best
+01B9 2430              ADD     A,#030H
+01BB FF                MOV     R7,A
+01BC 120000      R     LCALL   _putc_
+                                           ; SOURCE LINE # 120
+01BF E4                CLR     A
+01C0 F500        R     MOV     k,A
+01C2         ?C0048:
+                                           ; SOURCE LINE # 121
+01C2 E500        R     MOV     A,k
+01C4 25E0              ADD     A,ACC
+C51 COMPILER V9.60.7.0   T                                                                 11/07/2026 17:48:26 PAGE 11  
+
+01C6 25E0              ADD     A,ACC
+01C8 2400        R     ADD     A,#LOW score
+01CA F8                MOV     R0,A
+01CB 120000      E     LCALL   ?C?LLDIDATA
+01CE 8F00        R     MOV     u+03H,R7
+01D0 8E00        R     MOV     u+02H,R6
+01D2 8D00        R     MOV     u+01H,R5
+01D4 8C00        R     MOV     u,R4
+                                           ; SOURCE LINE # 122
+01D6 7F20              MOV     R7,#020H
+01D8 120000      R     LCALL   _putc_
+                                           ; SOURCE LINE # 123
+01DB 7810              MOV     R0,#010H
+01DD 120000      R     LCALL   L?0053
+                                           ; SOURCE LINE # 124
+01E0 7808              MOV     R0,#08H
+01E2 120000      R     LCALL   L?0053
+                                           ; SOURCE LINE # 125
+01E5 AF00        R     MOV     R7,u+03H
+01E7 120000      R     LCALL   _puthex
+                                           ; SOURCE LINE # 126
+01EA 0500        R     INC     k
+01EC E500        R     MOV     A,k
+01EE C3                CLR     C
+01EF 940A              SUBB    A,#0AH
+01F1 40CF              JC      ?C0048
+01F3         ?C0049:
+                                           ; SOURCE LINE # 127
+01F3 7F0D              MOV     R7,#0DH
+01F5 120000      R     LCALL   _putc_
+                                           ; SOURCE LINE # 128
+01F8 7F0A              MOV     R7,#0AH
+01FA 120000      R     LCALL   _putc_
+                                           ; SOURCE LINE # 129
+01FD 020000      R     LJMP    ?C0014
+             ; FUNCTION main (END)
+
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    634    ----
+   CONSTANT SIZE    =   1210    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =      5      10
+   IDATA SIZE       =    147    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

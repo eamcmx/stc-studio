@@ -1,0 +1,5 @@
+# Every test input on the real board, 2026-11-08, from node through tools/serial_bridge.py (COM13, 19200 baud).
+# Each answer line (digit and ten scores) is compared with the Python reference; time = host round trip (send to end of line).
+# build                   inputs  equal  differ  no answer  read correctly  median ms  flash s
+MNIST 14x14               10000  10000       0          0            9591      202.7     10.8
+asm 5x7 (put back)            4      4       0          0               -       93.4      4.3

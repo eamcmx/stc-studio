@@ -1,0 +1,32 @@
+        MOV  R0,#ACC1        1
+        MOV  R1,#HID         1
+        MOV  R2,#NH          1
+RL1:    MOV  A,@R0           1  ; 16-bit sum j; negative?
+        MOV  R6,A            1
+        INC  R0              1
+        MOV  A,@R0           1
+        MOV  R7,A            1
+        INC  R0              1
+        JB   ACC.7,RZERO     2
+        MOV  R5,#SH1         1
+RSH:    MOV  A,R5            1  ; shift right S times
+        JZ   RSAT            2
+        CLR  C               1
+        MOV  A,R7            1
+        RRC  A               1
+        MOV  R7,A            1
+        MOV  A,R6            1
+        RRC  A               1
+        MOV  R6,A            1
+        DEC  R5              1
+        SJMP RSH             2
+RSAT:   MOV  A,R7            1  ; cap at 255
+        JZ   RLOW            2
+        MOV  A,#0FFH         1
+        SJMP RSTORE          2
+RLOW:   MOV  A,R6            1  ; low byte
+        SJMP RSTORE          2
+RZERO:  CLR  A               1  ; negative: 0
+RSTORE: MOV  @R1,A           1  ; store hidden value j
+        INC  R1              1
+        DJNZ R2,RL1          2

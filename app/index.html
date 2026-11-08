@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>STC Studio</title>
+<meta name="description" content="Write 8051 assembly, assemble it like Keil A51, run it on a simulated TSI STC89C52RC board and flash the real board over USB.">
+<style>
+:root {
+  --bg: #f4f2ec; --card: #ffffff; --ink: #1d1d1b; --muted: #66645c; --line: #dedad0; --brand: #2F5496; --brand-ink: #fff;
+  --ok: #1b7a3a; --bad: #b3261e; --warn: #9a6200; --hl: #fff3b0;
+  --code-bg: #fffefa; --gut: #f1efe8; --gut-ink: #9a978d;
+  --t-c: #6a737d; --t-s: #a3501b; --t-l: #6f42c1; --t-m: #1f4fbf; --t-d: #b5179e; --t-r: #0a7d55; --t-n: #a14c00; --t-o: #555; --t-y: #00749e;
+  --mono: "JetBrains Mono", Consolas, "Cascadia Mono", Menlo, monospace;
+  --sans: Inter, "Segoe UI", system-ui, -apple-system, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #17191c; --card: #202328; --ink: #e8e6e1; --muted: #a3a097; --line: #353940; --brand: #6d8fd6; --brand-ink: #0d1626;
+    --ok: #59c07d; --bad: #ff7b72; --warn: #e3b341; --hl: #4a4220;
+    --code-bg: #1b1d21; --gut: #23262b; --gut-ink: #6f737a;
+    --t-c: #8b949e; --t-s: #e3a26f; --t-l: #c8a6ff; --t-m: #79b8ff; --t-d: #f692ce; --t-r: #56d4a0; --t-n: #ffab70; --t-o: #b0b0b0; --t-y: #66d0f5;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #17191c; --card: #202328; --ink: #e8e6e1; --muted: #a3a097; --line: #353940; --brand: #6d8fd6; --brand-ink: #0d1626;
+  --ok: #59c07d; --bad: #ff7b72; --warn: #e3b341; --hl: #4a4220;
+  --code-bg: #1b1d21; --gut: #23262b; --gut-ink: #6f737a;
+  --t-c: #8b949e; --t-s: #e3a26f; --t-l: #c8a6ff; --t-m: #79b8ff; --t-d: #f692ce; --t-r: #56d4a0; --t-n: #ffab70; --t-o: #b0b0b0; --t-y: #66d0f5;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 14px/1.45 var(--sans); display: flex; flex-direction: column; }
+button, select, input { font: inherit; color: inherit; }
+button, select { background: var(--card); border: 1px solid var(--line); border-radius: 6px; padding: 5px 11px; cursor: pointer; }
+button:hover:not(:disabled), select:hover { border-color: var(--brand); }
+button.pri { background: var(--brand); color: var(--brand-ink); border-color: var(--brand); }
+button:disabled { opacity: .45; cursor: default; }
+kbd { font: 11px var(--mono); color: var(--muted); }
+.bar { display: flex; align-items: center; gap: 12px; padding: 8px 14px; background: var(--card); border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+.brand { font: 600 17px/1.2 Georgia, "Source Serif 4", serif; color: var(--brand); white-space: nowrap; }
+.brand small { font: 12px var(--sans); color: var(--muted); margin-left: 6px; }
+.file { color: var(--muted); font-size: 13px; min-width: 120px; }
+.file b { color: var(--ink); font-weight: 600; }
+.tools { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin-left: auto; }
+.sep { width: 1px; height: 22px; background: var(--line); margin: 0 4px; }
+.grid { flex: 1; display: grid; grid-template-columns: minmax(0, 1fr) 470px; gap: 12px; padding: 12px; min-height: 0; }
+.left { display: flex; flex-direction: column; min-height: 0; gap: 10px; }
+.right { display: flex; flex-direction: column; gap: 10px; min-height: 0; overflow: auto; }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; }
+.card-h { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; gap: 8px; }
+.card-h b { font-weight: 600; }
+.card-h span { color: var(--muted); font-size: 12px; font-family: var(--mono); }
+.row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.status { min-height: 20px; margin-top: 6px; font-size: 13px; color: var(--muted); }
+.status.ok { color: var(--ok); } .status.bad { color: var(--bad); } .status.warn { color: var(--warn); }
+progress { width: 100%; height: 8px; margin-top: 8px; accent-color: var(--brand); }
+details summary { cursor: pointer; color: var(--muted); font-size: 12px; margin-top: 4px; }
+/* editor */
+#editor { flex: 1; min-height: 240px; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: var(--code-bg); }
+.ed { display: flex; position: relative; font: 13px/19px var(--mono); tab-size: 8; }
+.ed-gutter { width: 52px; flex: none; background: var(--gut); color: var(--gut-ink); overflow: hidden; text-align: right; user-select: none; border-right: 1px solid var(--line); }
+.ed-gin { padding: 6px 0; }
+.ed-gin div { padding: 0 8px 0 16px; cursor: pointer; position: relative; height: 19px; }
+.ed-gin div.bp::before { content: ""; position: absolute; left: 4px; top: 5px; width: 9px; height: 9px; border-radius: 50%; background: var(--bad); }
+.ed-gin div.ge { color: var(--bad); font-weight: 700; } .ed-gin div.gw { color: var(--warn); font-weight: 700; }
+.ed-gin div.gpc { background: var(--hl); color: var(--ink); }
+.ed-main { position: relative; flex: 1; overflow: hidden; }
+.ed-hl, .ed-ta { margin: 0; padding: 6px 10px; font: inherit; tab-size: 8; white-space: pre; border: 0; }
+.ed-hl { position: absolute; left: 0; top: 0; min-width: 100%; pointer-events: none; color: var(--ink); }
+.ed-ta { position: absolute; inset: 0; width: 100%; height: 100%; resize: none; outline: none; background: transparent; color: transparent; caret-color: var(--ink); overflow: auto; }
+.ed-ta::selection { background: color-mix(in srgb, var(--brand) 30%, transparent); color: transparent; }
+.ed-l { display: block; min-height: 19px; }
+.ed-l.err { background: color-mix(in srgb, var(--bad) 13%, transparent); }
+.ed-l.warn { background: color-mix(in srgb, var(--warn) 12%, transparent); }
+.ed-l.pc { background: var(--hl); }
+.ed-hl i { font-style: normal; }
+.ed-hl .c { color: var(--t-c); font-style: italic; } .ed-hl .s { color: var(--t-s); } .ed-hl .l { color: var(--t-l); font-weight: 600; }
+.ed-hl .m { color: var(--t-m); font-weight: 600; } .ed-hl .d { color: var(--t-d); font-weight: 600; } .ed-hl .r { color: var(--t-r); }
+.ed-hl .n { color: var(--t-n); } .ed-hl .o { color: var(--t-o); } .ed-hl .y { color: var(--t-y); }
+/* bottom panel */
+.bottom { height: 32%; min-height: 150px; display: flex; flex-direction: column; background: var(--card); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.tabs { display: flex; gap: 2px; padding: 4px 6px 0; border-bottom: 1px solid var(--line); }
+.tabs button { border: 0; border-radius: 6px 6px 0 0; background: transparent; color: var(--muted); padding: 5px 12px; }
+.tabs button.on { background: var(--bg); color: var(--ink); font-weight: 600; }
+.pane { flex: 1; overflow: auto; padding: 6px 10px; }
+.hidden { display: none !important; }
+.mono { font: 12px/1.45 var(--mono); white-space: pre; margin: 0; }
+.msg { display: grid; grid-template-columns: 64px 70px 1fr; gap: 8px; padding: 3px 6px; border-radius: 5px; cursor: pointer; font-size: 13px; }
+.msg:hover { background: var(--bg); }
+.msg .sev-error { color: var(--bad); font-weight: 600; } .msg .sev-warning { color: var(--warn); font-weight: 600; }
+.msg code { font: 12px var(--mono); color: var(--muted); display: block; }
+.summary { padding: 4px 6px; font-size: 13px; }
+.summary.ok { color: var(--ok); } .summary.bad { color: var(--bad); }
+#serOut { flex: 1; min-height: 60px; }
+#tab-ser { display: flex; flex-direction: column; gap: 6px; }
+#serIn { border: 1px solid var(--line); border-radius: 6px; padding: 5px 8px; background: var(--code-bg); }
+.tabs .sp { flex: 1; }
+.talk { font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 6px; padding: 0 2px 4px; }
+.talk select { padding: 2px 6px; font-size: 12px; }
+/* digit pad */
+.pad-wrap { display: flex; gap: 18px; align-items: flex-start; flex-wrap: wrap; }
+.pad { display: grid; grid-template-columns: repeat(5, 18px); grid-auto-rows: 18px; gap: 3px; padding: 6px; background: var(--bg); border-radius: 8px; touch-action: none; user-select: none; }
+.pad div { border: 1px solid var(--line); border-radius: 4px; background: var(--code-bg); cursor: pointer; }
+.pad div.on { background: var(--brand); border-color: var(--brand); }
+.pad-side { flex: 1; min-width: 240px; }
+.pad-out { display: flex; gap: 14px; align-items: flex-start; margin-top: 6px; }
+.pad-ans { font: 600 40px/1 var(--mono); min-width: 32px; text-align: center; }
+.pad-bars { flex: 1; display: grid; grid-template-columns: 12px 1fr 58px; gap: 1px 6px; font: 11px/13px var(--mono); }
+.pad-bars i { display: block; height: 9px; margin-top: 2px; background: var(--line); border-radius: 3px; }
+.pad-bars i.win { background: var(--ok); }
+.pad-bars span { color: var(--muted); text-align: right; }
+.pad-side label { font-size: 12px; color: var(--muted); }
+/* board */
+#board svg { width: 100%; height: auto; display: block; user-select: none; touch-action: none; }
+.btn-cap { cursor: pointer; }
+.simctl { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin-top: 8px; }
+/* registers */
+#regs { font: 12px/1.5 var(--mono); display: grid; grid-template-columns: repeat(4, auto 1fr); gap: 1px 8px; }
+#regs .k { color: var(--muted); } #regs .v.chg { background: var(--hl); border-radius: 3px; }
+#regs .wide { grid-column: span 7; }
+#flashLog { max-height: 160px; overflow: auto; font: 11px/1.4 var(--mono); white-space: pre-wrap; word-break: break-all; background: var(--bg); padding: 6px; border-radius: 6px; }
+@media (max-width: 980px) {
+  body { height: auto; }
+  .grid { grid-template-columns: 1fr; }
+  #editor { min-height: 360px; }
+  .right { overflow: visible; }
+}
+</style>
+</head>
+<body>
+<header class="bar">
+  <div class="brand">STC Studio<small>8051 assembly for the TSI STC89C52RC board</small></div>
+  <div class="file"><b id="fname">untitled.a51</b> <span id="dirty"></span></div>
+  <div class="tools">
+    <button id="bNew" title="Start an empty program">New</button>
+    <button id="bOpen" title="Open an .a51, .asm or .hex file">Open</button>
+    <button id="bSave" title="Save the source as a file (Ctrl+S)">Save</button>
+    <select id="examples" aria-label="Examples" style="max-width: 260px"><option value="">Examples</option></select>
+    <span class="sep"></span>
+    <button id="bAsm" class="pri" title="Assemble (F7)">Assemble</button>
+    <button id="bHex" title="Save the assembled program as an Intel HEX file" disabled>Save .hex</button>
+    <button id="bTheme" title="Light or dark">◐</button>
+    <input id="fileIn" type="file" accept=".a51,.asm,.inc,.txt,.hex,.ihx" hidden>
+  </div>
+</header>
+<main class="grid">
+  <section class="left">
+    <div id="editor"></div>
+    <div class="bottom">
+      <div class="tabs" role="tablist">
+        <button data-tab="msg" class="on" role="tab">Messages <span id="msgCount"></span></button>
+        <button data-tab="lst" role="tab">Listing</button>
+        <button data-tab="ser" role="tab">Serial</button>
+        <button data-tab="pad" role="tab">Digit pad</button>
+        <span class="sp"></span>
+        <label class="talk">Talk to <select id="serTo" aria-label="Serial and Digit pad talk to">
+          <option value="sim">the simulated board</option><option value="board">the real board</option></select></label>
+      </div>
+      <div id="tab-msg" class="pane"><div class="summary">Write a program or pick one from Examples, then Assemble.</div></div>
+      <pre id="tab-lst" class="pane mono hidden"></pre>
+      <div id="tab-ser" class="pane hidden">
+        <pre id="serOut" class="mono"></pre>
+        <input id="serIn" placeholder="Text for the simulated board's serial port (Enter sends it)" aria-label="Serial input">
+      </div>
+      <div id="tab-pad" class="pane hidden">
+        <div class="pad-wrap">
+          <div id="pad" class="pad" aria-label="Drawing grid, 5 by 7"></div>
+          <div class="pad-side">
+            <div class="row">
+              <button id="padSend" class="pri" title="Send the drawing: D and 35 characters, 1 for a lit square">Send</button>
+              <button id="padClear">Clear</button>
+              <label><input type="checkbox" id="padAuto" checked> send while I draw</label>
+            </div>
+            <div class="pad-out"><div id="padAns" class="pad-ans" aria-live="polite">?</div><div id="padBars" class="pad-bars"></div></div>
+            <div id="padMsg" class="status">For the example "Digit reader": run it, then draw a digit with the mouse.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  <aside class="right">
+    <div class="card">
+      <div class="card-h"><b>Simulated board</b><span id="simTime">0.000 s</span></div>
+      <div id="board"></div>
+      <div class="simctl">
+        <button id="bRun" class="pri" title="Run or pause (F5)">Run</button>
+        <button id="bStep" title="One instruction (F10)">Step</button>
+        <button id="bReset" title="Start the program again">Reset</button>
+        <select id="speed" aria-label="Speed">
+          <option value="1">Real time</option>
+          <option value="0.1">1/10 speed</option>
+          <option value="0.01">1/100 speed</option>
+          <option value="0.001">1/1000 speed</option>
+        </select>
+        <button id="bSound" aria-pressed="false" title="Hear the buzzer on P3.6">Sound off</button>
+      </div>
+      <div id="simMsg" class="status">Buttons: click them, or hold the keys 5, 4, 3, 2 for S5 to S2.</div>
+    </div>
+    <div class="card">
+      <div class="card-h"><b>Registers</b><span id="pcInfo"></span></div>
+      <div id="regs"></div>
+    </div>
+    <div class="card">
+      <div class="card-h"><b>Real board</b><span id="portInfo">USB: not chosen</span></div>
+      <div class="row">
+        <button id="bFlash" class="pri" title="Assemble if needed, then write the program to the board">Flash to board</button>
+        <button id="bPort" title="Choose which USB serial port the board is on">Choose port</button>
+        <button id="bRelease" title="Close the port so another program (AiCube-ISP) can use it" disabled>Release port</button>
+      </div>
+      <progress id="flashBar" value="0" max="1"></progress>
+      <div id="flashMsg" class="status">Plug the board in with its USB cable and switch it on. Chrome or Edge is needed.</div>
+      <details><summary>Details</summary><pre id="flashLog"></pre></details>
+    </div>
+  </aside>
+</main>
+<script src="../src/asm51.js"></script>
+<script src="../src/stcisp.js"></script>
+<script src="../src/i8051.js"></script>
+<script src="../src/board.js"></script>
+<script src="editor.js"></script>
+<script src="sound.js"></script>
+<script src="examples.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

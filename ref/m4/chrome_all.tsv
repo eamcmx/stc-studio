@@ -1,0 +1,44 @@
+# Every course program written to the board from STC Studio in Chrome, 7 Nov 2026, 14:41-14:46 UTC.
+# id	file	bytes	result (s = page time from Flash to done)	start s	end s (from 14:41:26.171 UTC)
+demo2	demo2.a51	1753	ok 3.9	3.1	7.1
+demo	demo.a51	1668	ok 3.9	11.2	15.1
+ex2	his_ex2_counter.a51	74	ok 2.4	19.1	21.5
+ex3	his_ex3_debounce.a51	60	ok 2.4	25.6	28.0
+l1	l1_running_light.a51	24	ok 2.4	32.0	34.4
+b1	b1_edge_count.a51	24	ok 2.4	38.5	40.9
+c1	c1_counter.a51	63	ok 2.4	44.9	47.3
+m1	m1_four_digits.a51	64	ok 2.5	51.4	53.8
+ta	sol_ta.a51	85	ok 2.5	57.8	60.3
+tb	sol_tb.a51	105	ok 2.5	64.3	66.8
+e1	sol_e1.a51	8	ok 2.4	70.8	73.2
+e3	sol_e3.a51	13	ok 2.4	77.2	79.6
+v1	v1_ai_code.a51	8	ok 2.4	83.7	86.1
+p01	p01.a51	7	ok 2.4	90.1	92.5
+p02	p02.a51	9	ok 2.4	96.5	99.0
+p03	p03.a51	10	ok 2.4	103.0	105.4
+p04	p04.a51	10	ok 2.4	109.4	111.9
+p05	p05.a51	11	ok 2.4	115.9	118.3
+p06	p06.a51	10	ok 2.4	122.3	124.7
+p07	p07.a51	7	ok 2.4	128.8	131.2
+p08	p08.a51	19	ok 2.4	135.2	137.6
+p09	p09.a51	7	ok 2.4	141.6	144.1
+p10	p10.a51	14	ok 2.4	148.1	150.5
+p11	p11.a51	12	ok 2.4	154.5	156.9
+p12	p12.a51	9	ok 2.4	160.9	163.4
+p13	p13.a51	17	ok 2.4	167.4	169.8
+p14	p14.a51	17	ok 2.4	173.8	176.3
+p15	p15.a51	60	ok 2.4	180.3	182.7
+p16	p16.a51	14	ok 2.4	186.7	189.2
+p17	p17.a51	37	ok 2.4	193.2	195.6
+p18	p18.a51	27	ok 2.4	199.6	202.0
+p19	p19.a51	24	ok 2.4	206.0	208.5
+p20	p20.a51	37	ok 2.4	212.5	214.9
+p21	p21.a51	13	ok 2.4	218.9	221.4
+p22	p22.a51	28	ok 2.4	225.4	227.8
+p23	p23.a51	48	ok 2.4	231.8	234.3
+p24	p24.a51	48	ok 2.4	238.3	240.7
+p25	p25.a51	121	ok 2.5	244.8	247.2
+his_p12	his_p12_port_output.asm	9	ok 2.4	261.8	264.2
+his_p13	his_p13_button_poll.asm	17	ok 2.4	268.3	270.7
+his_p24	his_p24_int0_counter.asm	48	ok 2.4	274.7	277.1
+demo2	demo2.a51 (again, left on the board)	1753	ok 4.0	281.3	285.3

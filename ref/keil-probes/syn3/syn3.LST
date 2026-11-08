@@ -1,0 +1,55 @@
+A51 MACRO ASSEMBLER  T                                                                    11/07/2026 13:45:03 PAGE     1
+
+
+MACRO ASSEMBLER A51 V8.2.7.0
+NO OBJECT MODULE REQUESTED
+ASSEMBLER INVOKED BY: C:\Keil_v5\C51\BIN\A51.EXE t.a51
+
+LOC  OBJ            LINE     SOURCE
+
+0000                   1      ORG 0
+0000 7442              2      MOV A,#'AB'
+*** _________________________________^
+*** WARNING #A52 IN 2 (t.a51, LINE 2): VALUE HAS BEEN TRUNCATED TO 8 BITS
+0002 B478FD            3      CJNE A,#'x',$
+0005 743B              4      MOV A,#';'
+0007                   5     LONE: ; only a comment
+0007                   6     L2: ORG 10H
+*** _____________________________^
+*** ERROR #A9 IN 6 (t.a51, LINE 6): SYNTAX ERROR
+0007 07                7      DB L2
+  0008                 8     HERE EQU $
+0008 08                9      DB HERE
+0009 42               10      DB 'A' + 1
+000A 414201           11      DB 'AB' + 1
+*** __________________________________^
+*** ERROR #A34 IN 11 (t.a51, LINE 11): ',' EXPECTED
+000D 414200           12      DB "AB" , 0
+0010 4242             13      DB 'A'+1,'B'
+0012 7400             14      MOV A,#HIGH $
+0014 4408             15      ORL A,#1 SHL 3
+0016 78FF             16      MOV R0,#LOW(-1)
+0018 904142           17      MOV DPTR,#'AB'
+001B 90000C           18      MOV DPTR,#L2+5
+001E                  19     L3: END
+*** _____________________________^
+*** ERROR #A9 IN 19 (t.a51, LINE 19): SYNTAX ERROR
+*** WARNING #A41 IN 19 (t.a51, LINE 19): MISSING 'END' STATEMENT
+A51 MACRO ASSEMBLER  T                                                                    11/07/2026 13:45:03 PAGE     2
+
+SYMBOL TABLE LISTING
+------ ----- -------
+
+
+N A M E             T Y P E  V A L U E   ATTRIBUTES
+
+HERE . . . . . . .  C ADDR   0008H   A   
+L2 . . . . . . . .  C ADDR   0007H   A   
+L3 . . . . . . . .  C ADDR   001EH   A   
+LONE . . . . . . .  C ADDR   0007H   A   
+
+
+REGISTER BANK(S) USED: 0 
+
+
+ASSEMBLY COMPLETE.  2 WARNING(S), 3 ERROR(S)

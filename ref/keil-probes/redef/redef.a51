@@ -1,0 +1,34 @@
+ ORG 0
+P0 DATA 80H
+T2CON DATA 0C8H
+L: NOP
+L: NOP
+E1 EQU 5
+E1 EQU 6
+S1 SET 5
+S1 SET 6
+ DB S1
+S1 EQU 7
+F1 EQU F2+1
+F2 EQU 3
+ DB F1
+ MOV A,#UNDEF
+R0 EQU 5
+A EQU 5
+ACC EQU 5
+TR0 BIT 20H.0
+lower EQU 1
+ DB LOWER
+SP: NOP
+NOP: NOP
+DB: NOP
+A_very_long_symbol_name_that_goes_past_31: NOP
+A_very_long_symbol_name_that_goes_past_32: NOP
+?Q1: NOP
+_U: NOP
+1L: NOP
+ DB F3
+F3 EQU 9
+M1 EQU MX
+MX: NOP
+ END
