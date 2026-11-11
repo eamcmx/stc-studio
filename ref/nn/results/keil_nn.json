@@ -1,8 +1,8 @@
 {
- "made": "2026-11-08T12:42:50.971Z",
+ "made": "2026-11-11T14:27:04.173Z",
  "by": "test/nn_keil.js",
- "programs": 45,
- "same": 45,
+ "programs": 48,
+ "same": 48,
  "rows": [
   {
    "file": "ref/nn/ablation/all_shortcuts.a51",
@@ -143,6 +143,12 @@
    "same_as_keil": true
   },
   {
+   "file": "ref/nn/energy/digit_mnist_dark.a51",
+   "bytes": 7208,
+   "compared": "A51 listing, line by line (over the 2 KB of the evaluation linker)",
+   "same_as_keil": true
+  },
+  {
    "file": "ref/nn/energy/digit_nn_marker.a51",
    "bytes": 1660,
    "compared": "linked image",
@@ -152,6 +158,18 @@
    "file": "ref/nn/energy/digit_nn_marker_dark.a51",
    "bytes": 1660,
    "compared": "linked image",
+   "same_as_keil": true
+  },
+  {
+   "file": "ref/nn/energy/digit_uci_bin_dark.a51",
+   "bytes": 2350,
+   "compared": "A51 listing, line by line (over the 2 KB of the evaluation linker)",
+   "same_as_keil": true
+  },
+  {
+   "file": "ref/nn/energy/digit_uci_gray_dark.a51",
+   "bytes": 2363,
+   "compared": "A51 listing, line by line (over the 2 KB of the evaluation linker)",
    "same_as_keil": true
   },
   {
