@@ -1,0 +1,49 @@
+{
+ "made": "2026-11-11T13:10:33.102Z",
+ "by": "test/energy_run.js",
+ "port": "COM16",
+ "file": "ref/nn/energy/digit_uci_gray_dark.a51",
+ "label": "ucigray",
+ "video": "C:\\Users\\eamer\\Documents\\Claude\\prechin-a2\\raw\\energy\\meter_ucigray.mkv",
+ "time_zero": "scrcpy reported the camera stream",
+ "phases": [
+  {
+   "name": "idle before",
+   "from_s": 4.46,
+   "to_s": 34.47
+  },
+  {
+   "name": "reading",
+   "from_s": 34.47,
+   "readings": 213,
+   "equal": 213,
+   "to_s": 64.54,
+   "readings_per_s": 7.08
+  },
+  {
+   "name": "idle after",
+   "from_s": 64.54,
+   "to_s": 94.55
+  }
+ ],
+ "scrcpy": [
+  "0.02 scrcpy 5.0.1 <https://github.com/Genymobile/scrcpy>",
+  "0.10 INFO: ADB device found:",
+  "0.10 INFO:     -->   (usb)  RFCY10K4QHD                     device  S",
+  "0.10 M_S931B",
+  "0.15 C:\\Users\\eamer\\AppData\\Local\\Microsoft\\WinGet\\Packages\\Genymobile.scrcpy_Microsoft.Winget.Source_8wekyb3d8bbwe\\scrcpy-win64-v5.0.1\\scrcpy-server: 1 file pushed, 0 skipped. 38.8 MB/s (733930 bytes in 0.018s)",
+  "0.47 [server] INFO: Device: [samsung] samsung SM-S931B (Android 17)",
+  "0.55 INFO: Recording started to mat",
+  "0.55 roska file: C:\\Users\\eamer\\Documents\\Claude\\prechin-a2\\raw\\energy\\meter_ucigray.mkv",
+  "0.57 [server] INFO: Using camera '0'",
+  "100.55 INFO: Time limit reached",
+  "100.56 INFO: Recording complete to ma",
+  "100.56 troska file: C:\\Users\\eamer\\Documents\\Claude\\prechin",
+  "100.56 -a2\\raw\\ene",
+  "100.56 rgy\\meter",
+  "100.56 _uc",
+  "100.56 igray",
+  "100.56 .mkv",
+  "101.55 WARN: Killing the server..."
+ ]
+}

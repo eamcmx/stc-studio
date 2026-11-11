@@ -31,3 +31,27 @@ assert dark != src
 head2 = '; MEASUREMENT BUILD, DISPLAY OFF (nn/energy_build.py): P2.0 low for one reading, no display interrupt.\n'
 (out / 'digit_nn_marker_dark.a51').write_text(head2 + dark, encoding='utf-8', newline='\n')
 print('ref/nn/energy/digit_nn_marker.a51 and digit_nn_marker_dark.a51 written')
+
+# 11 Nov 2026, the other networks with the display off, for the energy of one reading of each (no marker: the reading
+# is timed in the simulator by test/nn_energy_sim.js). SETB ET0 (2 bytes) becomes two NOPs, so no address moves.
+for src_file, name in (('ref/nn/uci/digit_uci_bin.a51', 'digit_uci_bin_dark.a51'),
+                       ('ref/nn/uci/digit_uci_gray.a51', 'digit_uci_gray_dark.a51'),
+                       ('ref/nn/mnist/digit_mnist.a51', 'digit_mnist_dark.a51')):
+    s = (ROOT / src_file).read_text(encoding='utf-8')
+    assert s.count('        SETB    ET0\n') == 1, src_file
+    s = s.replace('        SETB    ET0\n', '        NOP                     ; DISPLAY OFF BUILD (no SETB ET0)\n        NOP\n')
+    (out / name).write_text('; DISPLAY OFF BUILD (nn/energy_build.py): ' + src_file + ' without the display interrupt.\n' + s,
+                            encoding='utf-8', newline='\n')
+    print('ref/nn/energy/' + name + ' written')
+# the C sources of the SDCC builds with ET0 = 0, compiled with tools/sdcc_c.ps1 into <folder>/build with the options
+# of the originals: none for sdcc/, -DTUNED for sdcc_tuned/ (an unchanged rebuild of each gives the committed hex)
+for src_file in ('ref/nn/c/sdcc/digit_nn.c', 'ref/nn/c/mnist/sdcc/digit_mnist.c', 'ref/nn/c/mnist/sdcc_tuned/digit_mnist.c'):
+    s = (ROOT / src_file).read_text(encoding='utf-8')
+    assert s.count('ET0 = 1;') == 1, src_file
+    d = out / 'c' / Path(src_file).parent.relative_to('ref/nn/c')
+    d.mkdir(parents=True, exist_ok=True)
+    (d / Path(src_file).name).write_text(s.replace('ET0 = 1;', 'ET0 = 0;   /* DISPLAY OFF BUILD (nn/energy_build.py) */'),
+                                         encoding='utf-8', newline='\n')
+    for h in (ROOT / src_file).parent.glob('*.h'):
+        (d / h.name).write_bytes(h.read_bytes())
+    print(str(d / Path(src_file).name) + ' written')

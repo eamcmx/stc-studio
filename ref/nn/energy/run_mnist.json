@@ -1,0 +1,47 @@
+{
+ "made": "2026-11-11T13:13:58.825Z",
+ "by": "test/energy_run.js",
+ "port": "COM16",
+ "file": "ref/nn/energy/digit_mnist_dark.a51",
+ "label": "mnist",
+ "video": "C:\\Users\\eamer\\Documents\\Claude\\prechin-a2\\raw\\energy\\meter_mnist.mkv",
+ "time_zero": "scrcpy reported the camera stream",
+ "phases": [
+  {
+   "name": "idle before",
+   "from_s": 4.44,
+   "to_s": 34.44
+  },
+  {
+   "name": "reading",
+   "from_s": 34.44,
+   "readings": 156,
+   "equal": 156,
+   "to_s": 64.5,
+   "readings_per_s": 5.19
+  },
+  {
+   "name": "idle after",
+   "from_s": 64.5,
+   "to_s": 94.5
+  }
+ ],
+ "scrcpy": [
+  "0.04 scrcpy 5.0.1 <https://github.com/Genymobile/scrcpy>",
+  "0.11 INFO: ADB device found:",
+  "0.11 INFO:     -->   (usb)  RFCY10K4QH",
+  "0.11 D                     device  SM_S931B",
+  "0.17 C:\\Users\\eamer\\AppData\\Local\\Microsoft\\WinGet\\Packages\\Genymobile.scrcpy_Microsoft.Winget.Source_8wekyb3d8bbwe\\scrcpy-win64-v5.0.1\\scrcpy-server: 1 file pushed, 0 skipped. 36.6 MB/s (733930 bytes in 0.019s)",
+  "0.50 [server] INFO: Device: [samsung] samsung SM-S931B (Android 17)",
+  "0.57 INFO: Recording started to matroska file: C:\\Users\\eamer\\Documents\\Claude\\prechin-a2\\raw\\energy\\meter_mnist.mkv",
+  "0.60 [server] INFO: Using camera '0'",
+  "100.57 INFO: Time limit reached",
+  "100.58 INF",
+  "100.58 O: Recording complete to matroska file: C:\\Users\\eamer\\D",
+  "100.58 ocuments\\Claude\\prechin-a2\\r",
+  "100.58 aw\\energy\\meter_mnist.mkv",
+  "101.57 WARN: Killing the server.",
+  "101.57 .",
+  "101.57 ."
+ ]
+}

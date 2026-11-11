@@ -31,3 +31,13 @@ ref/nn/c/mnist/sdcc*/*.lk
 ref/nn/c/mnist/sdcc*/*.mem
 ref/nn/c/mnist/sdcc*/*.ihx
 ref/nn/c/mnist/sdcc*/*.asm
+# display-off SDCC builds for the energy runs (nn/energy_build.py): the .c with ET0 = 0 and each build's .hex, .rst,
+# .lst and .map stay; the headers are copied from ref/nn/c by nn/energy_build.py
+ref/nn/energy/c/**/*.h
+ref/nn/energy/c/**/build/*.c
+ref/nn/energy/c/**/build/*.rel
+ref/nn/energy/c/**/build/*.sym
+ref/nn/energy/c/**/build/*.lk
+ref/nn/energy/c/**/build/*.mem
+ref/nn/energy/c/**/build/*.ihx
+ref/nn/energy/c/**/build/*.asm

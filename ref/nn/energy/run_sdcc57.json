@@ -1,0 +1,56 @@
+{
+ "made": "2026-11-11T13:06:03.631Z",
+ "by": "test/energy_run.js",
+ "port": "COM16",
+ "file": "ref/nn/energy/c/sdcc/build/digit_nn.hex",
+ "label": "sdcc57",
+ "video": "C:\\Users\\eamer\\Documents\\Claude\\prechin-a2\\raw\\energy\\meter_sdcc57.mkv",
+ "time_zero": "scrcpy reported the camera stream",
+ "phases": [
+  {
+   "name": "idle before",
+   "from_s": 4.45,
+   "to_s": 34.45
+  },
+  {
+   "name": "reading",
+   "from_s": 34.45,
+   "readings": 257,
+   "equal": 257,
+   "to_s": 64.47,
+   "readings_per_s": 8.56
+  },
+  {
+   "name": "idle after",
+   "from_s": 64.47,
+   "to_s": 94.47
+  }
+ ],
+ "scrcpy": [
+  "0.03 scrcpy 5.0.1 <https://github.com/Genymobile/scrcpy>",
+  "0.12 INFO: ADB device found:",
+  "0.12 INFO:     -->   (usb)  RFCY10K4QHD                     device  SM_S931B",
+  "0.18 C:\\Users\\eamer\\AppData\\Local\\Microsoft\\WinGet\\Packages\\Genymobile.scrcpy_Microsoft.Winget.Source_8wekyb3d8bbwe\\scrcpy-win64-v5.0.1\\scrcpy-server: 1 file pushed, 0 skipped. 36.0 MB/s (733930 bytes in 0.019s)",
+  "0.49 [server] INFO: Device: [samsung] samsung SM-S931B (Android 17)",
+  "0.56 INFO: Recording started to matroska file: C:\\Users\\eame",
+  "0.56 r\\Documents\\Claude\\prechin-a2\\raw\\energy\\meter_sdcc57.mkv",
+  "0.59 [server] INFO: Using camera '0'",
+  "100.57 INFO: Time limit reached",
+  "100.60 I",
+  "100.60 N",
+  "100.60 F",
+  "100.60 O:",
+  "100.60 R",
+  "100.60 ecording comp",
+  "100.60 lete to matroska f",
+  "100.60 ile: C:\\",
+  "100.60 Users\\ea",
+  "100.60 mer\\",
+  "100.60 Documen",
+  "100.60 ts\\Cla",
+  "100.60 ude\\prechi",
+  "100.60 n-a2\\raw\\energ",
+  "100.60 y\\meter_sdcc57.mkv",
+  "101.57 WARN: Killing the server..."
+ ]
+}

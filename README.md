@@ -35,7 +35,8 @@ writes its results to `ref/nn/results/` (JSON) and prints them.
 | UCI handwritten digits (data included, CC BY 4.0) | `python nn/train_uci.py && node test/nn_uci.js` |
 | MNIST 14 x 14 (download the four MNIST files into `nn/data/mnist/` first, see `nn/train_mnist.py`) | `python nn/train_mnist.py && node test/nn_mnist.js` |
 | The generator against the earlier programs | `python nn/gen51.py && node test/gen51_check.js` |
-| The marker builds (P2.0 low for one reading) | `python nn/energy_build.py && node test/nn_marker.js` |
+| The marker and display-off builds; their reading times | `python nn/energy_build.py && node test/nn_marker.js && node test/nn_energy_sim.js` |
+| Energy of one reading, from the meter readings (`docs/m7-energy-plan.md`) | `python tools/meter_stats.py dark display nochip nochip2 ucibin ucigray sdcc57 mnist mnistsdcc mnistsdcct` |
 | Every test input on the real board | `node test/board_run.js COM13` |
 
 The C builds are in `ref/nn/c/`: `tools/keil_c.sh` compiles with Keil C51 (the evaluation version was used),

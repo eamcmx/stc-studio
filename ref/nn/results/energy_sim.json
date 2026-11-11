@@ -1,0 +1,78 @@
+{
+ "made": "2026-11-11T12:58:54.077Z",
+ "by": "test/nn_energy_sim.js",
+ "cycles_per_ms": 921.6,
+ "rows": [
+  {
+   "name": "5x7, assembly",
+   "file": "ref/nn/energy/digit_nn_marker_dark.a51",
+   "inputs": 346,
+   "answers_unlike_python": 0,
+   "display_interrupts": 0,
+   "bytes": 1660,
+   "avg_cycles": 13095,
+   "avg_ms": 14.2088
+  },
+  {
+   "name": "5x7, C as written, SDCC",
+   "file": "ref/nn/energy/c/sdcc/build/digit_nn.hex",
+   "inputs": 346,
+   "answers_unlike_python": 0,
+   "display_interrupts": 0,
+   "bytes": 2207,
+   "avg_cycles": 36237,
+   "avg_ms": 39.3194
+  },
+  {
+   "name": "UCI binary, assembly",
+   "file": "ref/nn/energy/digit_uci_bin_dark.a51",
+   "inputs": 1797,
+   "answers_unlike_python": 0,
+   "display_interrupts": 0,
+   "bytes": 2350,
+   "avg_cycles": 17628,
+   "avg_ms": 19.1273
+  },
+  {
+   "name": "UCI 16 grey levels, assembly",
+   "file": "ref/nn/energy/digit_uci_gray_dark.a51",
+   "inputs": 1797,
+   "answers_unlike_python": 0,
+   "display_interrupts": 0,
+   "bytes": 2363,
+   "avg_cycles": 45242,
+   "avg_ms": 49.0909
+  },
+  {
+   "name": "MNIST, assembly",
+   "file": "ref/nn/energy/digit_mnist_dark.a51",
+   "inputs": 10000,
+   "answers_unlike_python": 0,
+   "display_interrupts": 0,
+   "bytes": 7208,
+   "avg_cycles": 30712,
+   "avg_ms": 33.3249
+  },
+  {
+   "name": "MNIST, C as written, SDCC",
+   "file": "ref/nn/energy/c/mnist/sdcc/build/digit_mnist.hex",
+   "inputs": 10000,
+   "answers_unlike_python": 0,
+   "display_interrupts": 0,
+   "bytes": 7812,
+   "avg_cycles": 85616,
+   "avg_ms": 92.8992
+  },
+  {
+   "name": "MNIST, C tuned, SDCC",
+   "file": "ref/nn/energy/c/mnist/sdcc_tuned/build/digit_mnist.hex",
+   "inputs": 10000,
+   "answers_unlike_python": 0,
+   "display_interrupts": 0,
+   "bytes": 7782,
+   "avg_cycles": 70127,
+   "avg_ms": 76.0932
+  }
+ ],
+ "note": "MNIST, C tuned, SDCC simulated again on 2026-11-11 after the build was redone with -DTUNED"
+}

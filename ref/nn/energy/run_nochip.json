@@ -1,0 +1,32 @@
+{
+ "made": "2026-11-11T12:50:43.868Z",
+ "by": "test/energy_run.js",
+ "port": "COM16",
+ "file": "-",
+ "label": "nochip",
+ "video": "C:\\Users\\eamer\\Documents\\Claude\\prechin-a2\\raw\\energy\\meter_nochip.mkv",
+ "time_zero": "scrcpy reported the camera stream",
+ "phases": [
+  {
+   "name": "no chip",
+   "from_s": 4.55,
+   "to_s": 34.55
+  }
+ ],
+ "scrcpy": [
+  "0.02 scrcpy 5.0.1 <https://github.com/Genymobile/scrcpy>",
+  "0.09 INFO: ADB device found:",
+  "0.09 INFO:     -->   (usb)  RFCY10K4QHD",
+  "0.09 device  SM_S931B",
+  "0.14 C:\\Users\\eamer\\AppData\\Local\\Microsoft\\WinGet\\Packages\\Genymobile.scrcpy_Microsoft.Winget.Source_8wekyb3d8bbwe\\scrcpy-win64-v5.0.1\\scrcpy-server: 1 file pushed, 0 skipped. 44.1 MB/s (733930 bytes in 0.016s)",
+  "0.41 [server] INFO: Device: [samsung] samsung SM-S931B (Android 17)",
+  "0.46 INFO: Recording started to matroska file: C:\\Users\\eamer\\Documents\\Claude\\prechin-a2\\raw\\energy\\me",
+  "0.46 ter_nochip.mkv",
+  "0.48 [server] INFO: Using camera '0'",
+  "40.46 INFO: Time limit reached",
+  "40.46 INFO: Recording complete to",
+  "40.46 matroska file: C:\\Users\\eamer\\Documents\\Claude\\prechin-a2\\raw\\energy\\meter_nochip.mkv",
+  "41.46 W",
+  "41.46 ARN: Killing the server..."
+ ]
+}
